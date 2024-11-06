@@ -522,6 +522,18 @@
             "powerLevel": {
               "description": "Represantative number for unit strength, relevant for various triggers(like dog cages)",
               "$ref": "#/$defs/numeric_string"
+            },
+            "meleeEngage": {
+              "type": "boolean",
+              "description": "Whether the unit engages in melee combat or not."
+            },
+            "isBlessable": {
+              "type": "boolean",
+              "description": "Whether the unit is considered as a unit to be blessed by priest (mostly relevant for workers)."
+            },
+            "jesterUnfriendly": {
+              "type": "boolean",
+              "description": "Whether the unit does not want jester to visit him."
             }
           }
         }

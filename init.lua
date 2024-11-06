@@ -250,8 +250,23 @@ end
 local scenario_pgr_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
 local scenario_pgr_crowded_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
 local skirmish_pgr_base = locate_aob("F8 FF FF FF FA FF FF FF FB FF FF FF FC FF FF FF FD FF FF FF FD FF FF FF FE FF FF FF FE FF FF FF FF FF FF FF FF FF FF FF 0A 00 00 00 0C 00 00 00")
+
+local unit_array_base_addr = 0x145D03C
+local building_array_base_addr = 0xF989B4
+local unit_melee_toggles_base = 0xB55C14
+local unit_jester_unfriendly_base = 0xB55994
+local unit_blessable_base = 0xB55AD4
+if not data.version.isExtreme() then
+  unit_array_base_addr = 0x138854C
+  building_array_base_addr = 0xF98534
+  unit_melee_toggles_base = 0xB55A84
+  unit_jester_unfriendly_base = 0xB55800
+  unit_blessable_base = 0xB55940
+end
+
 local unit_health_base = locate_aob("C4 09 00 00 C4 09 00 00 10 27 00 00 C4 09 00 00 10 27 00 00 88 13 00 00 10 27 00")
 local unit_arrow_dmg_base = locate_aob("98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 98 3A 00 00 98 3A")
+-- local unit_melee_toggles_base = locate_aob("00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00")
 local unit_xbow_dmg_base = locate_aob("98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 B8 0B 00 00")
 local unit_stone_dmg_base = locate_aob("88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00")
 local unit_speed_base = locate_aob("01 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00")
@@ -294,9 +309,6 @@ local function double_iron_pickup()
 end
 
 local function ascension_extras()
-  core.writeCodeInteger(0x400000 + 0x755C9C, 0) -- "Drunkards melee damage toggle.", 
-  core.writeCodeInteger(0x400000 + 0x755CF4, 0) -- "Jester melee damage toggle.", 
-  core.writeCodeByte(0x400000 + 0x755AB4, 1) -- "Jester visiting assassins toggle.", 
   core.writeCodeByte(0x400000 + 0x149F67, 2) -- "Count path to positive fearfactor twice for resting.", 
   core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
 
@@ -403,15 +415,6 @@ namespace.apply_rebalance = function(config)
   local enable_ascension = config["enable_ascension"]
   local enable_iron_double_pickup = config["enable_iron_double_pickup"]
   local address = 0
-  local unit_array_base_addr = 0x145D03C
-  local building_array_base_addr = 0xF989B4
-  if data.version.isExtreme() then
-    unit_array_base_addr = 0x145D03C
-    building_array_base_addr = 0xF989B4
-  else
-    unit_array_base_addr = 0x138854C
-    building_array_base_addr = 0xF98534
-  end
 
   local archer_idx = table.find(unit_names, "European archer")
   local arabbow_idx = table.find(unit_names, "Arabian archer")
@@ -672,6 +675,9 @@ namespace.apply_rebalance = function(config)
       local fortificationDamagePenalty = stats["fortificationDamagePenalty"]
       local wallDamage = stats["wallDamage"]
       local powerLevel = stats["powerLevel"]
+      local meleeEngage = stats["meleeEngage"]
+      local isBlessable = stats["isBlessable"]
+      local jesterUnfriendly = stats["jesterUnfriendly"]
 
       local goldCost = stats["goldCost"]
       local speedLevel = stats["speedLevel"]
@@ -697,6 +703,18 @@ namespace.apply_rebalance = function(config)
       if stoneDamage ~= nil then
         address = unit_stone_dmg_base + unit_idx * 4
         core.writeInteger(address, stoneDamage)
+      end
+
+      if meleeEngage ~= nil then
+        core.writeInteger(unit_melee_toggles_base + 4*unit_idx, meleeEngage and 1 or 0)
+      end
+
+      if isBlessable ~= nil then
+        core.writeInteger(unit_blessable_base + 4*unit_idx, isBlessable and 1 or 0)
+      end
+
+      if jesterUnfriendly ~= nil then
+        core.writeInteger(unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0)
       end
 
       if ballistaBoltDamage ~= nil then
