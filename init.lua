@@ -476,13 +476,13 @@ namespace.apply_rebalance = function(config)
 
   core.writeCodeBytes(non_rax_unit_display_cost_func_addr+14,{
     0xB3, 0x1E, -- mov bl, engineer_cost
-    0xEB, 0x0F, 
+    0xEB, 0x0F,
     0xB3, 0x04, -- mov bl, laddermen_cost
-    0xEB, 0x0B, 
+    0xEB, 0x0B,
     0xB3, 0x1E, -- mov bl, tunnellor_cost
-    0xEB, 0x07, 
+    0xEB, 0x07,
     0xB3, 0x0A, -- mov bl, monk_cost
-    0xEB, 0x03, 
+    0xEB, 0x03,
     0x90, 0x90, 0x90,
   })
   core.writeCodeBytes(unit_gold_jumplist_addr, core.compile({
@@ -702,7 +702,7 @@ namespace.apply_rebalance = function(config)
       if ballistaBoltDamage ~= nil then
         core.writeSmallInteger(ballista_damage_table_addr + 2*unit_idx, ballistaBoltDamage)
       end
-      
+
       if mangonelDamage ~= nil then
         core.writeSmallInteger(mangonel_damage_table_addr + 2*unit_idx, mangonelDamage)
       end
@@ -758,13 +758,13 @@ namespace.apply_rebalance = function(config)
         if is_other_trainable_unit then
           if unit_idx_p1 == 30 then -- engineer cost
             core.writeCodeByte(non_rax_unit_display_cost_func_addr + 15, goldCost)
-            core.writeCodeInteger(non_rax_unit_cost_func_addr+40, goldCost)
+            core.writeCodeInteger(non_rax_unit_cost_func_addr+42, goldCost)
           elseif unit_idx_p1 == 29 then -- laddermen cost
             core.writeCodeByte(non_rax_unit_display_cost_func_addr + 19, goldCost)
-            core.writeCodeInteger(non_rax_unit_cost_func_addr+52, goldCost)
+            core.writeCodeInteger(non_rax_unit_cost_func_addr+54, goldCost)
           elseif unit_idx_p1 == 5 then -- tunnellor cost
             core.writeCodeByte(non_rax_unit_display_cost_func_addr + 23, goldCost)
-            core.writeCodeInteger(non_rax_unit_cost_func_addr+64, goldCost)
+            core.writeCodeInteger(non_rax_unit_cost_func_addr+66, goldCost)
           else -- monk cost (37)
             core.writeCodeByte(non_rax_unit_display_cost_func_addr + 27, goldCost)
             core.writeCodeInteger(non_rax_unit_cost_func_addr+78, goldCost)
@@ -892,7 +892,7 @@ namespace.apply_rebalance = function(config)
           core.writeCodeInteger(firethrower_building_melee_addr - 53, wallDamage)
         end
       end
-      
+
     end
   end
 
@@ -1465,7 +1465,7 @@ namespace.apply_rebalance = function(config)
         0xEB, 0x76                              -- jmp 0043EC5C
       }, pop_report_addr + 6))
       -- 118 bytes are free in function
-      
+
       core.writeCodeBytes(actual_effect_addr + 2, core.compile({  -- actual effect
         neutral_level,
         0x7D, 0x06,
@@ -1479,7 +1479,7 @@ namespace.apply_rebalance = function(config)
       -- 128 bytes are free in function
 
     end
-    
+
     if adv_multipliers ~= nil then
       local human_big_ai_medium = adv_multipliers["human_big_ai_medium"]
       local ai_big = adv_multipliers["ai_big"]
