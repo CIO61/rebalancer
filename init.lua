@@ -813,7 +813,7 @@ namespace.apply_rebalance = function(config)
         elseif unit == "Lord" then
           core.writeCodeByte(lord_building_melee_addr+9, buildingDamage)
         elseif unit == "Battering ram" then
-          core.writeCodeByte(ram_damage_addr+3, buildingDamage)
+          core.writeCodeByte(ram_damage_addr+2, buildingDamage)
         elseif unit == "Arabian archer" then
           core.writeCodeByte(arabbow_building_melee_addr+9, buildingDamage)
         elseif unit == "Arabian slave" then
