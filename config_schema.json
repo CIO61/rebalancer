@@ -336,19 +336,19 @@
       "type": "object",
       "properties": {
         "thresholds": {
-          "description": "Thresholds for unlocking each coverage level of religion",
+          "description": "Thresholds for unlocking each coverage level of religion\nVanilla is [24, 50, 75, 93] (even though ingame visuals show otherwise)",
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
         "bonuses": {
-          "description": "Popularity bonus for each coverage level of religion",
+          "description": "Popularity bonus for each coverage level of religion\nVanilla is [50, 100, 150, 200]",
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
         "cathedral_bonus": {
-          "description": "Popularity bonus for building cathedral.",
+          "description": "Popularity bonus for building cathedral.\nVanilla is 50",
           "type": "integer"
         },
         "church_bonus": {
-          "description": "Popularity bonus for building church.",
+          "description": "Popularity bonus for building church.\nVanilla is 25",
           "type": "integer"
         }
       }
@@ -357,14 +357,16 @@
       "type": "object",
       "properties": {
         "popularity_per_good_level": {
+          "description": "Popularity effect per level of good things, vanilla is 25",
           "type": "integer"
         },
         "popularity_per_bad_level":{
+          "description": "Popularity effect per level of bad things, vanilla is 25",
           "type": "integer"
         },
         "productivity": {
           "type": "array",
-          "description": "Productivity bonuses, from -5 fear factor to +5 fear factor",
+          "description": "Productivity bonuses, from -5 fear factor to +5 fear factor\nVanilla is [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]",
           "minItems": 11,
           "maxItems": 11,
           "items": {
@@ -373,7 +375,7 @@
         },
         "combat_bonus": {
           "type": "array",
-          "description": "Combat bonus percentages, from -5 fear factor to +5 fear factor",
+          "description": "Combat bonus percentages, from -5 fear factor to +5 fear factor\nVanilla is [75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125]",
           "minItems": 11,
           "maxItems": 11,
           "items": {
@@ -382,7 +384,7 @@
         },
         "coverage":{
           "type": "integer",
-          "description": "2^X people per fear factor building requirement to increase. Example: 4 means 2^4=16 means by 16 population, player would require one additional fear factor building per level."
+          "description": "2^X people per fear factor building requirement to increase. Example: 4 means 2^4=16 means by 16 population, player would require one additional fear factor building per level. Vanilla is 4"
         }
       }
     },
@@ -391,7 +393,7 @@
       "properties": {
         "popularity": {
           "type": "array",
-          "description": "Popularity effects per taxation level",
+          "description": "Popularity effects per taxation level\nVanilla is [175, 125, 75, 25, -50, -100, -150, -200, -300, -400]",
           "minItems": 12,
           "maxItems": 12,
           "items": {
@@ -400,7 +402,7 @@
         },
         "gold": {
           "type": "array",
-          "description": "List of taxation values. All taxation values must be a multiple of 0.05 in string format. Must contain one entry with exact value of \\\"0.00\\\", which determines the neutral tax level.",
+          "description": "List of taxation values. All taxation values must be a positive multiples of 0.01. Must contain one entry with exact value of \\\"0.00\\\", which determines the neutral tax level. \n Values to the left of 0.00 will be considered bribes. Vanilla is [1, 0.8, 0.6, 0.0, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2]",
           "maxItems": 12,
           "minItems": 12,
           "items": {
@@ -417,14 +419,15 @@
       "type": "object",
       "properties": {
         "thresholds": {
-          "description": "Thresholds for unlocking each coverage level of beer",
+          "description": "Thresholds for unlocking each coverage level of beer\nVanilla is [25, 50, 75, 100]",
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
         "bonuses": {
-          "description": "Popularity bonus for each coverage level of beer",
+          "description": "Popularity bonus for each coverage level of beer\nVanilla is [50, 100, 150, 200]",
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
         "coverage_per_inn": {
+          "description": "People covered per active Inn\nVanilla is 30",
           "type": "integer"
         }
       }
@@ -433,11 +436,11 @@
       "type": "object",
       "properties": {
         "ration_bonuses": {
-          "description": "Popularity effect for: No Food / Half Rations / Extra Rations / Double Rations",
+          "description": "Popularity effect for: No Food / Half Rations / Extra Rations / Double Rations\nVanilla is [-200, -100, 100, 200]",
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
         "variety_bonuses": {
-          "description": "Popularity effect multiple food types: 2/3/4 in order.",
+          "description": "Popularity effect multiple food types: 2/3/4 in order.\nVanilla is [25, 50, 150]",
           "type": "array",
           "minItems": 3,
           "maxItems": 3,
