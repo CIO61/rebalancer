@@ -256,6 +256,7 @@ local building_array_base_addr = 0xF989B4
 local unit_melee_toggles_base = 0xB55C14
 local unit_jester_unfriendly_base = 0xB55994
 local unit_blessable_base = 0xB55AD4
+local towers_or_gates_base = 0x5B9980  -- same for extreme and regular crusader
 if not data.version.isExtreme() then
   unit_array_base_addr = 0x138854C
   building_array_base_addr = 0xF98534
@@ -266,7 +267,6 @@ end
 
 local unit_health_base = locate_aob("C4 09 00 00 C4 09 00 00 10 27 00 00 C4 09 00 00 10 27 00 00 88 13 00 00 10 27 00")
 local unit_arrow_dmg_base = locate_aob("98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 98 3A 00 00 98 3A")
--- local unit_melee_toggles_base = locate_aob("00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 01 00 00")
 local unit_xbow_dmg_base = locate_aob("98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 B8 0B 00 00")
 local unit_stone_dmg_base = locate_aob("88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00")
 local unit_speed_base = locate_aob("01 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00")
@@ -276,8 +276,6 @@ local eu_unit_gold_cost_base = locate_aob("0C 00 00 00 14 00 00 00 08 00 00 00 1
 local ar_unit_gold_cost_base = locate_aob("4B 00 00 00 05 00 00 00 0C 00 00 00 3C 00 00 00")
 -- 16 bytes from last of one unit to start of next unit
 local unit_melee_dmg_base = locate_aob("02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 14 00 00 00") - 0x260
-
--- print(string.format("%x", core.AOBScan("")))
 
 local get_unit_melee_dmg_address = function(attacker, defender)
   local attacker_idx = table.find(unit_names, attacker) - 1
@@ -643,6 +641,7 @@ namespace.apply_rebalance = function(config)
     local tunneller_building_melee_addr = locate_aob("F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8")
 
     local archer_building_melee_addr =     locate_aob("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98")  -- +6 +9
+    local crossbow_building_melee_addr = locate_aob("33 FF 8D 44 00 02 8B D0 8B 44 24 10")
     local spearman_building_melee_addr =   locate_aob("F7 D9 1B C9 83 E1 FB 83 C1 08 0F BF 90")  -- +6 +9
     local maceman_building_melee_addr =    locate_aob("F7 D9 1B C9 83 E1 E1 83 C1 23 0F BF 98")  -- +6 +9
     local pikeman_building_melee_addr =  core.AOBScan("F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", tunneller_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
@@ -659,6 +658,17 @@ namespace.apply_rebalance = function(config)
     local arabsword_building_melee_addr =   core.AOBScan("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", assassin_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
     local monk_building_melee_addr =          locate_aob("F7 D9 1B C9 83 E1 EF 83 C1 14 0F BF A8 ? ? ? ? 6A 01")  -- +6 +9
     local ram_damage_addr = locate_aob("55 6A 32 52 8B 90 ? ? ? ? 51 52")  -- +3  
+
+    core.writeCodeBytes(crossbow_building_melee_addr-12, core.compile({
+      0x8B, 0x04, 0x95, core.itob(towers_or_gates_base), -- mov eax,[edx*4+005B9980]
+      0x3C, 0x01,                                        -- cmp al,01
+      0x75, 0x04,                                        -- jne 0055CE06
+      0x31, 0xC0,                                        -- xor eax,eax
+      0x2C, 0x02,                                        -- sub al,02
+      0x04, 0x04,                                        -- add al,04
+      0x90                                               -- nop 
+    }, crossbow_building_melee_addr-12)
+    )
 
     for unit, stats in pairs(units) do
       local health = stats["health"]
@@ -797,7 +807,7 @@ namespace.apply_rebalance = function(config)
         elseif unit == "European archer" then
           core.writeCodeByte(archer_building_melee_addr+9, buildingDamage)
         elseif unit == "European crossbowman" then
-          log(WARNING, "European crossbowman buildingDamage is not supported.")
+          core.writeCodeByte(crossbow_building_melee_addr+4, buildingDamage)
         elseif unit == "European spearman" then
           core.writeCodeByte(spearman_building_melee_addr+9, buildingDamage)
         elseif unit == "European pikeman" then
@@ -837,7 +847,7 @@ namespace.apply_rebalance = function(config)
         elseif unit == "European archer" then
           core.writeCodeByte(archer_building_melee_addr+6, fortificationDamagePenalty)
         elseif unit == "European crossbowman" then
-          log(WARNING, "European crossbowman fortificationDamagePenalty is not supported.")
+          core.writeCodeByte(crossbow_building_melee_addr+2, fortificationDamagePenalty*-1)
         elseif unit == "European spearman" then
           core.writeCodeByte(spearman_building_melee_addr+6, fortificationDamagePenalty)
         elseif unit == "European pikeman" then
@@ -877,7 +887,7 @@ namespace.apply_rebalance = function(config)
         elseif unit == "European archer" then
           core.writeCodeInteger(archer_building_melee_addr - 53, wallDamage)
         elseif unit == "European crossbowman" then
-          log(WARNING, "European crossbowman wallDamage is not supported.")
+          core.writeCodeInteger(crossbow_building_melee_addr-62, wallDamage)
         elseif unit == "European spearman" then
           core.writeCodeInteger(spearman_building_melee_addr - 36, wallDamage)
         elseif unit == "European pikeman" then
