@@ -440,7 +440,7 @@
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
         "variety_bonuses": {
-          "description": "Popularity effect multiple food types: 2/3/4 in order.\nVanilla is [25, 50, 150]",
+          "description": "Popularity bonus for multiple food types: 2/3/4 in order.\nVanilla is [25, 50, 75]",
           "type": "array",
           "minItems": 3,
           "maxItems": 3,
