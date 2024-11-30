@@ -392,6 +392,99 @@ local function ascension_extras()
   core.writeCodeBytes(0x400000 + 0x174A60, {0x66, 0xBA, 5, 0x00, 0x90, 0x90, 0x90})  -- Assassin Rally Speed
 end
 
+local function ai_ascension_extras()
+  core.writeCodeByte(0x400000 + 0x149F67, 2) -- "Count path to positive fearfactor twice for resting.", 
+  core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
+
+  core.writeCodeByte(0x400000 + 0x13D63C, 42) -- AI Fireballista building harass range.   
+  core.writeCodeByte(0x400000 + 0x13D64E, 68) -- AI Cata and Trebuchet building harass range.   
+  core.writeCodeByte(0x400000 + 0xE7F1A, 80) -- Assassin full uncloak range, part 1.   
+  core.writeCodeByte(0x400000 + 0xEA637, 80) -- Assassin full uncloak range, part 2.   
+  core.writeCodeByte(0x400000 + 0x16FF92, 18) -- Unit power level required around a dog cage for it to trigger.   
+  core.writeCodeByte(0x400000 + 0x1328DD, 184) -- Fire damage, code adjustment 1.   
+  core.writeCodeByte(0x400000 + 0x1328E2, 144) -- Fire damage, code adjustment 2.   
+
+  core.writeCodeShortInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
+  core.writeCodeShortInteger(0x400000 + 0x1C14B, 2) -- Pitch ditch cost modifier.   
+  core.writeCodeShortInteger(0x400000 + 0x141777, 120) -- Flagons per beer.   
+  core.writeCodeShortInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
+
+  core.writeCodeInteger(0x400000 + 0x1B635C, 41) -- Archer base range.
+  core.writeCodeInteger(0x400000 + 0x1B6374, 40) -- Crossbowman base range.
+  core.writeCodeInteger(0x400000 + 0x1B63EC, 40) -- Fireballista base range.
+  core.writeCodeInteger(0x400000 + 0x3595E, 1600) -- Archer, crossbowman and fireballista control range 1.
+  core.writeCodeInteger(0x400000 + 0x35E2D,  1681) -- Archer and crossbowman control range 2.
+  core.writeCodeInteger(0x400000 + 0x35F3B,  1600) -- Fireballista control range 2.
+  core.writeCodeInteger(0x400000 + 0x3633A, 1600) -- Archer, crossbowman and fireballista control range 3.
+  core.writeCodeInteger(0x400000 + 0x369B3, 1600) -- Archer, crossbowman and fireballista control range 4.
+  core.writeCodeInteger(0x400000 + 0x36ABA, 1600) -- Archer, crossbowman and fireballista control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B64FC, 125) -- Archer projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B642C, 0) -- Archer projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6514, 125) -- Crossbowman projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6444, 0) -- Crossbowman projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B658C, 125) -- Fireballista projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B64BC, 0) -- Fireballista projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B63DC, 18) -- Slinger base range.
+  core.writeCodeInteger(0x400000 + 0x35968, 324) -- Slinger control range 1.
+  core.writeCodeInteger(0x400000 + 0x35EAA, 324) -- Slinger control range 2.
+  core.writeCodeInteger(0x400000 + 0x36344, 324) -- Slinger control range 3.
+  core.writeCodeInteger(0x400000 + 0x369BA, 324) -- Slinger control range 4.
+  core.writeCodeInteger(0x400000 + 0x36AC1, 324) -- Slinger control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B657C, 100) -- Slinger projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B64AC, 0) -- Slinger projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B63E0, 11) -- Firethrower base range.
+  core.writeCodeInteger(0x400000 + 0x35972, 121) -- Firethrower control range 1.
+  core.writeCodeInteger(0x400000 + 0x35ED0, 121) -- Firethrower control range 2.
+  core.writeCodeInteger(0x400000 + 0x3634E, 121) -- Firethrower control range 3.
+  core.writeCodeInteger(0x400000 + 0x369C1, 121) -- Firethrower control range 4.
+  core.writeCodeInteger(0x400000 + 0x36AC8, 121) -- Firethrower control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B6580, 80) -- Firethrower projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B64B0, 0) -- Firethrower projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6368, 54) -- Mangonel base range.
+  core.writeCodeInteger(0x400000 + 0x3598D, 2916) -- Mangonel control range 1.
+  core.writeCodeInteger(0x400000 + 0x35EFD, 2916) -- Mangonel control range 2.
+  core.writeCodeInteger(0x400000 + 0x3636C, 2916) -- Mangonel control range 3.
+  core.writeCodeInteger(0x400000 + 0x36736, 2916) -- Mangonel control range 4.
+  core.writeCodeInteger(0x400000 + 0x368B8, 2916) -- Mangonel control range 5.
+  core.writeCodeInteger(0x400000 + 0x369D6, 2916) -- Mangonel control range 6.
+  core.writeCodeInteger(0x400000 + 0x36ADD, 2916) -- Mangonel control range 7.
+  core.writeCodeInteger(0x400000 + 0x1B6508, 15) -- Mangonel projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6438, 1) -- Mangonel projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6360, 60) -- Catapult base range.
+  core.writeCodeInteger(0x400000 + 0x3597C, 3600) -- Catapult control range 1.
+  core.writeCodeInteger(0x400000 + 0x35EE9, 3600) -- Catapult control range 2.
+  core.writeCodeInteger(0x400000 + 0x36358, 3600) -- Catapult control range 3.
+  core.writeCodeInteger(0x400000 + 0x369C8, 3600) -- Catapult control range 4.
+  core.writeCodeInteger(0x400000 + 0x36ACF, 3600) -- Catapult control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B6500, 10) -- Catapult projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6430, 2) -- Catapult projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6364, 70) -- Trebuchet base range.
+  core.writeCodeInteger(0x400000 + 0x1B63A8, 70) -- Tower ballista base range.
+  core.writeCodeInteger(0x400000 + 0x35986, 4900) -- Trebuchet and tower ballista control range 1.
+  core.writeCodeInteger(0x400000 + 0x35EF3, 4900) -- Trebuchet control range 2.
+  core.writeCodeInteger(0x400000 + 0x35F14, 4900) -- Tower ballista control range 2.
+  core.writeCodeInteger(0x400000 + 0x36362, 4900) -- Trebuchet and tower ballista control range 3.
+  core.writeCodeInteger(0x400000 + 0x369CF, 4900) -- Trebuchet and tower ballista control range 4.
+  core.writeCodeInteger(0x400000 + 0x36AD6, 4900) -- Trebuchet and tower ballista control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B6504, 30) -- Trebuchet projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6434, 1) -- Trebuchet projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6548, 170) -- Tower ballista projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6478, 0) -- Tower ballista projectile arch type.
+  core.writeCodeInteger(0x400000 + 0xE847C, 120) -- Assassin partial uncloak range, part 1.
+  core.writeCodeInteger(0x400000 + 0xB6E88, 120) -- Assassin partial uncloak range, part 3.
+  core.writeCodeInteger(0x400000 + 0x1328DE, 75) -- Fire damage.
+  core.writeCodeInteger(0x400000 + 0x58F88, 36) -- Ticks per flagon consumed.
+  core.writeCodeInteger(0x400000 + 0x3B22C, 160) -- Flagons per beer, inn display value.
+
+  core.writeCodeBytes(0x400000 + 0x3B227, {
+    0x31, 0xD2, 0x8B, 0xC1, 0xB9
+  })  -- Flagons per beer, inn display value, code adjustment 1.   
+  core.writeCodeBytes(0x400000 + 0x3B230, {
+    0xF7, 0xF1, 0x50, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+  })  -- Flagons per beer, inn display value, code adjustment 2.   
+
+end
+
 namespace.enable = function(self, config)
   local file = io.open(config["balance_config_file_selector"], "rb")
   local spec = file:read("*all")
@@ -411,6 +504,7 @@ namespace.apply_rebalance = function(config)
   local taxation = config["taxation"]
   local siege = config["siege"]
   local enable_ascension = config["enable_ascension"]
+  local enable_ai_ascension = config["enable_ai_ascension"]
   local enable_iron_double_pickup = config["enable_iron_double_pickup"]
   local address = 0
 
@@ -1092,8 +1186,6 @@ namespace.apply_rebalance = function(config)
         elseif res_name == "Armor" then
           core.writeCodeByte(armourer_func+8, baseDelivery)
         end
-
-        
       end
 
       if skirmishBonus ~= nil then
@@ -1534,6 +1626,13 @@ namespace.apply_rebalance = function(config)
     end
   end
 
+  if enable_ai_ascension ~= nil then
+    if data.version.isExtreme() then
+      ai_ascension_extras()
+    else
+      log(WARNING, "AI Ascension mode is only supported in SHC Extreme!")
+    end
+  end
 
 end
 
