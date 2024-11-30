@@ -523,7 +523,7 @@
               "$ref": "#/$defs/numeric_string"
             },
             "powerLevel": {
-              "description": "Represantative number for unit strength, relevant for various triggers(like dog cages)",
+              "description": "Represantative number for unit strength, relevant for various triggers(like dog cages) Vanilla values are as follows:\n European archer: 5\nEuropean crossbowman: 10\nEuropean spearman: 4\nEuropean pikeman: 10\nEuropean maceman: 10\nEuropean swordsman: 30\nEuropean knight: 35\nLadderman: 1\nEngineer: 5\nMonk: 8\nTunneler: 5\nArabian archer: 8\nArabian slave: 1\nArabian slinger: 2\nArabian assassin: 14\nArabian horse archer: 15\nArabian swordsman: 20\nArabian firethrower: 16\nFire ballista: 25\nCatapult: 25",
               "$ref": "#/$defs/numeric_string"
             },
             "meleeEngage": {
