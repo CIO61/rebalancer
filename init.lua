@@ -513,10 +513,10 @@ namespace.apply_rebalance = function(config)
   local non_rax_unit_cost_func_addr = locate_aob("8B 44 24 04 83 F8 1E 55")
   local non_rax_unit_display_cost_func_addr = locate_aob("33 DB 83 F8 03 77 1A FF 24 85 ? ? ? ?")
 
-  local ballista_damage_table_addr = core.allocate(#unit_names*2)
-  local mangonel_damage_table_addr = core.allocate(#unit_names*2)
-  local catapult_damage_table_addr = core.allocate(#unit_names*2)
-  local trebuchet_damage_table_addr = core.allocate(#unit_names*2)
+  local ballista_damage_table_addr = core.allocate(#unit_names*4)
+  local mangonel_damage_table_addr = core.allocate(#unit_names*4)
+  local catapult_damage_table_addr = core.allocate(#unit_names*4)
+  local trebuchet_damage_table_addr = core.allocate(#unit_names*4)
 
   local default_ballista_damage = 10000
   local default_mangonel_damage = 30000
@@ -529,19 +529,19 @@ namespace.apply_rebalance = function(config)
       0x75, 0x13,                                                     -- jne 005322D2
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x66, 0x8B, 0x0C, 0x4D, core.itob(ballista_damage_table_addr),  -- mov cx,[ecx*2+053FF2C0]
+      0x8B, 0x0C, 0x8D, core.itob(ballista_damage_table_addr), 0x90,  -- mov cx,[ecx*2+053FF2C0]  -- clear the nops later.
       0xEB, 0x76,                                                     -- jmp 00532348
-      0x66, 0x83, 0xFB, 0x02,                                         -- cmp bx,02
+      0x8B, 0xFB, 0x02,                                         -- cmp bx,02
       0x75, 0x13,                                                     -- jne 005322EB
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x66, 0x8B, 0x0C, 0x4D, core.itob(catapult_damage_table_addr),  -- mov cx,[ecx*2+053FF2C0]
+      0x8B, 0x0C, 0x8D, core.itob(catapult_damage_table_addr), 0x90,  -- mov cx,[ecx*2+053FF2C0]  -- clear the nops later.
       0xEB, 0x17,                                                     -- jmp 00532302
-      0x66, 0x83, 0xFB, 0x03,                                         -- cmp bx,03
+      0x8B, 0xFB, 0x03,                                         -- cmp bx,03
       0x75, 0x75,                                                     -- jne 00532366
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x66, 0x8B, 0x0C, 0x4D, core.itob(trebuchet_damage_table_addr), -- mov cx,[ecx*2+053FF2C0]
+      0x8B, 0x0C, 0x8D, core.itob(trebuchet_damage_table_addr), 0x90, -- mov cx,[ecx*2+053FF2C0]  -- clear the nops later.
       0xEB, 0x7C,                                                     -- jmp 00532380
     }, ballista_damage_addr-14)
   )
@@ -551,10 +551,11 @@ namespace.apply_rebalance = function(config)
   end
 
   local mangonel_damage_addr = locate_aob("66 83 F9 37 75 0A B9 32 00 00 00 E9 51 01 00 00") -- 154 bytes
+  print(mangonel_damage_addr)
   core.writeCodeBytes(mangonel_damage_addr,
     core.compile({
       0x49, -- sub ecx
-      0x66, 0x8B, 0x0C, 0x4D, core.itob(mangonel_damage_table_addr), -- mov cx, [ecx*2+ballista_damage_table_addr]
+      0x8B, 0x0C, 0x8D, core.itob(mangonel_damage_table_addr), 0x90, -- mov cx, [ecx*2+ballista_damage_table_addr]  -- clear the nops later.
       0xE9, core.itob(339)  -- jmp 339 bytes forward
     }, mangonel_damage_addr)
   )
@@ -653,6 +654,7 @@ namespace.apply_rebalance = function(config)
     local cat_collateral_addr = locate_aob("8B 1C 95 ? ? ? ? 8B CB BF 0A 00 00 00 81 E1 01 00 10 40 8B EF")+10
     local siege_projectile_func_addr = locate_aob("66 83 F9 03 75 0A BF 3C 00 00 00 8D 6F E2")
     local oneshot_threshold_addr = locate_aob("81 F9 20 4E 00 00 0F 8E F9 FD FF FF")
+    print(oneshot_threshold_addr)
     local cat_primary_addr = siege_projectile_func_addr+23 -- integer
     local treb_collateral_penalty_addr = siege_projectile_func_addr+13  -- byte
     local treb_primary_addr = siege_projectile_func_addr+7 -- integer
@@ -677,7 +679,7 @@ namespace.apply_rebalance = function(config)
       elseif key == "defaultBallistaBoltUnitDamage" then
         default_ballista_damage = val
       elseif key == "siegeProjectileOneShotThreshold" then
-        core.writeCodeInteger(oneshot_threshold_addr+3, val)
+        core.writeCodeInteger(oneshot_threshold_addr+2, val)
       elseif key == "enable_half_siege_ammo" then
         if val ~= nil then
           half_siege_ammo()
@@ -688,45 +690,45 @@ namespace.apply_rebalance = function(config)
 
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 50)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 50)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 50)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 50)
     elseif name == "Catapult" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 2500)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 5000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2500)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 5000)
     elseif name == "Trebuchet" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 4000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 5000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 4000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 5000)
     elseif name == "Mangonel" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 2000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 500)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 500)
     elseif name == "Siege tower" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 20000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 10000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 20000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 10000)
     elseif name == "Battering ram" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 20000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 10000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 20000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 10000)
     elseif name == "Portable shield" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 500)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 1500)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 500)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1500)
     elseif name == "Tower ballista" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 2000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 1000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1000)
     elseif name == "Fire ballista" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 2000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 1000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1000)
     else
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), default_ballista_damage)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), default_mangonel_damage)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage)
     end
   end
 
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
-      core.writeSmallInteger(catapult_damage_table_addr + 2*(index-1), 50)
-      core.writeSmallInteger(trebuchet_damage_table_addr + 2*(index-1), 50)
+      core.writeInteger(catapult_damage_table_addr + 4*(index-1), 50)
+      core.writeInteger(trebuchet_damage_table_addr + 4*(index-1), 50)
     else
-      core.writeSmallInteger(catapult_damage_table_addr + 2*(index-1), default_catapult_damage)
-      core.writeSmallInteger(trebuchet_damage_table_addr + 2*(index-1), default_trebuchet_damage)
+      core.writeInteger(catapult_damage_table_addr + 4*(index-1), default_catapult_damage)
+      core.writeInteger(trebuchet_damage_table_addr + 4*(index-1), default_trebuchet_damage)
     end
   end
 
@@ -822,19 +824,19 @@ namespace.apply_rebalance = function(config)
       end
 
       if ballistaBoltDamage ~= nil then
-        core.writeSmallInteger(ballista_damage_table_addr + 2*unit_idx, ballistaBoltDamage)
+        core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage)
       end
 
       if mangonelDamage ~= nil then
-        core.writeSmallInteger(mangonel_damage_table_addr + 2*unit_idx, mangonelDamage)
+        core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage)
       end
 
       if catapultRockDamage ~= nil then
-        core.writeSmallInteger(catapult_damage_table_addr + 2*unit_idx, catapultRockDamage)
+        core.writeInteger(catapult_damage_table_addr + 4*unit_idx, catapultRockDamage)
       end
 
       if trebuchetRockDamage ~= nil then
-        core.writeSmallInteger(trebuchet_damage_table_addr + 2*unit_idx, trebuchetRockDamage)
+        core.writeInteger(trebuchet_damage_table_addr + 4*unit_idx, trebuchetRockDamage)
       end
 
       if baseMeleeDamage ~= nil then
@@ -993,7 +995,7 @@ namespace.apply_rebalance = function(config)
         elseif unit == "European knight" then
           core.writeCodeInteger(knight_building_melee_addr - 55, wallDamage)
         elseif unit == "Monk" then
-          core.writeCodeInteger(monk_building_melee_addr - 43, wallDamage)
+          core.writeCodeInteger(monk_building_melee_addr - 52, wallDamage)
         elseif unit == "Lord" then
           core.writeCodeInteger(lord_building_melee_addr - 66, wallDamage)
         elseif unit == "Battering ram" then

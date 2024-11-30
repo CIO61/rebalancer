@@ -548,7 +548,7 @@
     "siege": {
       "type": "object",
       "properties": {
-        "half_siege_ammo": {
+        "enable_half_siege_ammo": {
           "type": "boolean",
           "description": "Whether to enable half siege ammo mode, where cats&trebs start with 10 rocks each and replenish 10 rocks for 10 stone."
         },
