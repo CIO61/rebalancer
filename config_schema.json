@@ -602,6 +602,10 @@
       "type": "boolean",
       "description": "Whether to enable Ascension Mod-specific changes (only works on Extreme!), reach out to Krarilotus/CIO for more details"
     },
+    "enable_ai_ascension": {
+      "type": "boolean",
+      "description": "Whether to enable AI Ascension Mod-specific changes (only works on Extreme!), reach out to Krarilotus for more details"
+    },
     "population_gathering_rate": {
       "type": "object",
       "description": "Population gathering rates, Calculation is as follows: 2000/(value*game speed) In scenarios, population hitting 100 means different peasant gathering rate.",

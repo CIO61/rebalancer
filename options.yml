@@ -1,0 +1,16 @@
+meta:
+  version: 0.0.1
+options:
+- category:
+  - Advanced
+  - Files
+  name: balance_config_file_selector
+  header: '{{balance_config_file_selector}}'
+  text: '{{balance_config_file_selector_descr}}'
+  display: FileInput
+  url: rebalancer.balance_config_file_selector
+  contents:
+    generalizeExtensionPaths: true
+    filter: files
+    type: string
+    value: ''

@@ -393,7 +393,7 @@ local function ascension_extras()
 end
 
 namespace.enable = function(self, config)
-  local file = io.open(config["config_file"], "rb")
+  local file = io.open(config["balance_config_file_selector"], "rb")
   local spec = file:read("*all")
   local rebalance_cfg = yaml.parse(spec)
   namespace.apply_rebalance(rebalance_cfg)
