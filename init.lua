@@ -404,10 +404,10 @@ local function ai_ascension_extras()
   core.writeCodeByte(0x400000 + 0x1328DD, 184) -- Fire damage, code adjustment 1.   
   core.writeCodeByte(0x400000 + 0x1328E2, 144) -- Fire damage, code adjustment 2.   
 
-  core.writeCodeShortInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
-  core.writeCodeShortInteger(0x400000 + 0x1C14B, 2) -- Pitch ditch cost modifier.   
-  core.writeCodeShortInteger(0x400000 + 0x141777, 120) -- Flagons per beer.   
-  core.writeCodeShortInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
+  core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
+  core.writeCodeSmallInteger(0x400000 + 0x1C14B, 2) -- Pitch ditch cost modifier.   
+  core.writeCodeSmallInteger(0x400000 + 0x141777, 120) -- Flagons per beer.   
+  core.writeCodeSmallInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
 
   core.writeCodeInteger(0x400000 + 0x1B635C, 41) -- Archer base range.
   core.writeCodeInteger(0x400000 + 0x1B6374, 40) -- Crossbowman base range.
