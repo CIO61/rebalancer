@@ -1,9 +1,8 @@
 meta:
-  version: 0.0.1
+  version: 1.0.0
 options:
 - category:
-  - Advanced
-  - Files
+  - Rebalancer
   name: balance_config_file_selector
   header: '{{balance_config_file_selector}}'
   text: '{{balance_config_file_selector_descr}}'
