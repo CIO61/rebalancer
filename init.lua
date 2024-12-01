@@ -529,19 +529,19 @@ namespace.apply_rebalance = function(config)
       0x75, 0x13,                                                     -- jne 005322D2
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(ballista_damage_table_addr), 0x90,  -- mov cx,[ecx*2+053FF2C0]  -- clear the nops later.
+      0x8B, 0x0C, 0x8D, core.itob(ballista_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
       0xEB, 0x76,                                                     -- jmp 00532348
-      0x8B, 0xFB, 0x02,                                         -- cmp bx,02
+      0x66, 0x83, 0xFB, 0x02,                                         -- cmp bx,02
       0x75, 0x13,                                                     -- jne 005322EB
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(catapult_damage_table_addr), 0x90,  -- mov cx,[ecx*2+053FF2C0]  -- clear the nops later.
+      0x8B, 0x0C, 0x8D, core.itob(catapult_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
       0xEB, 0x17,                                                     -- jmp 00532302
-      0x8B, 0xFB, 0x03,                                         -- cmp bx,03
+      0x66, 0x83, 0xFB, 0x03,                                         -- cmp bx,03
       0x75, 0x75,                                                     -- jne 00532366
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(trebuchet_damage_table_addr), 0x90, -- mov cx,[ecx*2+053FF2C0]  -- clear the nops later.
+      0x8B, 0x0C, 0x8D, core.itob(trebuchet_damage_table_addr), 0x90, -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
       0xEB, 0x7C,                                                     -- jmp 00532380
     }, ballista_damage_addr-14)
   )
@@ -551,11 +551,10 @@ namespace.apply_rebalance = function(config)
   end
 
   local mangonel_damage_addr = locate_aob("66 83 F9 37 75 0A B9 32 00 00 00 E9 51 01 00 00") -- 154 bytes
-  print(mangonel_damage_addr)
   core.writeCodeBytes(mangonel_damage_addr,
     core.compile({
       0x49, -- sub ecx
-      0x8B, 0x0C, 0x8D, core.itob(mangonel_damage_table_addr), 0x90, -- mov cx, [ecx*2+ballista_damage_table_addr]  -- clear the nops later.
+      0x8B, 0x0C, 0x8D, core.itob(mangonel_damage_table_addr), 0x90, -- mov ecx, [ecx*4+ballista_damage_table_addr]  -- clear the nops later.
       0xE9, core.itob(339)  -- jmp 339 bytes forward
     }, mangonel_damage_addr)
   )
@@ -654,7 +653,6 @@ namespace.apply_rebalance = function(config)
     local cat_collateral_addr = locate_aob("8B 1C 95 ? ? ? ? 8B CB BF 0A 00 00 00 81 E1 01 00 10 40 8B EF")+10
     local siege_projectile_func_addr = locate_aob("66 83 F9 03 75 0A BF 3C 00 00 00 8D 6F E2")
     local oneshot_threshold_addr = locate_aob("81 F9 20 4E 00 00 0F 8E F9 FD FF FF")
-    print(oneshot_threshold_addr)
     local cat_primary_addr = siege_projectile_func_addr+23 -- integer
     local treb_collateral_penalty_addr = siege_projectile_func_addr+13  -- byte
     local treb_primary_addr = siege_projectile_func_addr+7 -- integer
