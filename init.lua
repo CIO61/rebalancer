@@ -298,11 +298,14 @@ end
 
 local function double_iron_pickup()
   local iron_wait_addr = locate_aob("33 C9 39 88 ? ? ? ? 0F 94 C1 8D 4C 09 03")
-  core.writeCodeBytes(iron_wait_addr, {
-    0x83, 0xB8, 0xEC, 0x8A, 0xF9, 0x00, 0x01, 0x0F, 0x9E, 0xC1,
+  print(iron_wait_addr)
+  core.writeCodeBytes(iron_wait_addr, core.compile({
+    0x83, 0xB8, core.itob(building_array_base_addr + 0x138), 0x01,
+    0x0F, 0x9E, 0xC1,
     0x90
-  })
+  }, iron_wait_addr))
   local iron_subtract_addr = locate_aob("FF 6A ? 8D 80 ? ? ? ? 6A ? 51 E8")
+  print(iron_subtract_addr)
   core.writeCodeByte(iron_subtract_addr, -2)
 end
 
