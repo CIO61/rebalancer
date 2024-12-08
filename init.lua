@@ -101,11 +101,14 @@ local baker_func = locate_aob("53 C6 86 ? ? ? ? FE 6A 08 66 C7 86 ? ? ? ? 05 00"
 local wheatfarmer_func = locate_aob("53 66 89 BE ? ? ? ? 6A 02") -- skirmish bonus is push ebx instead of push val
 local brewer_func = locate_aob("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00") -- both produce amount and skirmish bonus is push ebp instead of push val
 
+local fletcher_func = locate_aob("55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 06 00 E8")
+local poleturner_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00", brewer_func+16, 0x7FFFFFF)  -- exact same AOB as brewer func, must uniqueify! (works bc brewer is changed before this scan)
+local blacksmith_func = locate_aob("55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 07 00 E8")  -- blacksmith has another call to calculategoodsproduced but its a mystery
 local custom_fletcher_code_addr = 0  -- defined when inserted as code
 local custom_poleturner_code_addr = 0  -- defined when inserted as code
 local custom_blacksmith_code_addr = 0  -- defined when inserted as code
 local tanner_func = locate_aob("53 53 50 66 89 AE ? ? ? ? E8 53 6C FD FF 66 89 86")
-local armourer_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", brewer_func+16, 0x7FFFFFF)
+local armourer_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", poleturner_func+16, 0x7FFFFFF)
 
 -- religion related addresses
 local religion_addr_1 = locate_aob("83 F8 18 7F 04 33 C9 EB 2C 83 F8 31 7F 07 B9 32 00 00 00 EB 20 83 F8 4A 7F 07 B9 64 00 00 00 EB 14 33 C9 83 F8 5E 0F 9F C1 83 E9 01 83 E1 CE 81 C1 C8 00 00 00 83 BE")
@@ -426,8 +429,6 @@ local function enable_rebalance_features()
   core.insertCode(brewer_func, 9, {}, brewer_func+5, "after")
   core.writeCodeBytes(brewer_func+5, {0x6A, 0x01, 0x6A, 0x01})
 
-
-  local fletcher_func = locate_aob("55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 06 00 E8")
   local custom_fletcher_code = {
     0x50,                                       -- push eax
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
@@ -446,9 +447,6 @@ local function enable_rebalance_features()
 
   core.writeCodeBytes(fletcher_func, {0x90, 0x90})
   custom_fletcher_code_addr = core.insertCode(fletcher_func, 9, custom_fletcher_code, fletcher_func+9, "after")
-
-   -- exact same AOB as brewer func, must uniqueify! (works bc brewer is changed before this scan)
-  local poleturner_func = locate_aob("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00")
 
   local custom_poleturner_code = {
     0x50,                                       -- push eax
@@ -470,8 +468,6 @@ local function enable_rebalance_features()
   core.writeCodeByte(poleturner_func+8, 0x90)
   custom_poleturner_code_addr = core.insertCode(poleturner_func, 9, custom_poleturner_code, poleturner_func+9, "after")
 
-  -- blacksmith has another call to calculategoodsproduced but its a mystery
-  local blacksmith_func = locate_aob("55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 07 00 E8")
   local custom_blacksmith_code = {
     0x50,                                       -- push eax
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
