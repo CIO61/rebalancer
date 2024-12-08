@@ -100,11 +100,12 @@ local hops_farmer_func = locate_aob("6A 01 74 04 6A 02 EB 02 6A 01 50 E8")  -- h
 local baker_func = locate_aob("53 C6 86 ? ? ? ? FE 6A 08 66 C7 86 ? ? ? ? 05 00")  -- skirmish bonus is push ebx instead of push val
 local wheatfarmer_func = locate_aob("53 66 89 BE ? ? ? ? 6A 02") -- skirmish bonus is push ebx instead of push val
 local brewer_func = locate_aob("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00") -- both produce amount and skirmish bonus is push ebp instead of push val
+
 local custom_fletcher_code_addr = 0  -- defined when inserted as code
 local custom_poleturner_code_addr = 0  -- defined when inserted as code
 local custom_blacksmith_code_addr = 0  -- defined when inserted as code
 local tanner_func = locate_aob("53 53 50 66 89 AE ? ? ? ? E8 53 6C FD FF 66 89 86")
-local armourer_func = locate_aob("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8")
+local armourer_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", brewer_func+16, 0x7FFFFFF)
 
 -- religion related addresses
 local religion_addr_1 = locate_aob("83 F8 18 7F 04 33 C9 EB 2C 83 F8 31 7F 07 B9 32 00 00 00 EB 20 83 F8 4A 7F 07 B9 64 00 00 00 EB 14 33 C9 83 F8 5E 0F 9F C1 83 E9 01 83 E1 CE 81 C1 C8 00 00 00 83 BE")
