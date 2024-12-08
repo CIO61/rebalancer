@@ -548,37 +548,6 @@ local function enable_rebalance_features()
   for idx, tax_val in ipairs(default_tax_table) do
     core.writeCodeSmallInteger(tax_table_addr+2*(idx-1), math.floor(tax_val*100))
   end
-end
-
-namespace.enable = function(self, config)
-  local file = io.open(config["balance_config_file_selector"], "rb")
-  local spec = file:read("*all")
-  local rebalance_cfg = yaml.parse(spec)
-  enable_rebalance_features()
-  namespace.apply_rebalance(rebalance_cfg)
-end
-
-namespace.apply_rebalance = function(config)
-  local buildings = config["buildings"]
-  local units = config["units"]
-  local resources = config["resources"]
-  local population_gathering_rate = config["population_gathering_rate"]
-  local religion = config["religion"]
-  local beer = config["beer"]
-  local food = config["food"]
-  local fear_factor = config["fear_factor"]
-  local taxation = config["taxation"]
-  local siege = config["siege"]
-  local enable_ascension = config["enable_ascension"]
-  local enable_ai_ascension = config["enable_ai_ascension"]
-  local enable_iron_double_pickup = config["enable_iron_double_pickup"]
-  local address = 0
-
-
-  local default_ballista_damage = 10000
-  local default_mangonel_damage = 30000
-  local default_catapult_damage = 30000
-  local default_trebuchet_damage = 30000
 
   core.writeCodeBytes(ballista_damage_addr-14,
     core.compile({
@@ -666,6 +635,32 @@ namespace.apply_rebalance = function(config)
     }, non_rax_unit_cost_func_addr+18
   ))
 
+end
+
+namespace.enable = function(self, config)
+  local file = io.open(config["balance_config_file_selector"], "rb")
+  local spec = file:read("*all")
+  local rebalance_cfg = yaml.parse(spec)
+  enable_rebalance_features()
+  namespace.apply_rebalance(rebalance_cfg)
+end
+
+namespace.apply_rebalance = function(config)
+  local buildings = config["buildings"]
+  local units = config["units"]
+  local resources = config["resources"]
+  local population_gathering_rate = config["population_gathering_rate"]
+  local religion = config["religion"]
+  local beer = config["beer"]
+  local food = config["food"]
+  local fear_factor = config["fear_factor"]
+  local taxation = config["taxation"]
+  local siege = config["siege"]
+  local enable_ascension = config["enable_ascension"]
+  local enable_ai_ascension = config["enable_ai_ascension"]
+  local enable_iron_double_pickup = config["enable_iron_double_pickup"]
+  local address = 0
+
   if buildings ~= nil then    
     for building, stats in pairs(buildings) do
       local cost = stats["cost"]
@@ -693,7 +688,12 @@ namespace.apply_rebalance = function(config)
     end
   end
 
+  -- siege changes need to come before units, due to projectile damages on units
   if siege ~= nil then
+    local default_ballista_damage = 10000
+    local default_mangonel_damage = 30000
+    local default_catapult_damage = 30000
+    local default_trebuchet_damage = 30000
     for key, val in pairs(siege) do
       if key == "catapultRockDamage" then
         core.writeCodeInteger(cat_primary_addr, val)
@@ -721,30 +721,31 @@ namespace.apply_rebalance = function(config)
         end
       end
     end
-  end
 
-  for index, name in ipairs(unit_names) do
-    if name == "Lord" then  -- defaults are set once
-    elseif name == "Catapult" then  -- defaults are set once
-    elseif name == "Trebuchet" then  -- defaults are set once
-    elseif name == "Mangonel" then  -- defaults are set once
-    elseif name == "Siege tower" then  -- defaults are set once
-    elseif name == "Battering ram" then  -- defaults are set once
-    elseif name == "Portable shield" then  -- defaults are set once
-    elseif name == "Tower ballista" then  -- defaults are set once
-    elseif name == "Fire ballista" then  -- defaults are set once
-    else
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage)
+    for index, name in ipairs(unit_names) do
+      if name == "Lord" then  -- defaults are set once
+      elseif name == "Catapult" then  -- defaults are set once
+      elseif name == "Trebuchet" then  -- defaults are set once
+      elseif name == "Mangonel" then  -- defaults are set once
+      elseif name == "Siege tower" then  -- defaults are set once
+      elseif name == "Battering ram" then  -- defaults are set once
+      elseif name == "Portable shield" then  -- defaults are set once
+      elseif name == "Tower ballista" then  -- defaults are set once
+      elseif name == "Fire ballista" then  -- defaults are set once
+      else
+        core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage)
+        core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage)
+      end
     end
-  end
 
-  for index, name in ipairs(unit_names) do
-    if name == "Lord" then  -- defaults are set once
-    else
-      core.writeInteger(catapult_damage_table_addr + 4*(index-1), default_catapult_damage)
-      core.writeInteger(trebuchet_damage_table_addr + 4*(index-1), default_trebuchet_damage)
+    for index, name in ipairs(unit_names) do
+      if name == "Lord" then  -- defaults are set once
+      else
+        core.writeInteger(catapult_damage_table_addr + 4*(index-1), default_catapult_damage)
+        core.writeInteger(trebuchet_damage_table_addr + 4*(index-1), default_trebuchet_damage)
+      end
     end
+
   end
 
   if units ~= nil then
