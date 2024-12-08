@@ -1,0 +1,25 @@
+config-sparse:
+  modules:
+    ucp2-legacy:
+      config:
+        o_freetrader:
+          enabled:
+            contents:
+              required-value: false
+        u_arabxbow:
+          enabled:
+            contents:
+              required-value: false
+        u_laddermen:
+          enabled:
+            contents:
+              required-value: false
+        u_spearmen:
+          enabled:
+            contents:
+              required-value: false
+    rebalancer:
+      config: {}
+  plugins: {}
+meta:
+  version: 1.0.0

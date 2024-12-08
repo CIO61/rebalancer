@@ -1,6 +1,7 @@
 name: rebalancer
-version: 0.0.1
-date: 2023
+display-name: Rebalancer
+type: module
+version: 1.0.2
 author: CIO
 meta:
   version: 1.0.0

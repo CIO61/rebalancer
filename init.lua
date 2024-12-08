@@ -61,11 +61,14 @@ end
 
 local function double_iron_pickup()
   local iron_wait_addr = locate_aob("33 C9 39 88 ? ? ? ? 0F 94 C1 8D 4C 09 03")
-  core.writeCodeBytes(iron_wait_addr, {
-    0x83, 0xB8, 0xEC, 0x8A, 0xF9, 0x00, 0x01, 0x0F, 0x9E, 0xC1,
+  print(iron_wait_addr)
+  core.writeCodeBytes(iron_wait_addr, core.compile({
+    0x83, 0xB8, core.itob(building_array_base_addr + 0x138), 0x01,
+    0x0F, 0x9E, 0xC1,
     0x90
-  })
+  }, iron_wait_addr))
   local iron_subtract_addr = locate_aob("FF 6A ? 8D 80 ? ? ? ? 6A ? 51 E8")
+  print(iron_subtract_addr)
   core.writeCodeByte(iron_subtract_addr, -2)
 end
 
@@ -155,8 +158,101 @@ local function ascension_extras()
   core.writeCodeBytes(0x400000 + 0x174A60, {0x66, 0xBA, 5, 0x00, 0x90, 0x90, 0x90})  -- Assassin Rally Speed
 end
 
+local function ai_ascension_extras()
+  core.writeCodeByte(0x400000 + 0x149F67, 2) -- "Count path to positive fearfactor twice for resting.", 
+  core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
+
+  core.writeCodeByte(0x400000 + 0x13D63C, 42) -- AI Fireballista building harass range.   
+  core.writeCodeByte(0x400000 + 0x13D64E, 68) -- AI Cata and Trebuchet building harass range.   
+  core.writeCodeByte(0x400000 + 0xE7F1A, 80) -- Assassin full uncloak range, part 1.   
+  core.writeCodeByte(0x400000 + 0xEA637, 80) -- Assassin full uncloak range, part 2.   
+  core.writeCodeByte(0x400000 + 0x16FF92, 18) -- Unit power level required around a dog cage for it to trigger.   
+  core.writeCodeByte(0x400000 + 0x1328DD, 184) -- Fire damage, code adjustment 1.   
+  core.writeCodeByte(0x400000 + 0x1328E2, 144) -- Fire damage, code adjustment 2.   
+
+  core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
+  core.writeCodeSmallInteger(0x400000 + 0x1C14B, 2) -- Pitch ditch cost modifier.   
+  core.writeCodeSmallInteger(0x400000 + 0x141777, 120) -- Flagons per beer.   
+  core.writeCodeSmallInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
+
+  core.writeCodeInteger(0x400000 + 0x1B635C, 41) -- Archer base range.
+  core.writeCodeInteger(0x400000 + 0x1B6374, 40) -- Crossbowman base range.
+  core.writeCodeInteger(0x400000 + 0x1B63EC, 40) -- Fireballista base range.
+  core.writeCodeInteger(0x400000 + 0x3595E, 1600) -- Archer, crossbowman and fireballista control range 1.
+  core.writeCodeInteger(0x400000 + 0x35E2D,  1681) -- Archer and crossbowman control range 2.
+  core.writeCodeInteger(0x400000 + 0x35F3B,  1600) -- Fireballista control range 2.
+  core.writeCodeInteger(0x400000 + 0x3633A, 1600) -- Archer, crossbowman and fireballista control range 3.
+  core.writeCodeInteger(0x400000 + 0x369B3, 1600) -- Archer, crossbowman and fireballista control range 4.
+  core.writeCodeInteger(0x400000 + 0x36ABA, 1600) -- Archer, crossbowman and fireballista control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B64FC, 125) -- Archer projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B642C, 0) -- Archer projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6514, 125) -- Crossbowman projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6444, 0) -- Crossbowman projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B658C, 125) -- Fireballista projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B64BC, 0) -- Fireballista projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B63DC, 18) -- Slinger base range.
+  core.writeCodeInteger(0x400000 + 0x35968, 324) -- Slinger control range 1.
+  core.writeCodeInteger(0x400000 + 0x35EAA, 324) -- Slinger control range 2.
+  core.writeCodeInteger(0x400000 + 0x36344, 324) -- Slinger control range 3.
+  core.writeCodeInteger(0x400000 + 0x369BA, 324) -- Slinger control range 4.
+  core.writeCodeInteger(0x400000 + 0x36AC1, 324) -- Slinger control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B657C, 100) -- Slinger projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B64AC, 0) -- Slinger projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B63E0, 11) -- Firethrower base range.
+  core.writeCodeInteger(0x400000 + 0x35972, 121) -- Firethrower control range 1.
+  core.writeCodeInteger(0x400000 + 0x35ED0, 121) -- Firethrower control range 2.
+  core.writeCodeInteger(0x400000 + 0x3634E, 121) -- Firethrower control range 3.
+  core.writeCodeInteger(0x400000 + 0x369C1, 121) -- Firethrower control range 4.
+  core.writeCodeInteger(0x400000 + 0x36AC8, 121) -- Firethrower control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B6580, 80) -- Firethrower projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B64B0, 0) -- Firethrower projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6368, 54) -- Mangonel base range.
+  core.writeCodeInteger(0x400000 + 0x3598D, 2916) -- Mangonel control range 1.
+  core.writeCodeInteger(0x400000 + 0x35EFD, 2916) -- Mangonel control range 2.
+  core.writeCodeInteger(0x400000 + 0x3636C, 2916) -- Mangonel control range 3.
+  core.writeCodeInteger(0x400000 + 0x36736, 2916) -- Mangonel control range 4.
+  core.writeCodeInteger(0x400000 + 0x368B8, 2916) -- Mangonel control range 5.
+  core.writeCodeInteger(0x400000 + 0x369D6, 2916) -- Mangonel control range 6.
+  core.writeCodeInteger(0x400000 + 0x36ADD, 2916) -- Mangonel control range 7.
+  core.writeCodeInteger(0x400000 + 0x1B6508, 15) -- Mangonel projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6438, 1) -- Mangonel projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6360, 60) -- Catapult base range.
+  core.writeCodeInteger(0x400000 + 0x3597C, 3600) -- Catapult control range 1.
+  core.writeCodeInteger(0x400000 + 0x35EE9, 3600) -- Catapult control range 2.
+  core.writeCodeInteger(0x400000 + 0x36358, 3600) -- Catapult control range 3.
+  core.writeCodeInteger(0x400000 + 0x369C8, 3600) -- Catapult control range 4.
+  core.writeCodeInteger(0x400000 + 0x36ACF, 3600) -- Catapult control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B6500, 10) -- Catapult projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6430, 2) -- Catapult projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6364, 70) -- Trebuchet base range.
+  core.writeCodeInteger(0x400000 + 0x1B63A8, 70) -- Tower ballista base range.
+  core.writeCodeInteger(0x400000 + 0x35986, 4900) -- Trebuchet and tower ballista control range 1.
+  core.writeCodeInteger(0x400000 + 0x35EF3, 4900) -- Trebuchet control range 2.
+  core.writeCodeInteger(0x400000 + 0x35F14, 4900) -- Tower ballista control range 2.
+  core.writeCodeInteger(0x400000 + 0x36362, 4900) -- Trebuchet and tower ballista control range 3.
+  core.writeCodeInteger(0x400000 + 0x369CF, 4900) -- Trebuchet and tower ballista control range 4.
+  core.writeCodeInteger(0x400000 + 0x36AD6, 4900) -- Trebuchet and tower ballista control range 5.
+  core.writeCodeInteger(0x400000 + 0x1B6504, 30) -- Trebuchet projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6434, 1) -- Trebuchet projectile arch type.
+  core.writeCodeInteger(0x400000 + 0x1B6548, 170) -- Tower ballista projectile velocity.
+  core.writeCodeInteger(0x400000 + 0x1B6478, 0) -- Tower ballista projectile arch type.
+  core.writeCodeInteger(0x400000 + 0xE847C, 120) -- Assassin partial uncloak range, part 1.
+  core.writeCodeInteger(0x400000 + 0xB6E88, 120) -- Assassin partial uncloak range, part 3.
+  core.writeCodeInteger(0x400000 + 0x1328DE, 75) -- Fire damage.
+  core.writeCodeInteger(0x400000 + 0x58F88, 36) -- Ticks per flagon consumed.
+  core.writeCodeInteger(0x400000 + 0x3B22C, 160) -- Flagons per beer, inn display value.
+
+  core.writeCodeBytes(0x400000 + 0x3B227, {
+    0x31, 0xD2, 0x8B, 0xC1, 0xB9
+  })  -- Flagons per beer, inn display value, code adjustment 1.   
+  core.writeCodeBytes(0x400000 + 0x3B230, {
+    0xF7, 0xF1, 0x50, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+  })  -- Flagons per beer, inn display value, code adjustment 2.   
+
+end
+
 namespace.enable = function(self, config)
-  local file = io.open(config["config_file"], "rb")
+  local file = io.open(config["balance_config_file_selector"], "rb")
   local spec = file:read("*all")
   local rebalance_cfg = yaml.parse(spec)
   namespace.apply_rebalance(rebalance_cfg)
@@ -174,6 +270,7 @@ namespace.apply_rebalance = function(config)
   local taxation = config["taxation"]
   local siege = config["siege"]
   local enable_ascension = config["enable_ascension"]
+  local enable_ai_ascension = config["enable_ai_ascension"]
   local enable_iron_double_pickup = config["enable_iron_double_pickup"]
   local address = 0
 
@@ -182,10 +279,10 @@ namespace.apply_rebalance = function(config)
   local non_rax_unit_cost_func_addr = locate_aob("8B 44 24 04 83 F8 1E 55")
   local non_rax_unit_display_cost_func_addr = locate_aob("33 DB 83 F8 03 77 1A FF 24 85 ? ? ? ?")
 
-  local ballista_damage_table_addr = core.allocate(#unit_names*2)
-  local mangonel_damage_table_addr = core.allocate(#unit_names*2)
-  local catapult_damage_table_addr = core.allocate(#unit_names*2)
-  local trebuchet_damage_table_addr = core.allocate(#unit_names*2)
+  local ballista_damage_table_addr = core.allocate(#unit_names*4)
+  local mangonel_damage_table_addr = core.allocate(#unit_names*4)
+  local catapult_damage_table_addr = core.allocate(#unit_names*4)
+  local trebuchet_damage_table_addr = core.allocate(#unit_names*4)
 
   local default_ballista_damage = 10000
   local default_mangonel_damage = 30000
@@ -198,19 +295,19 @@ namespace.apply_rebalance = function(config)
       0x75, 0x13,                                                     -- jne 005322D2
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x66, 0x8B, 0x0C, 0x4D, core.itob(ballista_damage_table_addr),  -- mov cx,[ecx*2+053FF2C0]
+      0x8B, 0x0C, 0x8D, core.itob(ballista_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
       0xEB, 0x76,                                                     -- jmp 00532348
       0x66, 0x83, 0xFB, 0x02,                                         -- cmp bx,02
       0x75, 0x13,                                                     -- jne 005322EB
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x66, 0x8B, 0x0C, 0x4D, core.itob(catapult_damage_table_addr),  -- mov cx,[ecx*2+053FF2C0]
+      0x8B, 0x0C, 0x8D, core.itob(catapult_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
       0xEB, 0x17,                                                     -- jmp 00532302
       0x66, 0x83, 0xFB, 0x03,                                         -- cmp bx,03
       0x75, 0x75,                                                     -- jne 00532366
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x66, 0x8B, 0x0C, 0x4D, core.itob(trebuchet_damage_table_addr), -- mov cx,[ecx*2+053FF2C0]
+      0x8B, 0x0C, 0x8D, core.itob(trebuchet_damage_table_addr), 0x90, -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
       0xEB, 0x7C,                                                     -- jmp 00532380
     }, ballista_damage_addr-14)
   )
@@ -223,7 +320,7 @@ namespace.apply_rebalance = function(config)
   core.writeCodeBytes(mangonel_damage_addr,
     core.compile({
       0x49, -- sub ecx
-      0x66, 0x8B, 0x0C, 0x4D, core.itob(mangonel_damage_table_addr), -- mov cx, [ecx*2+ballista_damage_table_addr]
+      0x8B, 0x0C, 0x8D, core.itob(mangonel_damage_table_addr), 0x90, -- mov ecx, [ecx*4+ballista_damage_table_addr]  -- clear the nops later.
       0xE9, core.itob(339)  -- jmp 339 bytes forward
     }, mangonel_damage_addr)
   )
@@ -346,7 +443,7 @@ namespace.apply_rebalance = function(config)
       elseif key == "defaultBallistaBoltUnitDamage" then
         default_ballista_damage = val
       elseif key == "siegeProjectileOneShotThreshold" then
-        core.writeCodeInteger(oneshot_threshold_addr+3, val)
+        core.writeCodeInteger(oneshot_threshold_addr+2, val)
       elseif key == "enable_half_siege_ammo" then
         if val ~= nil then
           half_siege_ammo()
@@ -357,45 +454,45 @@ namespace.apply_rebalance = function(config)
 
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 50)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 50)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 50)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 50)
     elseif name == "Catapult" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 2500)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 5000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2500)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 5000)
     elseif name == "Trebuchet" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 4000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 5000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 4000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 5000)
     elseif name == "Mangonel" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 2000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 500)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 500)
     elseif name == "Siege tower" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 20000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 10000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 20000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 10000)
     elseif name == "Battering ram" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 20000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 10000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 20000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 10000)
     elseif name == "Portable shield" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 500)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 1500)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 500)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1500)
     elseif name == "Tower ballista" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 2000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 1000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1000)
     elseif name == "Fire ballista" then
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), 2000)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), 1000)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1000)
     else
-      core.writeSmallInteger(ballista_damage_table_addr + 2*(index-1), default_ballista_damage)
-      core.writeSmallInteger(mangonel_damage_table_addr + 2*(index-1), default_mangonel_damage)
+      core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage)
+      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage)
     end
   end
 
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
-      core.writeSmallInteger(catapult_damage_table_addr + 2*(index-1), 50)
-      core.writeSmallInteger(trebuchet_damage_table_addr + 2*(index-1), 50)
+      core.writeInteger(catapult_damage_table_addr + 4*(index-1), 50)
+      core.writeInteger(trebuchet_damage_table_addr + 4*(index-1), 50)
     else
-      core.writeSmallInteger(catapult_damage_table_addr + 2*(index-1), default_catapult_damage)
-      core.writeSmallInteger(trebuchet_damage_table_addr + 2*(index-1), default_trebuchet_damage)
+      core.writeInteger(catapult_damage_table_addr + 4*(index-1), default_catapult_damage)
+      core.writeInteger(trebuchet_damage_table_addr + 4*(index-1), default_trebuchet_damage)
     end
   end
 
@@ -491,19 +588,19 @@ namespace.apply_rebalance = function(config)
       end
 
       if ballistaBoltDamage ~= nil then
-        core.writeSmallInteger(ballista_damage_table_addr + 2*unit_idx, ballistaBoltDamage)
+        core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage)
       end
 
       if mangonelDamage ~= nil then
-        core.writeSmallInteger(mangonel_damage_table_addr + 2*unit_idx, mangonelDamage)
+        core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage)
       end
 
       if catapultRockDamage ~= nil then
-        core.writeSmallInteger(catapult_damage_table_addr + 2*unit_idx, catapultRockDamage)
+        core.writeInteger(catapult_damage_table_addr + 4*unit_idx, catapultRockDamage)
       end
 
       if trebuchetRockDamage ~= nil then
-        core.writeSmallInteger(trebuchet_damage_table_addr + 2*unit_idx, trebuchetRockDamage)
+        core.writeInteger(trebuchet_damage_table_addr + 4*unit_idx, trebuchetRockDamage)
       end
 
       if baseMeleeDamage ~= nil then
@@ -662,7 +759,7 @@ namespace.apply_rebalance = function(config)
         elseif unit == "European knight" then
           core.writeCodeInteger(knight_building_melee_addr - 55, wallDamage)
         elseif unit == "Monk" then
-          core.writeCodeInteger(monk_building_melee_addr - 43, wallDamage)
+          core.writeCodeInteger(monk_building_melee_addr - 52, wallDamage)
         elseif unit == "Lord" then
           core.writeCodeInteger(lord_building_melee_addr - 66, wallDamage)
         elseif unit == "Battering ram" then
@@ -855,8 +952,6 @@ namespace.apply_rebalance = function(config)
         elseif res_name == "Armor" then
           core.writeCodeByte(armourer_func+8, baseDelivery)
         end
-
-        
       end
 
       if skirmishBonus ~= nil then
@@ -1297,6 +1392,13 @@ namespace.apply_rebalance = function(config)
     end
   end
 
+  if enable_ai_ascension ~= nil then
+    if data.version.isExtreme() then
+      ai_ascension_extras()
+    else
+      log(WARNING, "AI Ascension mode is only supported in SHC Extreme!")
+    end
+  end
 
 end
 
