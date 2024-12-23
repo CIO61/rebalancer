@@ -184,13 +184,6 @@ local function ascension_extras()
   core.writeCodeByte(0x400000 + 0x13D63C, 42) -- AI Fireballista building harass range.   
   core.writeCodeByte(0x400000 + 0x13D64E, 68) -- AI Cata and Trebuchet building harass range.   
 
-  -- core.writeCodeByte(0x400000 + 0xE7F1A, 80) -- Assassin full uncloak range, part 1.
-  -- core.writeCodeByte(0x400000 + 0xEA637, 80) -- Assassin full uncloak range, part 2.
-
-  -- core.writeCodeInteger(0x400000 + 0xE847C, 120) -- Assassin partial uncloak range, part 1.
-  -- core.writeCodeInteger(0x400000 + 0xEA5FF, 120) -- Assassin partial uncloak range, part 2.
-  -- core.writeCodeInteger(0x400000 + 0xB6E88, 120) -- Assassin partial uncloak range, part 3.
-
   core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
 
   core.writeCodeInteger(0x400000 + 0x17A08A, 20) -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
