@@ -184,12 +184,12 @@ local function ascension_extras()
   core.writeCodeByte(0x400000 + 0x13D63C, 42) -- AI Fireballista building harass range.   
   core.writeCodeByte(0x400000 + 0x13D64E, 68) -- AI Cata and Trebuchet building harass range.   
 
-  core.writeCodeByte(0x400000 + 0xE7F1A, 80) -- Assassin full uncloak range, part 1.
-  core.writeCodeByte(0x400000 + 0xEA637, 80) -- Assassin full uncloak range, part 2.
+  -- core.writeCodeByte(0x400000 + 0xE7F1A, 80) -- Assassin full uncloak range, part 1.
+  -- core.writeCodeByte(0x400000 + 0xEA637, 80) -- Assassin full uncloak range, part 2.
 
-  core.writeCodeInteger(0x400000 + 0xE847C, 120) -- Assassin partial uncloak range, part 1.
-  core.writeCodeInteger(0x400000 + 0xEA5FF, 120) -- Assassin partial uncloak range, part 2.
-  core.writeCodeInteger(0x400000 + 0xB6E88, 120) -- Assassin partial uncloak range, part 3.
+  -- core.writeCodeInteger(0x400000 + 0xE847C, 120) -- Assassin partial uncloak range, part 1.
+  -- core.writeCodeInteger(0x400000 + 0xEA5FF, 120) -- Assassin partial uncloak range, part 2.
+  -- core.writeCodeInteger(0x400000 + 0xB6E88, 120) -- Assassin partial uncloak range, part 3.
 
   core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
 
@@ -368,11 +368,11 @@ local function enable_rebalance_features()
 
   core.writeCodeByte(baker_func, 0x90)  -- nop out original push ebx
   core.insertCode(baker_func, 8, {}, baker_func+6, "after")
-  core.writeCodeBytes(baker_func+6, {0x6A, 0x01})
+  core.writeCodeBytes(baker_func+6, {0x6A, 0x00})
 
   core.writeCodeByte(wheatfarmer_func, 0x90)  -- nop out original push ebx
   core.insertCode(wheatfarmer_func, 8, {}, wheatfarmer_func+6, "after")
-  core.writeCodeBytes(wheatfarmer_func+6, {0x6A, 0x01})
+  core.writeCodeBytes(wheatfarmer_func+6, {0x6A, 0x00})
 
   core.writeCodeByte(brewer_func, 0x90)  -- nop out original push ebp
   core.writeCodeByte(brewer_func+8, 0x90)  -- nop out original push ebp
@@ -800,9 +800,9 @@ namespace.apply_rebalance = function(config)
         elseif unit == "European spearman" then
           core.writeCodeByte(spearman_building_melee_addr+9, buildingDamage)
         elseif unit == "European pikeman" then
-          core.writeCodeByte(maceman_building_melee_addr+9, buildingDamage)
-        elseif unit == "European maceman" then
           core.writeCodeByte(pikeman_building_melee_addr+9, buildingDamage)
+        elseif unit == "European maceman" then
+          core.writeCodeByte(maceman_building_melee_addr+9, buildingDamage)
         elseif unit == "European swordsman" then
           core.writeCodeByte(swordsman_building_melee_addr+9, buildingDamage)
         elseif unit == "European knight" then
