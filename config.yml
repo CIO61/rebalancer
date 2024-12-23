@@ -18,6 +18,23 @@ config-sparse:
           enabled:
             contents:
               required-value: false
+        o_shfy:
+          o_shfy_beer:
+            enabled:
+              contents:
+                required-value: false
+          o_shfy_religion:
+            enabled:
+              contents:
+                required-value: false
+          o_shfy_peasantspawnrate:
+            enabled:
+              contents:
+                required-value: false
+          o_shfy_resourcequantity:
+            enabled:
+              contents:
+                required-value: false
     rebalancer:
       config: {}
   plugins: {}
