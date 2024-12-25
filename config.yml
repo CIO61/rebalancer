@@ -18,6 +18,10 @@ config-sparse:
           enabled:
             contents:
               required-value: false
+        u_spearmen_run:
+          enabled:
+            contents:
+              value: false
         o_shfy:
           o_shfy_beer:
             enabled:
