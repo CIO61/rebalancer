@@ -120,7 +120,8 @@ local beer_addr_1 = locate_aob("83 FE 19 7D 04 33 C0 EB 2B 83 FE 32 7D 07 B8 32 
 local beer_addr_2 = locate_aob("83 F8 19 7D 04 33 F6 EB 2E 83 F8 32 7D 07 BE 32 00 00 00 EB 22 83 F8 4B 7D 07 BE 64 00 00 00 EB 16 33 C9 83 F8 64 0F 9D C1 83 E9 01 83 E1 CE 81 C1 C8 00 00 00 8B F1")
 local beer_addr_3 = locate_aob("83 F8 19 89 84 3E ? ? ? ? 7D 04 33 C0 EB 2E 83 F8 32 7D 07 B8 32 00 00 00 EB 22 83 F8 4B 7D 07 B8 64 00 00 00 EB 16 33 D2 83 F8 64 0F 9D C2 83 EA 01 83 E2 CE 81 C2 C8 00 00 00 8B C2")
 local beer_coverage_addr = locate_aob("7F 05 33 C0 C2 04 00 8B 89 ? ? ? ? 85 C9 7E F1 69 C0 B8 0B 00 00 99")
-
+local flagon_mul_addr = locate_aob("69 C0 2C 03 00 00 66 81 80 ? ? ? ? A0 00")
+local flagon_inn_display_addr = locate_aob("8D B6 ? ? ? ? 50 B8 67 66 66 66 F7 E9 C1 FA 06")
 -- food related addresses
 local food_addr_1 = locate_aob("BE 38 FF FF FF EB 49 8B 0D ? ? ? ? 69 C9 ? ? ? ? 8B 81 ? ? ? ? 83 F8 04 75 07 BE C8 00 00 00 EB 2B 83 F8 03 75 05 8D 70 61 EB 21 83 F8 02 75 04 33 F6 EB 18 3B C3 75 07 BE 9C FF FF FF EB 0D 85 C0 BE 38 FF FF FF 74 04")
 local food_addr_2 = locate_aob("BE 38 FF FF FF EB 3C 8B 88 ? ? ? ? 83 F9 04 75 07 BE C8 00 00 00 EB 2A 83 F9 03 75 05 8D 71 61 EB 20 83 F9 02 75 04 33 F6 EB 17 83 F9 01 75 05 8D 71 9B EB 0D 85 C9 BE 38 FF FF FF 74 04")
@@ -133,7 +134,7 @@ local ff_addr_3 = locate_aob("8B 84 3E ? ? ? ? 83 F8 01 7C 09 6B C0 19 89 44 24 
 local productivity_addr = locate_aob("C7 01 96 00 00 00 EB 7A 83 F8 FC 7F 08 C7 01 8C 00 00 00 EB 6D 83 F8 FD 7F 08 C7 01")
 local ff_coverage_addr = locate_aob("C1 F9 04 83 C1 01 2B 46 F8")
 local combat_bonus_memory_addr = locate_aob("83 C0 14 0F AF 44 24 04 8D 0C 80 B8 1F 85 EB 51 F7 E9")
-
+local resting_factor_addr = locate_aob("69 F6 ? ? ? ? 66 83 86 ? ? ? ? 01")+13
 -- tax related addresses
 local tax_addr = locate_aob("8B 44 24 08 83 C0 FF 0F AF 44 24 0C 99 2B C2 D1 F8")
 local bribe_addr = locate_aob("B8 05 00 00 00 2B 44 24 08 0F AF 44 24 0C 99")
@@ -146,6 +147,11 @@ local keep_menu_addr = locate_aob("83 F8 03 7D 07 83 7C 24 10 00 7E 2B 85 C0 75 
 local pop_report_addr = locate_aob("83 B8 ? ? ? ? 03 7D 11 83 7C 24 18 00 7F 0A BE 19 00 00 00 E9")
 local actual_effect_addr = locate_aob("83 F8 03 7D 0E 85 ED 7F 0A B8 19 00 00 00 E9 86 00 00")
 local multipliers_addr_base = locate_aob("69 C0 FA 00 00 00 8B C8 B8 1F 85 EB 51 F7 E9 C1 FA 05 8B C2 C1 E8 1F")
+
+-- castle defence addresses
+local pitch_ditch_costaddr = locate_aob("5D 66 C7 06 01 00")+4
+local killing_pit_dmg_addr = locate_aob("75 7D 81 86 ? ? ? ? B0 B9 FF FF")+8
+local dog_threshold_addr = locate_aob("E8 ? ? ? ? 83 3D ? ? ? ? 19 7D 0D")+11
 
 local function get_unit_melee_dmg_address(attacker, defender)
   local attacker_idx = table.find(unit_names, attacker) - 1
@@ -177,8 +183,6 @@ local function double_iron_pickup()
 end
 
 local function ascension_extras()
-  core.writeCodeByte(0x400000 + 0x16FF92, 18) -- Unit power level required around a dog cage for it to trigger.   
-  core.writeCodeByte(0x400000 + 0x149F67, 2) -- "Count path to positive fearfactor twice for resting.", 
   core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
 
   -- {"description":"Spearmen running only enemies, code edit 1.
@@ -208,21 +212,7 @@ local function ascension_extras()
 
   core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
 
-  core.writeCodeInteger(0x400000 + 0x17A08A, 20) -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
-  core.writeCodeByte(0x400000 + 0x17A089, 0xB8)  -- Custom unit to closest enemy distance update rate cap, code adjustment 1
-  core.writeCodeByte(0x400000 + 0x17A08E, 0x90)  -- Custom unit to closest enemy distance update rate cap, code adjustment 2
-
-  core.writeCodeSmallInteger(0x400000 + 0x141777, 120) -- Flagons per beer.   
   core.writeCodeSmallInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
-  core.writeCodeInteger(0x400000 + 0x3B22C, 120) -- Flagons per beer, inn display value.
-  core.writeCodeBytes(0x400000 + 0x3B227, {
-    0x31, 0xD2, 0x8B, 0xC1, 0xB9
-  })  -- Flagons per beer, inn display value, code adjustment 1.   
-  core.writeCodeBytes(0x400000 + 0x3B230, {
-    0xF7, 0xF1, 0x50, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
-  })  -- Flagons per beer, inn display value, code adjustment 2.  
-
-  core.writeCodeSmallInteger(0x400000 + 0x1C14B, 3) -- Pitch ditch cost modifier. (2 per pitch instead of 4)
 
   core.writeCodeInteger(0x400000 + 0x1B635C, 40) -- "Archer base range.",
   core.writeCodeInteger(0x400000 + 0x1B6374, 40) -- "Crossbowman base range.",
@@ -311,6 +301,14 @@ local function ascension_extras()
   core.writeCodeBytes(0x400000 + 0x1734A2, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})  -- no rally running for Slingers
   core.writeCodeBytes(0x400000 + 0x174A49, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})  -- no rally running for Assassins
   core.writeCodeBytes(0x400000 + 0x177012, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})  -- no rally running for Fire Throwers
+end
+
+local function mp_ascension_extras()
+  core.writeCodeInteger(0x400000 + 0x17A08A, 20) -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
+  core.writeCodeByte(0x400000 + 0x17A089, 0xB8)  -- Custom unit to closest enemy distance update rate cap, code adjustment 1
+  core.writeCodeByte(0x400000 + 0x17A08E, 0x90)  -- Custom unit to closest enemy distance update rate cap, code adjustment 2
+
+  ascension_extras()
 end
 
 local function ai_ascension_extras()
@@ -621,6 +619,7 @@ namespace.apply_rebalance = function(config)
   local fear_factor = config["fear_factor"]
   local taxation = config["taxation"]
   local siege = config["siege"]
+  local castle = config["castle"]
   local enable_ascension = config["enable_ascension"]
   local enable_ai_ascension = config["enable_ai_ascension"]
   local enable_iron_double_pickup = config["enable_iron_double_pickup"]
@@ -846,6 +845,9 @@ namespace.apply_rebalance = function(config)
       end
 
       if fortificationDamagePenalty ~= nil then
+        if val > 0 then
+          val = -val
+        end
         if unit == "Tunneler" then
           core.writeCodeByte(tunneller_building_melee_addr+6, fortificationDamagePenalty)
         elseif unit == "European archer" then
@@ -1156,6 +1158,17 @@ namespace.apply_rebalance = function(config)
       if key == "coverage_per_inn" then
         core.writeCodeInteger(beer_coverage_addr+19, val*100)
       end
+      if key == "flagons_per_beer" then
+        core.writeCodeSmallInteger(flagon_mul_addr+13, val)
+        core.writeCodeBytes(flagon_inn_display_addr+7, core.compile({
+          0x31, 0xD2, -- xor edx, edx
+          0x8B, 0xC1, -- mov eax, ecx
+          0xB9, core.itob(val), -- mov eax, val
+          0xF7, 0xF1, -- div ecx
+          0x50,   -- push eax
+          0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+        }, flagon_inn_display_addr+7))
+      end
     end
   end
 
@@ -1252,6 +1265,9 @@ namespace.apply_rebalance = function(config)
         core.writeCode(custom_combat_addr, custom_combat_instructions, true)
         core.writeCode(combat_bonus_memory_addr, combat_jumpout_instructions, true)
       end
+      if key == "resting_factor" then
+        core.writeCodeByte(resting_factor_addr, val)
+      end
     end
   end
 
@@ -1333,13 +1349,41 @@ namespace.apply_rebalance = function(config)
 
   end
 
+  if castle ~= nil then
+    for key, val in pairs(castle) do
+      if key == "ditch_per_pitch" then
+        -- (5-x) % 4 could be a simplification
+        if val == 1 then -- 0
+          core.writeCodeSmallInteger(pitch_ditch_costaddr, 0)
+        elseif val == 2 then -- 3
+          core.writeCodeSmallInteger(pitch_ditch_costaddr, 3)
+        elseif val == 3 then -- 2
+          core.writeCodeSmallInteger(pitch_ditch_costaddr, 2)
+        elseif val == 4 then -- 1
+          core.writeCodeSmallInteger(pitch_ditch_costaddr, 1)
+        else
+          log(WARNING, "Ditch per pitch can only be a value from 1 to 4.")
+        end
+      end
+      if key == "killing_pit_damage" then
+        if val > 0 then  -- force negative value
+          val = -val
+        end
+        core.writeCodeInteger(killing_pit_dmg_addr, val)
+      end
+      if key == "dog_trigger_threshold" then
+        core.writeCodeByte(dog_threshold_addr, val)
+      end
+    end
+  end
+
   if enable_iron_double_pickup then
     double_iron_pickup()
   end
 
   if enable_ascension ~= nil then
     if data.version.isExtreme() then
-      ascension_extras()
+      mp_ascension_extras()
     else
       log(WARNING, "Ascension mode is only supported in SHC Extreme!")
     end

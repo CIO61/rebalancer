@@ -385,6 +385,10 @@
         "coverage":{
           "type": "integer",
           "description": "2^X people per fear factor building requirement to increase. Example: 4 means 2^4=16 means by 16 population, player would require one additional fear factor building per level. Vanilla is 4"
+        },
+        "resting_factor": {
+          "type": "integer",
+          "description": "Multiplier for how much walking to gardens is required, vanilla is 1. Making this value bigger would mean less walking between good things under positive fear factor"
         }
       }
     },
@@ -428,6 +432,10 @@
         },
         "coverage_per_inn": {
           "description": "People covered per active Inn\nVanilla is 30",
+          "type": "integer"
+        },
+        "flagons_per_beer": {
+          "description": "How many flagons are supplied from 1 unit of beer, vanilla is 160",
           "type": "integer"
         }
       }
@@ -515,11 +523,11 @@
               "$ref": "#/$defs/numeric_string"
             },
             "fortificationDamagePenalty": {
-              "description": "Melee damage towards tower and gates, is represented as penalty on buildingDamage (so a negative value!)",
+              "description": "Melee damage towards towers, is represented as penalty on buildingDamage\nCan be written as either a negative or normal number, it will be interpreted as negative either way.",
               "$ref": "#/$defs/numeric_string"
             },
             "wallDamage": {
-              "description": "Melee damage towards walls.",
+              "description": "Melee damage towards walls and gatehouses.",
               "$ref": "#/$defs/numeric_string"
             },
             "powerLevel": {
@@ -591,6 +599,23 @@
         "siegeProjectileOneShotThreshold": {
           "description": "Threshold for a siege projectile damage to insta-kill a unit, vanilla is 20000",
           "$ref": "#/$defs/numeric_string"
+        }
+      }
+    },
+    "castle": {
+      "type": "object",
+      "properties": {
+        "ditch_per_pitch": {
+          "description": "How many tiles of pitch ditch can be placed using 1 pitch in stockpile (Vanilla is 4)\nCan only be a value from 1 to 4",
+          "enum": [1, 2, 3, 4]
+        },
+        "killing_pit_damage": {
+          "type": "integer",
+          "description": "How much damage a killing pit does (Vanilla is 18000)"
+        },
+        "dog_trigger_threshold": {
+          "type": "integer",
+          "description": "Total enemy unit strength nearby a dogcage for it to release the dogs, use this in combination with powerLevel attribute of units."
         }
       }
     },
