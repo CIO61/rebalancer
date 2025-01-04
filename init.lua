@@ -154,6 +154,9 @@ local pitch_ditch_costaddr = locate_aob("5D 66 C7 06 01 00")+4
 local killing_pit_dmg_addr = locate_aob("75 7D 81 86 ? ? ? ? B0 B9 FF FF")+8
 local dog_threshold_addr = locate_aob("E8 ? ? ? ? 83 3D ? ? ? ? 19 7D 0D")+11
 
+-- leather_per_cow address
+local leather_per_cow_address = locate_aob("53 6A 03 6A 03 6A 05 52 50")
+
 local function get_unit_melee_dmg_address(attacker, defender)
   local attacker_idx = table.find(unit_names, attacker) - 1
   local defender_idx = table.find(unit_names, defender) - 1
@@ -624,6 +627,7 @@ namespace.apply_rebalance = function(config)
   local enable_ascension = config["enable_ascension"]
   local enable_ai_ascension = config["enable_ai_ascension"]
   local enable_iron_double_pickup = config["enable_iron_double_pickup"]
+  local leather_per_cow = config["leather_per_cow"]
   local address = 0
 
   if buildings ~= nil then    
@@ -1384,6 +1388,11 @@ namespace.apply_rebalance = function(config)
 
   if enable_iron_double_pickup then
     double_iron_pickup()
+  end
+
+  if leather_per_cow then
+    core.writeCodeByte(leather_per_cow_address+2, leather_per_cow)
+    core.writeCodeByte(leather_per_cow_address+4, leather_per_cow)
   end
 
   if enable_ascension ~= nil then
