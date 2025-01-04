@@ -845,8 +845,8 @@ namespace.apply_rebalance = function(config)
       end
 
       if fortificationDamagePenalty ~= nil then
-        if val > 0 then
-          val = -val
+        if fortificationDamagePenalty > 0 then
+          fortificationDamagePenalty = -fortificationDamagePenalty
         end
         if unit == "Tunneler" then
           core.writeCodeByte(tunneller_building_melee_addr+6, fortificationDamagePenalty)
