@@ -455,6 +455,10 @@
           "items": {
             "type": "integer"
           }
+        },
+        "food_value": {
+          "type": "integer",
+          "description": "Amount of food value provided by 1 food unit. Making this number bigger would mean people need less food, and vice versa.\nVanilla is 15000"
         }
       }
     },

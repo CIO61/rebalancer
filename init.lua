@@ -126,6 +126,7 @@ local flagon_inn_display_addr = locate_aob("8D B6 ? ? ? ? 50 B8 67 66 66 66 F7 E
 local food_addr_1 = locate_aob("BE 38 FF FF FF EB 49 8B 0D ? ? ? ? 69 C9 ? ? ? ? 8B 81 ? ? ? ? 83 F8 04 75 07 BE C8 00 00 00 EB 2B 83 F8 03 75 05 8D 70 61 EB 21 83 F8 02 75 04 33 F6 EB 18 3B C3 75 07 BE 9C FF FF FF EB 0D 85 C0 BE 38 FF FF FF 74 04")
 local food_addr_2 = locate_aob("BE 38 FF FF FF EB 3C 8B 88 ? ? ? ? 83 F9 04 75 07 BE C8 00 00 00 EB 2A 83 F9 03 75 05 8D 71 61 EB 20 83 F9 02 75 04 33 F6 EB 17 83 F9 01 75 05 8D 71 9B EB 0D 85 C9 BE 38 FF FF FF 74 04")
 local food_addr_3 = locate_aob("B9 38 FF FF FF EB 3F 8B 84 3E ? ? ? ? 85 C0 75 07 B9 38 FF FF FF EB 2D 83 F8 01 75 05 8D 48 9B EB 23 83 F8 02 75 04 33 C9 EB 1A 83 F8 04 75")
+local food_point_addr = locate_aob("0E 3B CD 74 25 B8 98 3A 00 00 99")+6
 
 -- fear factor related addresses
 local ff_addr_1 = locate_aob("8B 82 ? ? ? ? 83 F8 01 7C 05 6B C0 19 EB 0C 83 F8 FF 7F 05 6B C0 19")
@@ -1206,6 +1207,10 @@ namespace.apply_rebalance = function(config)
         core.writeCodeByte(food_addr_3 + 84, val[1])
         core.writeCodeByte(food_addr_3 + 94, val[2])
         core.writeCodeByte(food_addr_3 + 104, val[3])
+      end
+      if key == "food_value" then
+        core.writeCodeInteger(food_point_addr, val)
+        core.writeCodeInteger(food_point_addr+242, val)
       end
     end
   end
