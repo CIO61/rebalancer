@@ -388,7 +388,7 @@
         },
         "resting_factor": {
           "type": "integer",
-          "description": "Multiplier for how much walking to gardens is required, vanilla is 1. Making this value bigger would mean less walking between good things under positive fear factor"
+          "description": "Multiplier for how much walking to gardens is counted towards the required, vanilla is 1. Making this value bigger would mean less walking between good things under positive fear factor"
         }
       }
     },
