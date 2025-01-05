@@ -530,6 +530,10 @@
               "description": "Melee damage towards towers, is represented as penalty on buildingDamage\nCan be written as either a negative or normal number, it will be interpreted as negative either way.",
               "$ref": "#/$defs/numeric_string"
             },
+            "fortificationDamage": {
+              "description": "Melee damage towards sturdy buildings.(which is only towers in vanilla) Overrides fortificationDamagePenalty!",
+              "$ref": "#/$defs/numeric_string"
+            },
             "wallDamage": {
               "description": "Melee damage towards walls and gatehouses.",
               "$ref": "#/$defs/numeric_string"

@@ -731,6 +731,7 @@ namespace.apply_rebalance = function(config)
       local meleeDamageVs = stats["meleeDamageVs"]
       local buildingDamage = stats["buildingDamage"]
       local fortificationDamagePenalty = stats["fortificationDamagePenalty"]
+      local fortificationDamage = stats["fortificationDamage"]
       local wallDamage = stats["wallDamage"]
       local powerLevel = stats["powerLevel"]
       local meleeEngage = stats["meleeEngage"]
@@ -889,6 +890,62 @@ namespace.apply_rebalance = function(config)
           core.writeCodeByte(arabsword_building_melee_addr+6, fortificationDamagePenalty)
         elseif unit == "Arabian firethrower" then
           core.writeCodeByte(firethrower_building_melee_addr+6, fortificationDamagePenalty)
+        end
+      end
+
+      if fortificationDamage ~= nil then
+        if unit == "Tunneler" then
+          local fdp = core.readByte(tunneller_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(tunneller_building_melee_addr+6, -fdp)
+        elseif unit == "European archer" then
+          local fdp = core.readByte(archer_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(archer_building_melee_addr+6, -fdp)
+        elseif unit == "European crossbowman" then
+          local fdp = core.readByte(crossbow_building_melee_addr+4) - fortificationDamage
+          core.writeCodeByte(crossbow_building_melee_addr+2, fdp)
+        elseif unit == "European spearman" then
+          local fdp = core.readByte(spearman_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(spearman_building_melee_addr+6, -fdp)
+        elseif unit == "European pikeman" then
+          local fdp = core.readByte(pikeman_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(pikeman_building_melee_addr+6, -fdp)
+        elseif unit == "European maceman" then
+          local fdp = core.readByte(maceman_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(maceman_building_melee_addr+6, -fdp)
+        elseif unit == "European swordsman" then
+          local fdp = core.readByte(swordsman_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(swordsman_building_melee_addr+6, -fdp)
+        elseif unit == "European knight" then
+          local fdp = core.readByte(knight_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(knight_building_melee_addr+6, -fdp)
+        elseif unit == "Monk" then
+          local fdp = core.readByte(monk_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(monk_building_melee_addr+6, -fdp)
+        elseif unit == "Lord" then
+          local fdp = core.readByte(lord_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(lord_building_melee_addr+6, -fdp)
+        elseif unit == "Battering ram" then
+          log(WARNING, "Battering ram fortificationDamage is not supported.")
+        elseif unit == "Arabian archer" then
+          local fdp = core.readByte(arabbow_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(arabbow_building_melee_addr+6, -fdp)
+        elseif unit == "Arabian slave" then
+          log(WARNING, "Arabian slave fortificationDamage is not supported.")
+        elseif unit == "Arabian slinger" then
+          local fdp = core.readByte(slinger_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(slinger_building_melee_addr+6, -fdp)
+        elseif unit == "Arabian assassin" then
+          local fdp = core.readByte(assassin_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(assassin_building_melee_addr+6, -fdp)
+        elseif unit == "Arabian horse archer" then
+          local fdp = core.readByte(horsearcher_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(horsearcher_building_melee_addr+6, -fdp)
+        elseif unit == "Arabian swordsman" then
+          local fdp = core.readByte(arabsword_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(arabsword_building_melee_addr+6, -fdp)
+        elseif unit == "Arabian firethrower" then
+          local fdp = core.readByte(firethrower_building_melee_addr+9) - fortificationDamage
+          core.writeCodeByte(firethrower_building_melee_addr+6, -fdp)
         end
       end
 
