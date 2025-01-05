@@ -851,6 +851,7 @@ namespace.apply_rebalance = function(config)
       end
 
       if fortificationDamagePenalty ~= nil then
+        log(WARNING, string.format("[%s] fortificationDamagePenalty is deprecated and will be removed soon, update your config to use fortificationDamage instead!", unit))
         if fortificationDamagePenalty > 0 then
           fortificationDamagePenalty = -fortificationDamagePenalty
         end
@@ -1191,6 +1192,19 @@ namespace.apply_rebalance = function(config)
         core.writeCodeByte(beer_addr_1 + 23, val[3])
         core.writeCodeByte(beer_addr_1 + 37, val[4])
 
+        -- next level at: %## informative texts
+        core.writeCodeByte(beer_addr_1 + 95+2, val[1])
+        core.writeCodeInteger(beer_addr_1 + 95+6, val[1])
+
+        core.writeCodeByte(beer_addr_1 + 95+14, val[2])
+        core.writeCodeInteger(beer_addr_1 + 95+18, val[2])
+
+        core.writeCodeByte(beer_addr_1 + 95+26, val[3])
+        core.writeCodeInteger(beer_addr_1 + 95+30, val[3])
+
+        core.writeCodeByte(beer_addr_1 + 95+38, val[4])
+        core.writeCodeInteger(beer_addr_1 + 95+42, val[4])
+
         core.writeCodeByte(beer_addr_2 + 2 , val[1])
         core.writeCodeByte(beer_addr_2 + 11 , val[2])
         core.writeCodeByte(beer_addr_2 + 23 , val[3])
@@ -1230,6 +1244,87 @@ namespace.apply_rebalance = function(config)
           0x50,   -- push eax
           0x90, 0x90, 0x90, 0x90, 0x90, 0x90
         }, flagon_inn_display_addr+7))
+      end
+      if key == "multipliers" then
+        local linear_scaling_code = [[
+        push ebx
+        xor ebx, ebx
+        cmp eax, threshold_1
+        jnl label_1
+        imul eax, multiplier_1
+        add ebx, eax
+        jmp end_label
+          label_1:
+        cmp eax, threshold_2
+        jnl label_2
+        sub eax, threshold_1
+        add ebx, threshold_1*multiplier_1
+        imul eax, multiplier_2
+        add ebx, eax
+        jmp end_label
+          label_2:
+        cmp eax, threshold_3
+        jnl label_3
+        sub eax, threshold_2
+        add ebx, threshold_1*multiplier_1 + (threshold_2-threshold_1)*multiplier_2
+        imul eax, multiplier_3
+        add ebx, eax
+        jmp end_label
+          label_3:
+        cmp eax, threshold_4
+        jnl label_4
+        sub eax, threshold_3
+        add ebx, threshold_1*multiplier_1 + (threshold_2-threshold_1)*multiplier_2 + (threshold_3-threshold_2)*multiplier_3
+        imul eax, multiplier_4
+        add ebx, eax
+        jmp end_label
+          label_4:
+        add ebx, threshold_1*multiplier_1 + (threshold_2-threshold_1)*multiplier_2 + (threshold_3-threshold_2)*multiplier_3 + (threshold_4-threshold_3)*multiplier_4
+          end_label:
+        mov eax, ebx
+        pop ebx
+      ]]
+        local beer_thresholds = beer["thresholds"]
+        if beer_thresholds == nil then
+          beer_thresholds = {25, 50, 75, 100}
+        end
+        local assembled_code = core.assemble(linear_scaling_code,{
+          threshold_1 = beer_thresholds[1],
+          threshold_2 = beer_thresholds[2],
+          threshold_3 = beer_thresholds[3],
+          threshold_4 = beer_thresholds[4],
+          multiplier_1 = 3,
+          multiplier_2 = 2,
+          multiplier_3 = 2,
+          multiplier_4 = 1
+        },0)
+        -- local code_addr = core.allocateCode(core.calculateCodeSize(assembled_code))
+        -- core.writeCodeBytes(code_addr, assembled_code)
+        -- 50 -- push eax, 56 -- push esi, 58 -- pop eax, 5E -- pop esi
+        -- beer_addr_1 (52 bytes) info: esi target: eax
+        core.writeCodeBytes(beer_addr_1, {
+          0x56, -- push esi
+          0x8B, 0xC6 -- mov eax esi
+        })
+        core.insertCode(beer_addr_1+3, 47, assembled_code)
+        core.writeCodeBytes(beer_addr_1+50, {
+          0x59,  -- pop ecx (push ecx happens for some reason)
+          0x5E  -- pop esi
+        })
+        -- beer_addr_2 (55 bytes) info: eax target: esi
+        core.writeCodeBytes(beer_addr_2, {
+          0x50 -- push eax
+        })
+        core.insertCode(beer_addr_2+1, 50, assembled_code)
+        core.writeCodeBytes(beer_addr_2+51, {
+          0x59, -- pop ecx (push ecx happens for some reason)
+          0x8B, 0xF0, -- mov esi eax
+          0x58 -- pop eax
+        })
+
+        -- beer_addr_3 (62 bytes) info: eax target: eax
+        core.insertCode(beer_addr_3, 61, assembled_code)
+        core.writeCodeByte(beer_addr_3+61, 0x59) -- pop ecx (push ecx happens for some reason)
       end
     end
   end
