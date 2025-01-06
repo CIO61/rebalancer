@@ -1,5 +1,6 @@
 local constants = require("constants")
 local addresses = require("addresses")
+local templates = require("templates")
 
 local building_names = constants.building_names
 local unit_names = constants.unit_names
@@ -24,6 +25,8 @@ local unit_blessable_base = addresses.unit_blessable_base
 local towers_or_gates_base = addresses.towers_or_gates_base
 local unit_gold_jumplist_addr = addresses.unit_gold_jumplist_addr
 local tax_popularity_offset = addresses.tax_popularity_offset
+
+local linear_scaling_code = templates.linear_scaling_code
 
 local archer_idx = table.find(unit_names, "European archer")
 local arabbow_idx = table.find(unit_names, "Arabian archer")
@@ -1170,7 +1173,52 @@ namespace.apply_rebalance = function(config)
         core.writeCodeInteger(religion_addr_3 + 27, val[2])
         core.writeCodeByte(religion_addr_3 + 46, val[3]-val[4])
         core.writeCodeByte(religion_addr_3 + 49, val[4])
+      end
+      if key == "multipliers" then
+        local religion_thresholds = religion["thresholds"]
+        if religion_thresholds == nil then
+          religion_thresholds = {25, 50, 75, 100} -- vanilla thresholds are 24 49 74 94
         end
+        local assembled_code = core.assemble(linear_scaling_code,{
+          threshold_1 = religion_thresholds[1],
+          threshold_2 = religion_thresholds[2],
+          threshold_3 = religion_thresholds[3],
+          threshold_4 = religion_thresholds[4],
+          multiplier_1 = val[1],
+          multiplier_2 = val[2],
+          multiplier_3 = val[3],
+          multiplier_4 = val[4]
+        },0)
+        assembled_code["n"] = nil
+
+        -- religion_addr_1 (53 bytes)
+        -- info:eax 
+        -- target:ecx
+        print(string.format("religion_addr_1: %x", religion_addr_1))
+        core.writeCodeByte(religion_addr_1, 0x50) -- push eax
+        core.insertCode(religion_addr_1+1, 49, assembled_code)
+        core.writeCodeBytes(religion_addr_1+50, {
+          0x8B, 0xC8, -- mov ecx, eax
+          0x58        -- pop eax
+        })
+        
+        -- religion_addr_2 (55 bytes)
+        -- info: eax 
+        -- target: eax
+        print(string.format("religion_addr_2: %x", religion_addr_2))
+        core.insertCode(religion_addr_2, 55, assembled_code)
+        
+        -- religion_addr_3 (55 bytes)
+        -- info: eax 
+        -- target: esi
+        print(string.format("religion_addr_3: %x", religion_addr_3))
+        core.writeCodeByte(religion_addr_3, 0x50) -- push eax
+        core.insertCode(religion_addr_3+1, 51, assembled_code)
+        core.writeCodeBytes(religion_addr_3+52, {
+          0x8B, 0xF0, -- mov esi, eax
+          0x58        -- pop eax
+        })
+      end
       if key == "church_bonus" then
         core.writeCodeByte(religion_addr_1 + 64, val)
         core.writeCodeByte(religion_addr_2 + 448, val)
@@ -1246,44 +1294,6 @@ namespace.apply_rebalance = function(config)
         }, flagon_inn_display_addr+7))
       end
       if key == "multipliers" then
-        local linear_scaling_code = [[
-        push ebx
-        xor ebx, ebx
-        cmp eax, threshold_1
-        jnl label_1
-        imul eax, multiplier_1
-        add ebx, eax
-        jmp end_label
-          label_1:
-        cmp eax, threshold_2
-        jnl label_2
-        sub eax, threshold_1
-        add ebx, threshold_1*multiplier_1
-        imul eax, multiplier_2
-        add ebx, eax
-        jmp end_label
-          label_2:
-        cmp eax, threshold_3
-        jnl label_3
-        sub eax, threshold_2
-        add ebx, threshold_1*multiplier_1 + (threshold_2-threshold_1)*multiplier_2
-        imul eax, multiplier_3
-        add ebx, eax
-        jmp end_label
-          label_3:
-        cmp eax, threshold_4
-        jnl label_4
-        sub eax, threshold_3
-        add ebx, threshold_1*multiplier_1 + (threshold_2-threshold_1)*multiplier_2 + (threshold_3-threshold_2)*multiplier_3
-        imul eax, multiplier_4
-        add ebx, eax
-        jmp end_label
-          label_4:
-        add ebx, threshold_1*multiplier_1 + (threshold_2-threshold_1)*multiplier_2 + (threshold_3-threshold_2)*multiplier_3 + (threshold_4-threshold_3)*multiplier_4
-          end_label:
-        mov eax, ebx
-        pop ebx
-      ]]
         local beer_thresholds = beer["thresholds"]
         if beer_thresholds == nil then
           beer_thresholds = {25, 50, 75, 100}
@@ -1293,11 +1303,12 @@ namespace.apply_rebalance = function(config)
           threshold_2 = beer_thresholds[2],
           threshold_3 = beer_thresholds[3],
           threshold_4 = beer_thresholds[4],
-          multiplier_1 = 3,
-          multiplier_2 = 2,
-          multiplier_3 = 2,
-          multiplier_4 = 1
+          multiplier_1 = val[1],
+          multiplier_2 = val[2],
+          multiplier_3 = val[3],
+          multiplier_4 = val[4]
         },0)
+        assembled_code["n"] = nil
         -- local code_addr = core.allocateCode(core.calculateCodeSize(assembled_code))
         -- core.writeCodeBytes(code_addr, assembled_code)
         -- 50 -- push eax, 56 -- push esi, 58 -- pop eax, 5E -- pop esi
@@ -1306,25 +1317,22 @@ namespace.apply_rebalance = function(config)
           0x56, -- push esi
           0x8B, 0xC6 -- mov eax esi
         })
-        core.insertCode(beer_addr_1+3, 47, assembled_code)
-        core.writeCodeBytes(beer_addr_1+50, {
-          0x59,  -- pop ecx (push ecx happens for some reason)
+        core.insertCode(beer_addr_1+3, 48, assembled_code)
+        core.writeCodeBytes(beer_addr_1+51, {
           0x5E  -- pop esi
         })
         -- beer_addr_2 (55 bytes) info: eax target: esi
         core.writeCodeBytes(beer_addr_2, {
           0x50 -- push eax
         })
-        core.insertCode(beer_addr_2+1, 50, assembled_code)
-        core.writeCodeBytes(beer_addr_2+51, {
-          0x59, -- pop ecx (push ecx happens for some reason)
+        core.insertCode(beer_addr_2+1, 51, assembled_code)
+        core.writeCodeBytes(beer_addr_2+52, {
           0x8B, 0xF0, -- mov esi eax
           0x58 -- pop eax
         })
 
         -- beer_addr_3 (62 bytes) info: eax target: eax
-        core.insertCode(beer_addr_3, 61, assembled_code)
-        core.writeCodeByte(beer_addr_3+61, 0x59) -- pop ecx (push ecx happens for some reason)
+        core.insertCode(beer_addr_3, 62, assembled_code)
       end
     end
   end

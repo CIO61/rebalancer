@@ -343,6 +343,10 @@
           "description": "Popularity bonus for each coverage level of religion\nVanilla is [50, 100, 150, 200]",
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
+        "multipliers": {
+          "description": "Alternative to \"bonuses\", makes it so that every percentage of coverage is counted towards popularity, calculation is made in percentage*value\n[2, 2, 2, 2] would be equivalent of Vanilla.",
+          "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
+        },
         "cathedral_bonus": {
           "description": "Popularity bonus for building cathedral.\nVanilla is 50",
           "type": "integer"
