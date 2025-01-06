@@ -1190,28 +1190,22 @@ namespace.apply_rebalance = function(config)
           multiplier_4 = val[4]
         },0)
         assembled_code["n"] = nil
-
         -- religion_addr_1 (53 bytes)
         -- info:eax 
         -- target:ecx
-        print(string.format("religion_addr_1: %x", religion_addr_1))
         core.writeCodeByte(religion_addr_1, 0x50) -- push eax
         core.insertCode(religion_addr_1+1, 49, assembled_code)
         core.writeCodeBytes(religion_addr_1+50, {
           0x8B, 0xC8, -- mov ecx, eax
           0x58        -- pop eax
         })
-        
         -- religion_addr_2 (55 bytes)
         -- info: eax 
         -- target: eax
-        print(string.format("religion_addr_2: %x", religion_addr_2))
         core.insertCode(religion_addr_2, 55, assembled_code)
-        
         -- religion_addr_3 (55 bytes)
         -- info: eax 
         -- target: esi
-        print(string.format("religion_addr_3: %x", religion_addr_3))
         core.writeCodeByte(religion_addr_3, 0x50) -- push eax
         core.insertCode(religion_addr_3+1, 51, assembled_code)
         core.writeCodeBytes(religion_addr_3+52, {
