@@ -1245,7 +1245,7 @@ namespace.apply_rebalance = function(config)
         core.writeCodeInteger(beer_addr_1 + 95+30, val[3])
 
         core.writeCodeByte(beer_addr_1 + 95+38, val[4])
-        core.writeCodeInteger(beer_addr_1 + 95+42, val[4])
+        core.writeCodeInteger(beer_addr_1 + 95+46, val[4])
 
         core.writeCodeByte(beer_addr_2 + 2 , val[1])
         core.writeCodeByte(beer_addr_2 + 11 , val[2])
