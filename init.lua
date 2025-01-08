@@ -666,44 +666,28 @@ namespace.apply_rebalance = function(config)
     local default_mangonel_damage = 30000
     local default_catapult_damage = 30000
     local default_trebuchet_damage = 30000
-    for key, val in pairs(siege) do
-      if key == "catapultRockDamage" then
-        core.writeCodeInteger(cat_primary_addr, val)
-      elseif key == "catapultRockCollateralDamage" then
-        core.writeCodeInteger(cat_collateral_addr, val)
-      elseif key == "trebuchetRockDamage" then
-        core.writeCodeInteger(treb_primary_addr, val)
-      elseif key == "trebuchetRockCollateralPenalty" then
-        core.writeCodeByte(treb_collateral_penalty_addr, val)
-      elseif key == "mangonelPebbleDamage" then
-        core.writeCodeInteger(mango_primary_addr, val)
-      elseif key == "defaultMangonelPebbleUnitDamage" then
-        default_mangonel_damage = val
-      elseif key == "defaultCatapultRockUnitDamage" then
-        default_catapult_damage = val
-      elseif key == "defaultTrebuchetRockUnitDamage" then
-        default_trebuchet_damage = val
-      elseif key == "defaultBallistaBoltUnitDamage" then
-        default_ballista_damage = val
-      elseif key == "siegeProjectileOneShotThreshold" then
-        core.writeCodeInteger(oneshot_threshold_addr+2, val)
-      elseif key == "enable_half_siege_ammo" then
-        if val ~= nil then
-          half_siege_ammo()
-        end
-      end
-    end
+    if siege["catapultRockDamage"] ~= nil then core.writeCodeInteger(cat_primary_addr, siege["catapultRockDamage"]) end
+    if siege["catapultRockCollateralDamage"] ~= nil then core.writeCodeInteger(cat_collateral_addr, siege["catapultRockCollateralDamage"]) end
+    if siege["trebuchetRockDamage"] ~= nil then core.writeCodeInteger(treb_primary_addr, siege["trebuchetRockDamage"]) end
+    if siege["trebuchetRockCollateralPenalty"] ~= nil then core.writeCodeByte(treb_collateral_penalty_addr, siege["trebuchetRockCollateralPenalty"]) end
+    if siege["mangonelPebbleDamage"] ~= nil then core.writeCodeInteger(mango_primary_addr, siege["mangonelPebbleDamage"]) end
+    if siege["defaultMangonelPebbleUnitDamage"] ~= nil then default_mangonel_damage = siege["defaultMangonelPebbleUnitDamage"] end
+    if siege["defaultCatapultRockUnitDamage"] ~= nil then default_catapult_damage = siege["defaultCatapultRockUnitDamage"] end
+    if siege["defaultTrebuchetRockUnitDamage"] ~= nil then default_trebuchet_damage = siege["defaultTrebuchetRockUnitDamage"] end
+    if siege["defaultBallistaBoltUnitDamage"] ~= nil then default_ballista_damage = siege["defaultBallistaBoltUnitDamage"] end
+    if siege["siegeProjectileOneShotThreshold"] ~= nil then core.writeCodeInteger(oneshot_threshold_addr+2, siege["siegeProjectileOneShotThreshold"]) end
+    if siege["enable_half_siege_ammo"] ~= nil and siege["enable_half_siege_ammo"] == true then half_siege_ammo() end
 
     for index, name in ipairs(unit_names) do
-      if name == "Lord" then  -- defaults are set once
-      elseif name == "Catapult" then  -- defaults are set once
-      elseif name == "Trebuchet" then  -- defaults are set once
-      elseif name == "Mangonel" then  -- defaults are set once
-      elseif name == "Siege tower" then  -- defaults are set once
-      elseif name == "Battering ram" then  -- defaults are set once
-      elseif name == "Portable shield" then  -- defaults are set once
-      elseif name == "Tower ballista" then  -- defaults are set once
-      elseif name == "Fire ballista" then  -- defaults are set once
+      if name == "Lord"
+      or name == "Catapult"
+      or name == "Trebuchet"
+      or name == "Mangonel"
+      or name == "Siege tower"
+      or name == "Battering ram"
+      or name == "Portable shield"
+      or name == "Tower ballista"
+      or name == "Fire ballista" then  -- defaults are set once
       else
         core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage)
         core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage)
@@ -1011,8 +995,6 @@ namespace.apply_rebalance = function(config)
         address = resource_sell_base + 4 * res_index
         core.writeInteger(address, sell)
       end
-
-
       if baseDelivery ~= nil then
         if res_name == "Wood" then
           core.writeCodeByte(woodcutter_func+10, baseDelivery)
@@ -1056,7 +1038,6 @@ namespace.apply_rebalance = function(config)
           core.writeCodeByte(armourer_func+8, baseDelivery)
         end
       end
-
       if skirmishBonus ~= nil then
         local sb = skirmishBonus and 1 or 0
         if res_name == "Wood" then
@@ -1131,306 +1112,315 @@ namespace.apply_rebalance = function(config)
   end
 
   if religion ~= nil then
-    for key, val in pairs(religion) do
-      if key == "thresholds" then
-        core.writeCodeByte(religion_addr_1 + 2, val[1])
-        core.writeCodeByte(religion_addr_1 + 11, val[2])
-        core.writeCodeByte(religion_addr_1 + 23, val[3])
-        core.writeCodeByte(religion_addr_1 + 37, val[4])
+    local religion_thresholds = religion["thresholds"]
+    local religion_bonuses = religion["bonuses"]
+    local religion_multipliers = religion["multipliers"]
+    local church_bonus = religion["church_bonus"]
+    local cathedral_bonus = religion["cathedral_bonus"]
+    if religion_thresholds ~= nil then
+      core.writeCodeByte(religion_addr_1 + 2, religion_thresholds[1])
+      core.writeCodeByte(religion_addr_1 + 11, religion_thresholds[2])
+      core.writeCodeByte(religion_addr_1 + 23, religion_thresholds[3])
+      core.writeCodeByte(religion_addr_1 + 37, religion_thresholds[4])
 
-        core.writeCodeByte(religion_addr_2 + 2, val[1])
-        core.writeCodeByte(religion_addr_2 + 11, val[2])
-        core.writeCodeByte(religion_addr_2 + 23, val[3])
-        core.writeCodeByte(religion_addr_2 + 37, val[4])
+      core.writeCodeByte(religion_addr_2 + 2, religion_thresholds[1])
+      core.writeCodeByte(religion_addr_2 + 11, religion_thresholds[2])
+      core.writeCodeByte(religion_addr_2 + 23, religion_thresholds[3])
+      core.writeCodeByte(religion_addr_2 + 37, religion_thresholds[4])
 
-        core.writeCodeByte(religion_addr_2 + 100, val[1]-1)
-        core.writeCodeByte(religion_addr_2 + 115, val[2]-1)
-        core.writeCodeByte(religion_addr_2 + 130, val[3]-1)
-        core.writeCodeByte(religion_addr_2 + 145, val[4]-1)
+      core.writeCodeByte(religion_addr_2 + 100, religion_thresholds[1]-1)
+      core.writeCodeByte(religion_addr_2 + 115, religion_thresholds[2]-1)
+      core.writeCodeByte(religion_addr_2 + 130, religion_thresholds[3]-1)
+      core.writeCodeByte(religion_addr_2 + 145, religion_thresholds[4]-1)
 
-        core.writeCodeInteger(religion_addr_2 + 107, val[1])
-        core.writeCodeInteger(religion_addr_2 + 122, val[2])
-        core.writeCodeInteger(religion_addr_2 + 137, val[3])
-        core.writeCodeInteger(religion_addr_2 + 152, val[4])
+      core.writeCodeInteger(religion_addr_2 + 107, religion_thresholds[1])
+      core.writeCodeInteger(religion_addr_2 + 122, religion_thresholds[2])
+      core.writeCodeInteger(religion_addr_2 + 137, religion_thresholds[3])
+      core.writeCodeInteger(religion_addr_2 + 152, religion_thresholds[4])
 
-        core.writeCodeByte(religion_addr_3 + 2, val[1]-1)
-        core.writeCodeByte(religion_addr_3 + 11, val[2]-1)
-        core.writeCodeByte(religion_addr_3 + 23, val[3]-1)
-        core.writeCodeByte(religion_addr_3 + 37, val[4]-1)
+      core.writeCodeByte(religion_addr_3 + 2, religion_thresholds[1]-1)
+      core.writeCodeByte(religion_addr_3 + 11, religion_thresholds[2]-1)
+      core.writeCodeByte(religion_addr_3 + 23, religion_thresholds[3]-1)
+      core.writeCodeByte(religion_addr_3 + 37, religion_thresholds[4]-1)
+    end
+    if religion_bonuses ~= nil then
+      core.writeCodeInteger(religion_addr_1 + 15, religion_bonuses[1])
+      core.writeCodeInteger(religion_addr_1 + 27, religion_bonuses[2])
+      core.writeCodeByte(religion_addr_1 + 46, religion_bonuses[3]-religion_bonuses[4])
+      core.writeCodeInteger(religion_addr_1 + 49, religion_bonuses[4])
+
+      core.writeCodeInteger(religion_addr_2 + 15, religion_bonuses[1])
+      core.writeCodeByte(religion_addr_2 + 27, religion_bonuses[2])
+      core.writeCodeByte(religion_addr_2 + 46, religion_bonuses[3]-religion_bonuses[4])
+      core.writeCodeInteger(religion_addr_2 + 49, religion_bonuses[4])
+
+      core.writeCodeInteger(religion_addr_3 + 15, religion_bonuses[1])
+      core.writeCodeInteger(religion_addr_3 + 27, religion_bonuses[2])
+      core.writeCodeByte(religion_addr_3 + 46, religion_bonuses[3]-religion_bonuses[4])
+      core.writeCodeByte(religion_addr_3 + 49, religion_bonuses[4])
+    end
+    if religion_multipliers ~= nil then
+      if religion_thresholds == nil then
+        religion_thresholds = {25, 50, 75, 100} -- vanilla thresholds are 24 49 74 94
       end
-      if key == "bonuses" then
-        core.writeCodeInteger(religion_addr_1 + 15, val[1])
-        core.writeCodeInteger(religion_addr_1 + 27, val[2])
-        core.writeCodeByte(religion_addr_1 + 46, val[3]-val[4])
-        core.writeCodeInteger(religion_addr_1 + 49, val[4])
-
-        core.writeCodeInteger(religion_addr_2 + 15, val[1])
-        core.writeCodeByte(religion_addr_2 + 27, val[2])
-        core.writeCodeByte(religion_addr_2 + 46, val[3]-val[4])
-        core.writeCodeInteger(religion_addr_2 + 49, val[4])
-
-        core.writeCodeInteger(religion_addr_3 + 15, val[1])
-        core.writeCodeInteger(religion_addr_3 + 27, val[2])
-        core.writeCodeByte(religion_addr_3 + 46, val[3]-val[4])
-        core.writeCodeByte(religion_addr_3 + 49, val[4])
-      end
-      if key == "multipliers" then
-        local religion_thresholds = religion["thresholds"]
-        if religion_thresholds == nil then
-          religion_thresholds = {25, 50, 75, 100} -- vanilla thresholds are 24 49 74 94
-        end
-        local assembled_code = core.assemble(linear_scaling_code,{
-          threshold_1 = religion_thresholds[1],
-          threshold_2 = religion_thresholds[2],
-          threshold_3 = religion_thresholds[3],
-          threshold_4 = religion_thresholds[4],
-          multiplier_1 = val[1],
-          multiplier_2 = val[2],
-          multiplier_3 = val[3],
-          multiplier_4 = val[4]
-        },0)
-        assembled_code["n"] = nil
-        -- religion_addr_1 (53 bytes)
-        -- info:eax 
-        -- target:ecx
-        core.writeCodeByte(religion_addr_1, 0x50) -- push eax
-        core.insertCode(religion_addr_1+1, 49, assembled_code)
-        core.writeCodeBytes(religion_addr_1+50, {
-          0x8B, 0xC8, -- mov ecx, eax
-          0x58        -- pop eax
-        })
-        -- religion_addr_2 (55 bytes)
-        -- info: eax 
-        -- target: eax
-        core.insertCode(religion_addr_2, 55, assembled_code)
-        -- religion_addr_3 (55 bytes)
-        -- info: eax 
-        -- target: esi
-        core.writeCodeByte(religion_addr_3, 0x50) -- push eax
-        core.insertCode(religion_addr_3+1, 51, assembled_code)
-        core.writeCodeBytes(religion_addr_3+52, {
-          0x8B, 0xF0, -- mov esi, eax
-          0x58        -- pop eax
-        })
-      end
-      if key == "church_bonus" then
-        core.writeCodeByte(religion_addr_1 + 64, val)
-        core.writeCodeByte(religion_addr_2 + 448, val)
-        core.writeCodeByte(religion_addr_3 + 66, val)
-      end
-      if key == "cathedral_bonus" then
-        core.writeCodeByte(religion_addr_1 + 76, val)
-        core.writeCodeByte(religion_addr_2 + 463, val)
-        core.writeCodeByte(religion_addr_3 + 78, val)
-      end
+      local assembled_code = core.assemble(linear_scaling_code,{
+        threshold_1 = religion_thresholds[1],
+        threshold_2 = religion_thresholds[2],
+        threshold_3 = religion_thresholds[3],
+        threshold_4 = religion_thresholds[4],
+        multiplier_1 = religion_multipliers[1],
+        multiplier_2 = religion_multipliers[2],
+        multiplier_3 = religion_multipliers[3],
+        multiplier_4 = religion_multipliers[4]
+      },0)
+      assembled_code["n"] = nil
+      -- religion_addr_1 (53 bytes)
+      -- info:eax 
+      -- target:ecx
+      core.writeCodeByte(religion_addr_1, 0x50) -- push eax
+      core.insertCode(religion_addr_1+1, 49, assembled_code)
+      core.writeCodeBytes(religion_addr_1+50, {
+        0x8B, 0xC8, -- mov ecx, eax
+        0x58        -- pop eax
+      })
+      -- religion_addr_2 (55 bytes)
+      -- info: eax 
+      -- target: eax
+      core.insertCode(religion_addr_2, 55, assembled_code)
+      -- religion_addr_3 (55 bytes)
+      -- info: eax 
+      -- target: esi
+      core.writeCodeByte(religion_addr_3, 0x50) -- push eax
+      core.insertCode(religion_addr_3+1, 51, assembled_code)
+      core.writeCodeBytes(religion_addr_3+52, {
+        0x8B, 0xF0, -- mov esi, eax
+        0x58        -- pop eax
+      })
+    end
+    if church_bonus ~= nil then
+      core.writeCodeByte(religion_addr_1 + 64, church_bonus)
+      core.writeCodeByte(religion_addr_2 + 448, church_bonus)
+      core.writeCodeByte(religion_addr_3 + 66, church_bonus)
+    end
+    if cathedral_bonus ~= nil then
+      core.writeCodeByte(religion_addr_1 + 76, cathedral_bonus)
+      core.writeCodeByte(religion_addr_2 + 463, cathedral_bonus)
+      core.writeCodeByte(religion_addr_3 + 78, cathedral_bonus)
     end
   end
 
   if beer ~= nil then
-    for key, val in pairs(beer) do
-      if key == "thresholds" then
-        core.writeCodeByte(beer_addr_1 + 2, val[1])
-        core.writeCodeByte(beer_addr_1 + 11, val[2])
-        core.writeCodeByte(beer_addr_1 + 23, val[3])
-        core.writeCodeByte(beer_addr_1 + 37, val[4])
+    local beer_thresholds = beer["thresholds"]
+    local beer_bonuses = beer["bonuses"]
+    local beer_coverage = beer["coverage_per_inn"]
+    local beer_flagons = beer["flagons_per_beer"]
+    local beer_multipliers = beer["multipliers"]
+    if beer_thresholds == nil then
+      beer_thresholds = {25, 50, 75, 100}
+    else
+      core.writeCodeByte(beer_addr_1 + 2, beer_thresholds[1])
+      core.writeCodeByte(beer_addr_1 + 11, beer_thresholds[2])
+      core.writeCodeByte(beer_addr_1 + 23, beer_thresholds[3])
+      core.writeCodeByte(beer_addr_1 + 37, beer_thresholds[4])
 
-        -- next level at: %## informative texts
-        core.writeCodeByte(beer_addr_1 + 95+2, val[1])
-        core.writeCodeInteger(beer_addr_1 + 95+6, val[1])
+      -- next level at: %## informative texts
+      core.writeCodeByte(beer_addr_1 + 95+2, beer_thresholds[1])
+      core.writeCodeInteger(beer_addr_1 + 95+6, beer_thresholds[1])
 
-        core.writeCodeByte(beer_addr_1 + 95+14, val[2])
-        core.writeCodeInteger(beer_addr_1 + 95+18, val[2])
+      core.writeCodeByte(beer_addr_1 + 95+14, beer_thresholds[2])
+      core.writeCodeInteger(beer_addr_1 + 95+18, beer_thresholds[2])
 
-        core.writeCodeByte(beer_addr_1 + 95+26, val[3])
-        core.writeCodeInteger(beer_addr_1 + 95+30, val[3])
+      core.writeCodeByte(beer_addr_1 + 95+26, beer_thresholds[3])
+      core.writeCodeInteger(beer_addr_1 + 95+30, beer_thresholds[3])
 
-        core.writeCodeByte(beer_addr_1 + 95+38, val[4])
-        core.writeCodeInteger(beer_addr_1 + 95+46, val[4])
+      core.writeCodeByte(beer_addr_1 + 95+38, beer_thresholds[4])
+      core.writeCodeInteger(beer_addr_1 + 95+46, beer_thresholds[4])
 
-        core.writeCodeByte(beer_addr_2 + 2 , val[1])
-        core.writeCodeByte(beer_addr_2 + 11 , val[2])
-        core.writeCodeByte(beer_addr_2 + 23 , val[3])
-        core.writeCodeByte(beer_addr_2 + 37 , val[4])
+      core.writeCodeByte(beer_addr_2 + 2 , beer_thresholds[1])
+      core.writeCodeByte(beer_addr_2 + 11 , beer_thresholds[2])
+      core.writeCodeByte(beer_addr_2 + 23 , beer_thresholds[3])
+      core.writeCodeByte(beer_addr_2 + 37 , beer_thresholds[4])
 
-        core.writeCodeByte(beer_addr_3 + 2, val[1])
-        core.writeCodeByte(beer_addr_3 + 18, val[2])
-        core.writeCodeByte(beer_addr_3 + 30, val[3])
-        core.writeCodeByte(beer_addr_3 + 44, val[4])
-      end
-      if key == "bonuses" then
-        core.writeCodeByte(beer_addr_1 + 15, val[1])
-        core.writeCodeByte(beer_addr_1 + 27, val[2])
-        core.writeCodeByte(beer_addr_1 + 46, val[3]-val[4])
-        core.writeCodeByte(beer_addr_1 + 48, val[4])
+      core.writeCodeByte(beer_addr_3 + 2, beer_thresholds[1])
+      core.writeCodeByte(beer_addr_3 + 18, beer_thresholds[2])
+      core.writeCodeByte(beer_addr_3 + 30, beer_thresholds[3])
+      core.writeCodeByte(beer_addr_3 + 44, beer_thresholds[4])
+    end
+    if beer_bonuses ~= nil then
+      core.writeCodeByte(beer_addr_1 + 15, beer_bonuses[1])
+      core.writeCodeByte(beer_addr_1 + 27, beer_bonuses[2])
+      core.writeCodeByte(beer_addr_1 + 46, beer_bonuses[3]-beer_bonuses[4])
+      core.writeCodeByte(beer_addr_1 + 48, beer_bonuses[4])
 
-        core.writeCodeByte(beer_addr_2 + 15 , val[1])
-        core.writeCodeByte(beer_addr_2 + 27 , val[2])
-        core.writeCodeByte(beer_addr_2 + 46 , val[3]-val[4])
-        core.writeCodeByte(beer_addr_2 + 49 , val[4])
+      core.writeCodeByte(beer_addr_2 + 15 , beer_bonuses[1])
+      core.writeCodeByte(beer_addr_2 + 27 , beer_bonuses[2])
+      core.writeCodeByte(beer_addr_2 + 46 , beer_bonuses[3]-beer_bonuses[4])
+      core.writeCodeByte(beer_addr_2 + 49 , beer_bonuses[4])
 
-        core.writeCodeByte(beer_addr_3 + 22, val[1])
-        core.writeCodeByte(beer_addr_3 + 34, val[2])
-        core.writeCodeByte(beer_addr_3 + 53, val[3]-val[4])
-        core.writeCodeByte(beer_addr_3 + 56, val[4])
-      end
-      if key == "coverage_per_inn" then
-        core.writeCodeInteger(beer_coverage_addr+19, val*100)
-      end
-      if key == "flagons_per_beer" then
-        core.writeCodeSmallInteger(flagon_mul_addr+13, val)
+      core.writeCodeByte(beer_addr_3 + 22, beer_bonuses[1])
+      core.writeCodeByte(beer_addr_3 + 34, beer_bonuses[2])
+      core.writeCodeByte(beer_addr_3 + 53, beer_bonuses[3]-beer_bonuses[4])
+      core.writeCodeByte(beer_addr_3 + 56, beer_bonuses[4])
+    end
+    if beer_coverage ~= nil then
+      core.writeCodeInteger(beer_coverage_addr+19, beer_coverage*100)
+    end
+    if beer_flagons ~= nil then
+      core.writeCodeSmallInteger(flagon_mul_addr+13, beer_flagons)
         core.writeCodeBytes(flagon_inn_display_addr+7, core.compile({
           0x31, 0xD2, -- xor edx, edx
           0x8B, 0xC1, -- mov eax, ecx
-          0xB9, core.itob(val), -- mov eax, val
+          0xB9, core.itob(beer_flagons), -- mov eax, val
           0xF7, 0xF1, -- div ecx
           0x50,   -- push eax
           0x90, 0x90, 0x90, 0x90, 0x90, 0x90
         }, flagon_inn_display_addr+7))
-      end
-      if key == "multipliers" then
-        local beer_thresholds = beer["thresholds"]
-        if beer_thresholds == nil then
-          beer_thresholds = {25, 50, 75, 100}
-        end
-        local assembled_code = core.assemble(linear_scaling_code,{
-          threshold_1 = beer_thresholds[1],
-          threshold_2 = beer_thresholds[2],
-          threshold_3 = beer_thresholds[3],
-          threshold_4 = beer_thresholds[4],
-          multiplier_1 = val[1],
-          multiplier_2 = val[2],
-          multiplier_3 = val[3],
-          multiplier_4 = val[4]
-        },0)
-        assembled_code["n"] = nil
-        -- local code_addr = core.allocateCode(core.calculateCodeSize(assembled_code))
-        -- core.writeCodeBytes(code_addr, assembled_code)
-        -- 50 -- push eax, 56 -- push esi, 58 -- pop eax, 5E -- pop esi
-        -- beer_addr_1 (52 bytes) info: esi target: eax
-        core.writeCodeBytes(beer_addr_1, {
-          0x56, -- push esi
-          0x8B, 0xC6 -- mov eax esi
-        })
-        core.insertCode(beer_addr_1+3, 48, assembled_code)
-        core.writeCodeBytes(beer_addr_1+51, {
-          0x5E  -- pop esi
-        })
-        -- beer_addr_2 (55 bytes) info: eax target: esi
-        core.writeCodeBytes(beer_addr_2, {
-          0x50 -- push eax
-        })
-        core.insertCode(beer_addr_2+1, 51, assembled_code)
-        core.writeCodeBytes(beer_addr_2+52, {
-          0x8B, 0xF0, -- mov esi eax
-          0x58 -- pop eax
-        })
+    end
+    if beer_multipliers ~= nil then
+      local assembled_code = core.assemble(linear_scaling_code,{
+        threshold_1 = beer_thresholds[1],
+        threshold_2 = beer_thresholds[2],
+        threshold_3 = beer_thresholds[3],
+        threshold_4 = beer_thresholds[4],
+        multiplier_1 = beer_multipliers[1],
+        multiplier_2 = beer_multipliers[2],
+        multiplier_3 = beer_multipliers[3],
+        multiplier_4 = beer_multipliers[4]
+      },0)
+      assembled_code["n"] = nil
+      -- local code_addr = core.allocateCode(core.calculateCodeSize(assembled_code))
+      -- core.writeCodeBytes(code_addr, assembled_code)
+      -- 50 -- push eax, 56 -- push esi, 58 -- pop eax, 5E -- pop esi
+      -- beer_addr_1 (52 bytes) info: esi target: eax
+      core.writeCodeBytes(beer_addr_1, {
+        0x56, -- push esi
+        0x8B, 0xC6 -- mov eax esi
+      })
+      print(string.format("%x",beer_addr_1))
+      core.insertCode(beer_addr_1+3, 48, assembled_code)
+      core.writeCodeBytes(beer_addr_1+51, {
+        0x5E  -- pop esi
+      })
+      -- beer_addr_2 (55 bytes) info: eax target: esi
+      core.writeCodeBytes(beer_addr_2, {
+        0x50 -- push eax
+      })
+      core.insertCode(beer_addr_2+1, 51, assembled_code)
+      core.writeCodeBytes(beer_addr_2+52, {
+        0x8B, 0xF0, -- mov esi eax
+        0x58 -- pop eax
+      })
 
-        -- beer_addr_3 (62 bytes) info: eax target: eax
-        core.insertCode(beer_addr_3, 62, assembled_code)
-      end
+      -- beer_addr_3 (62 bytes) info: eax target: eax
+      core.insertCode(beer_addr_3, 62, assembled_code)
     end
   end
 
   if food ~= nil then
-    for key, val in pairs(food) do
-      if key == "ration_bonuses" then
-        core.writeCodeInteger(food_addr_1 + 1, val[1])
-        core.writeCodeInteger(food_addr_1 + 70, val[1])
-        core.writeCodeInteger(food_addr_1 + 61, val[2])
-        core.writeCodeByte(food_addr_1 + 44, val[3])
-        core.writeCodeInteger(food_addr_1 + 31, val[4])
+    local ration_bonuses = food["ration_bonuses"]
+    local variety_bonuses = food["variety_bonuses"]
+    local food_value = food["food_value"]
+    if ration_bonuses ~= nil then
+        core.writeCodeInteger(food_addr_1 + 1, ration_bonuses[1])
+        core.writeCodeInteger(food_addr_1 + 70, ration_bonuses[1])
+        core.writeCodeInteger(food_addr_1 + 61, ration_bonuses[2])
+        core.writeCodeByte(food_addr_1 + 44, ration_bonuses[3])
+        core.writeCodeInteger(food_addr_1 + 31, ration_bonuses[4])
 
-        core.writeCodeInteger(food_addr_2 + 1, val[1])
-        core.writeCodeInteger(food_addr_2 + 57, val[1])
-        core.writeCodeByte(food_addr_2 + 51, val[2]-1)
-        core.writeCodeByte(food_addr_2 + 32, val[3]-3)
-        core.writeCodeInteger(food_addr_2 + 19, val[4])
+        core.writeCodeInteger(food_addr_2 + 1, ration_bonuses[1])
+        core.writeCodeInteger(food_addr_2 + 57, ration_bonuses[1])
+        core.writeCodeByte(food_addr_2 + 51, ration_bonuses[2]-1)
+        core.writeCodeByte(food_addr_2 + 32, ration_bonuses[3]-3)
+        core.writeCodeInteger(food_addr_2 + 19, ration_bonuses[4])
 
-        core.writeCodeInteger(food_addr_3 + 1, val[1])
-        core.writeCodeInteger(food_addr_3 + 19, val[1])
-        core.writeCodeByte(food_addr_3 + 32, val[2]-1)
-        core.writeCodeInteger(food_addr_3 + 60, val[3])
-        core.writeCodeInteger(food_addr_3 + 50, val[4])
+        core.writeCodeInteger(food_addr_3 + 1, ration_bonuses[1])
+        core.writeCodeInteger(food_addr_3 + 19, ration_bonuses[1])
+        core.writeCodeByte(food_addr_3 + 32, ration_bonuses[2]-1)
+        core.writeCodeInteger(food_addr_3 + 60, ration_bonuses[3])
+        core.writeCodeInteger(food_addr_3 + 50, ration_bonuses[4])
+    end
+    if variety_bonuses ~= nil then
+      core.writeCodeByte(food_addr_1 + 466, variety_bonuses[1]-2)
+      core.writeCodeByte(food_addr_1 + 476, variety_bonuses[2]-3)
+      core.writeCodeInteger(food_addr_1 + 485, variety_bonuses[3])
 
-      end
-      if key == "variety_bonuses" then
-        core.writeCodeByte(food_addr_1 + 466, val[1]-2)
-        core.writeCodeByte(food_addr_1 + 476, val[2]-3)
-        core.writeCodeInteger(food_addr_1 + 485, val[3])
+      core.writeCodeByte(food_addr_2 + 89, variety_bonuses[1])
+      core.writeCodeByte(food_addr_2 + 99, variety_bonuses[2])
+      core.writeCodeByte(food_addr_2 + 109, variety_bonuses[3])
 
-        core.writeCodeByte(food_addr_2 + 89, val[1])
-        core.writeCodeByte(food_addr_2 + 99, val[2])
-        core.writeCodeByte(food_addr_2 + 109, val[3])
-
-        core.writeCodeByte(food_addr_3 + 84, val[1])
-        core.writeCodeByte(food_addr_3 + 94, val[2])
-        core.writeCodeByte(food_addr_3 + 104, val[3])
-      end
-      if key == "food_value" then
-        core.writeCodeInteger(food_point_addr, val)
-        core.writeCodeInteger(food_point_addr+242, val)
-      end
+      core.writeCodeByte(food_addr_3 + 84, variety_bonuses[1])
+      core.writeCodeByte(food_addr_3 + 94, variety_bonuses[2])
+      core.writeCodeByte(food_addr_3 + 104, variety_bonuses[3])
+    end
+    if food_value ~= nil then
+      core.writeCodeInteger(food_point_addr, food_value)
+      core.writeCodeInteger(food_point_addr+242, food_value)
     end
   end
 
   if fear_factor ~= nil then
-    for key, val in pairs(fear_factor) do
-      if key == "popularity_per_good_level" then
-        core.writeCodeByte(ff_addr_1 + 13, val)
-        core.writeCodeByte(ff_addr_2 + 13, val)
-        core.writeCodeByte(ff_addr_3 + 14, val)
-      end
-      if key == "popularity_per_bad_level" then
-        core.writeCodeByte(ff_addr_1 + 23, val)
-        core.writeCodeByte(ff_addr_2 + 25, val)
-        core.writeCodeByte(ff_addr_3 + 28, val)
-      end
-      if key == "productivity" then
-        core.writeCodeInteger(productivity_addr + 2, val[1])
-        core.writeCodeInteger(productivity_addr + 15, val[2])
-        core.writeCodeInteger(productivity_addr + 28, val[3])
-        core.writeCodeInteger(productivity_addr + 41, val[4])
-        core.writeCodeInteger(productivity_addr + 54, val[5])
-        core.writeCodeInteger(productivity_addr + 66, val[6])
-        core.writeCodeInteger(productivity_addr + 79, val[7])
-        core.writeCodeInteger(productivity_addr + 92, val[8])
-        core.writeCodeInteger(productivity_addr + 105, val[9])
-        core.writeCodeByte(productivity_addr + 124, val[10]-val[11])
-        core.writeCodeByte(productivity_addr + 127, val[11])
-      end
-      if key == "coverage" then
-        local custom_coverage_instructions = {
-          0x85, 0xC9,  -- test ecx, ecx
-          0x74, 0x01,  -- jn by one
-          0x49,  -- dec ecx
-          0xC1, 0xF9, val,  -- sar ecx, coverage_value
-          0x41  -- inc ecx
-        }
-        core.insertCode(ff_coverage_addr, 6, custom_coverage_instructions)
-      end
-      if key == "combat_bonus" then
-        local damage_table_addr = core.allocate(11)
-        local custom_combat_instructions = {
-          0x8A, 0x88, core.itob(damage_table_addr+5),
-          0x0F, 0xAF, 0x4C, 0x24, 0x04,             -- imul ecx,[esp+04]
-          core.jmpTo(combat_bonus_memory_addr+11)   -- jmp 0053162B
-        }
+    local popularity_per_good_level = fear_factor["popularity_per_good_level"]
+    local popularity_per_bad_level = fear_factor["popularity_per_bad_level"]
+    local productivity = fear_factor["productivity"]
+    local coverage = fear_factor["coverage"]
+    local combat_bonus = fear_factor["combat_bonus"]
+    local resting_factor = fear_factor["resting_factor"]
 
-        core.writeCode(damage_table_addr, val, true)
-        local custom_combat_addr = core.allocateCode(core.calculateCodeSize(custom_combat_instructions))
+    if popularity_per_good_level ~= nil then
+      core.writeCodeByte(ff_addr_1 + 13, popularity_per_good_level)
+      core.writeCodeByte(ff_addr_2 + 13, popularity_per_good_level)
+      core.writeCodeByte(ff_addr_3 + 14, popularity_per_good_level)
+    end
+    if popularity_per_bad_level ~= nil then
+      core.writeCodeByte(ff_addr_1 + 23, popularity_per_bad_level)
+      core.writeCodeByte(ff_addr_2 + 25, popularity_per_bad_level)
+      core.writeCodeByte(ff_addr_3 + 28, popularity_per_bad_level)
+    end
+    if productivity ~= nil then
+      core.writeCodeInteger(productivity_addr + 2, productivity[1])
+      core.writeCodeInteger(productivity_addr + 15, productivity[2])
+      core.writeCodeInteger(productivity_addr + 28, productivity[3])
+      core.writeCodeInteger(productivity_addr + 41, productivity[4])
+      core.writeCodeInteger(productivity_addr + 54, productivity[5])
+      core.writeCodeInteger(productivity_addr + 66, productivity[6])
+      core.writeCodeInteger(productivity_addr + 79, productivity[7])
+      core.writeCodeInteger(productivity_addr + 92, productivity[8])
+      core.writeCodeInteger(productivity_addr + 105, productivity[9])
+      core.writeCodeByte(productivity_addr + 124, productivity[10]-productivity[11])
+      core.writeCodeByte(productivity_addr + 127, productivity[11])
+    end
+    if coverage ~= nil then
+      local custom_coverage_instructions = {
+        0x85, 0xC9,  -- test ecx, ecx
+        0x74, 0x01,  -- jn by one
+        0x49,  -- dec ecx
+        0xC1, 0xF9, coverage,  -- sar ecx, coverage_value
+        0x41  -- inc ecx
+      }
+      core.insertCode(ff_coverage_addr, 6, custom_coverage_instructions)
+    end
+    if combat_bonus ~= nil then
+      local damage_table_addr = core.allocate(11)
+      local custom_combat_instructions = {
+        0x8A, 0x88, core.itob(damage_table_addr+5),
+        0x0F, 0xAF, 0x4C, 0x24, 0x04,             -- imul ecx,[esp+04]
+        core.jmpTo(combat_bonus_memory_addr+11)   -- jmp 0053162B
+      }
 
-        local combat_jumpout_instructions = {
-          0x31, 0xC9,                   -- xor ecx, ecx
-          core.jmpTo(custom_combat_addr),
-          0x90, 0x90, 0x90, 0x90        -- nop nop nop nop
-        }
+      core.writeCode(damage_table_addr, combat_bonus, true)
+      local custom_combat_addr = core.allocateCode(core.calculateCodeSize(custom_combat_instructions))
 
-        core.writeCode(custom_combat_addr, custom_combat_instructions, true)
-        core.writeCode(combat_bonus_memory_addr, combat_jumpout_instructions, true)
-      end
-      if key == "resting_factor" then
-        core.writeCodeByte(resting_factor_addr, val)
-      end
+      local combat_jumpout_instructions = {
+        0x31, 0xC9,                   -- xor ecx, ecx
+        core.jmpTo(custom_combat_addr),
+        0x90, 0x90, 0x90, 0x90        -- nop nop nop nop
+      }
+
+      core.writeCode(custom_combat_addr, custom_combat_instructions, true)
+      core.writeCode(combat_bonus_memory_addr, combat_jumpout_instructions, true)
+    end
+    if resting_factor ~= nil then
+      core.writeCodeByte(resting_factor_addr, resting_factor)
     end
   end
 
