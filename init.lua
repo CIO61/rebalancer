@@ -26,7 +26,8 @@ local towers_or_gates_base = addresses.towers_or_gates_base
 local unit_gold_jumplist_addr = addresses.unit_gold_jumplist_addr
 local tax_popularity_offset = addresses.tax_popularity_offset
 
-local linear_scaling_code = templates.linear_scaling_code
+local continuous_scaling_code = templates.continuous_scaling_code
+local discrete_scaling_code = templates.discrete_scaling_code
 
 local archer_idx = table.find(unit_names, "European archer")
 local arabbow_idx = table.find(unit_names, "Arabian archer")
@@ -1163,7 +1164,7 @@ namespace.apply_rebalance = function(config)
       if religion_thresholds == nil then
         religion_thresholds = {25, 50, 75, 100} -- vanilla thresholds are 24 49 74 94
       end
-      local assembled_code = core.assemble(linear_scaling_code,{
+      local assembled_code = core.assemble(discrete_scaling_code,{
         threshold_1 = religion_thresholds[1],
         threshold_2 = religion_thresholds[2],
         threshold_3 = religion_thresholds[3],
@@ -1174,22 +1175,16 @@ namespace.apply_rebalance = function(config)
         multiplier_4 = religion_multipliers[4]
       },0)
       assembled_code["n"] = nil
-      -- religion_addr_1 (53 bytes)
-      -- info:eax 
-      -- target:ecx
+      -- religion_addr_1 (53 bytes) info:eax  target:ecx
       core.writeCodeByte(religion_addr_1, 0x50) -- push eax
       core.insertCode(religion_addr_1+1, 49, assembled_code)
       core.writeCodeBytes(religion_addr_1+50, {
         0x8B, 0xC8, -- mov ecx, eax
         0x58        -- pop eax
       })
-      -- religion_addr_2 (55 bytes)
-      -- info: eax 
-      -- target: eax
+      -- religion_addr_2 (55 bytes) info: eax  target: eax
       core.insertCode(religion_addr_2, 55, assembled_code)
-      -- religion_addr_3 (55 bytes)
-      -- info: eax 
-      -- target: esi
+      -- religion_addr_3 (55 bytes) info: eax  target: esi
       core.writeCodeByte(religion_addr_3, 0x50) -- push eax
       core.insertCode(religion_addr_3+1, 51, assembled_code)
       core.writeCodeBytes(religion_addr_3+52, {
@@ -1277,7 +1272,7 @@ namespace.apply_rebalance = function(config)
         }, flagon_inn_display_addr+7))
     end
     if beer_multipliers ~= nil then
-      local assembled_code = core.assemble(linear_scaling_code,{
+      local assembled_code = core.assemble(discrete_scaling_code,{
         threshold_1 = beer_thresholds[1],
         threshold_2 = beer_thresholds[2],
         threshold_3 = beer_thresholds[3],
@@ -1288,9 +1283,6 @@ namespace.apply_rebalance = function(config)
         multiplier_4 = beer_multipliers[4]
       },0)
       assembled_code["n"] = nil
-      -- local code_addr = core.allocateCode(core.calculateCodeSize(assembled_code))
-      -- core.writeCodeBytes(code_addr, assembled_code)
-      -- 50 -- push eax, 56 -- push esi, 58 -- pop eax, 5E -- pop esi
       -- beer_addr_1 (52 bytes) info: esi target: eax
       core.writeCodeBytes(beer_addr_1, {
         0x56, -- push esi
@@ -1310,7 +1302,6 @@ namespace.apply_rebalance = function(config)
         0x8B, 0xF0, -- mov esi eax
         0x58 -- pop eax
       })
-
       -- beer_addr_3 (62 bytes) info: eax target: eax
       core.insertCode(beer_addr_3, 62, assembled_code)
     end
