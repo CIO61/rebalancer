@@ -370,7 +370,7 @@
         },
         "productivity": {
           "type": "array",
-          "description": "Productivity bonuses, from -5 fear factor to +5 fear factor\nVanilla is [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]",
+          "description": "Productivity bonuses, from -5 fear factor to +5 fear factor\nVanilla is [150, 140, 130, 120, 110, 100, 90, 80, 70, 60, 50]",
           "minItems": 11,
           "maxItems": 11,
           "items": {
