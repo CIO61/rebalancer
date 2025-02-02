@@ -270,6 +270,17 @@
       "items": {
         "type": "integer"
       }
+    },
+    "population_gathering_rate_map": {
+      "type": "object",
+      "patternProperties": {
+        "": {
+          "type": "integer"
+        }
+      },
+      "propertyNames": {
+        "$ref": "#/$defs/popularity_threshold"
+      }
     }
   },
   "properties": {
@@ -653,22 +664,42 @@
     },
     "population_gathering_rate": {
       "type": "object",
-      "description": "Population gathering rates, Calculation is as follows: 2000/(value*game speed) In scenarios, population hitting 100 means different peasant gathering rate.",
-      "patternProperties": {
-        "": {
-          "type": "object",
-          "patternProperties": {
-            "": {
-              "type": "integer"
+      "description": "Population gathering rates, Calculation is as follows: 2000/(value*game speed)",
+      "properties": {
+        "Skirmish": {
+          "description": "Population gathering rate values for skirmish&multiplayer matches",
+          "$ref": "#/$defs/population_gathering_rate_map"
+        },
+        "Scenario_lt_100": {
+          "description": "Population gathering rate values for single player scenarios, where population is less than 100",
+          "$ref": "#/$defs/population_gathering_rate_map"
+        },
+        "Scenario_gt_100": {
+          "description": "Population gathering rate values for single player scenarios, where population is more than 100",
+          "$ref": "#/$defs/population_gathering_rate_map"
+        },
+        "population_upkeep": {
+          "description": "Special upkeep system for skirmish&multiplayer matches. When defined, poeple gather slower, and leave faster as population grows.",
+          "properties": {
+            "slower_gathering": {
+              "type": "integer",
+              "description": "Penalty factor for gathering rate, select any number from 1 to 5. 5 is most severe.",
+              "enum": [1, 2, 3, 4, 5]
+            },
+            "minimum_gathering": {
+              "type": "integer",
+              "description": "Minimum value after gathering rate penalty is applied, defaults to 4."
+            },
+            "faster_leaving": {
+              "type": "integer",
+              "description": "Boost factor for leaving rate, select any number from 1 to 5. 5 is most severe.",
+              "enum": [1, 2, 3, 4, 5]
             }
-          },
-          "propertyNames": {
-            "$ref": "#/$defs/popularity_threshold"
           }
         }
       },
       "propertyNames": {
-        "enum": ["Skirmish", "Scenario_lt_100", "Scenario_gt_100"]
+        "enum": ["Skirmish", "Scenario_lt_100", "Scenario_gt_100", "population_upkeep"]
       }
     }
   }

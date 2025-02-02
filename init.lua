@@ -13,6 +13,7 @@ local function locate_aob(str)
   return core.AOBScan(str, 0x400000, 0x7FFFFF)
 end
 
+local pop_gathering_addr = locate_aob("8B 0C 85 ? ? ? ? EB 2D 8B 4E F0")
 local scenario_pgr_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
 local scenario_pgr_crowded_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
 local skirmish_pgr_base = locate_aob("F8 FF FF FF FA FF FF FF FB FF FF FF FC FF FF FF FD FF FF FF FD FF FF FF FE FF FF FF FE FF FF FF FF FF FF FF FF FF FF FF 0A 00 00 00 0C 00 00 00")
@@ -26,8 +27,8 @@ local towers_or_gates_base = addresses.towers_or_gates_base
 local unit_gold_jumplist_addr = addresses.unit_gold_jumplist_addr
 local tax_popularity_offset = addresses.tax_popularity_offset
 
-local continuous_scaling_code = templates.continuous_scaling_code
-local discrete_scaling_code = templates.discrete_scaling_code
+-- local scaling_code = templates.continuous_scaling_code
+local scaling_code = templates.discrete_scaling_code
 
 local archer_idx = table.find(unit_names, "European archer")
 local arabbow_idx = table.find(unit_names, "Arabian archer")
@@ -1087,28 +1088,79 @@ namespace.apply_rebalance = function(config)
   end
 
   if population_gathering_rate ~= nil then
-    for pgr, data in pairs(population_gathering_rate) do
-      if pgr == "Skirmish" then
-        for threshold, value in pairs(data) do
-          local pgr_index = table.find(pop_thresholds, threshold)-1
-          address = skirmish_pgr_base + 4 * pgr_index
-          core.writeInteger(address, value)
-        end
+    local Skirmish = population_gathering_rate["Skirmish"]
+    local Scenario_lt_100 = population_gathering_rate["Scenario_lt_100"]
+    local Scenario_gt_100 = population_gathering_rate["Scenario_gt_100"]
+    local population_upkeep = population_gathering_rate["population_upkeep"]
+    if Skirmish ~= nil then
+      for threshold, value in pairs(Skirmish) do
+        local pgr_index = table.find(pop_thresholds, threshold)-1
+        address = skirmish_pgr_base + 4 * pgr_index
+        core.writeInteger(address, value)
       end
-      if pgr == "Scenario_lt_100" then
-        for threshold, value in pairs(data) do
-          local pgr_index = table.find(pop_thresholds, threshold)-1
-          address = scenario_pgr_base + 4 * pgr_index
-          core.writeInteger(address, value)
-        end
+    end
+    if Scenario_lt_100 ~= nil then
+      for threshold, value in pairs(Scenario_lt_100) do
+        local pgr_index = table.find(pop_thresholds, threshold)-1
+        address = scenario_pgr_base + 4 * pgr_index
+        core.writeInteger(address, value)
       end
-      if pgr == "Scenario_gt_100" then
-        for threshold, value in pairs(data) do
-          local pgr_index = table.find(pop_thresholds, threshold)-1
-          address = scenario_pgr_crowded_base + 4 * pgr_index
-          core.writeInteger(address, value)
-        end
+    end
+    if Scenario_gt_100 ~= nil then
+      for threshold, value in pairs(Scenario_gt_100) do
+        local pgr_index = table.find(pop_thresholds, threshold)-1
+        address = scenario_pgr_crowded_base + 4 * pgr_index
+        core.writeInteger(address, value)
       end
+    end
+    if population_upkeep ~= nil then
+      local slower_gathering = population_upkeep["slower_gathering"]
+      local minimum_gathering = population_upkeep["minimum_gathering"]
+      local faster_leaving = population_upkeep["faster_leaving"]
+      if minimum_gathering == nil then
+        minimum_gathering = 4
+      end
+      if slower_gathering < 1 then
+        log(WARNING, "Upkeep values must be between 1 and 5")
+        slower_gathering = 1
+      end
+      if slower_gathering > 5 then
+        log(WARNING, "Upkeep values must be between 1 and 5")
+        slower_gathering = 5
+      end
+      if faster_leaving < 1 then
+        log(WARNING, "Upkeep values must be between 1 and 5")
+        faster_leaving = 1
+      end
+      if faster_leaving > 5 then
+        log(WARNING, "Upkeep values must be between 1 and 5")
+        faster_leaving = 5
+      end
+
+      local upkeep_code_bytes = core.assemble([[
+        push eax
+        mov eax, [esi+0x2110]
+        cmp ecx, 0
+        jl label_0
+        shr eax, gather_factor
+        cmp eax, ecx
+        jg label_2
+        jmp label_1
+            label_0:
+        shr eax, leave_factor
+            label_1:
+        sub ecx, eax
+        jmp end_label
+            label_2:
+        mov ecx, minimum_gather
+            end_label:
+        pop eax
+      ]],{
+        leave_factor = 7-faster_leaving,
+        minimum_gather = minimum_gathering,
+        gather_factor = 7-slower_gathering
+      },0)
+      core.insertCode(pop_gathering_addr, 7, upkeep_code_bytes, pop_gathering_addr+7, "before")
     end
   end
 
@@ -1164,7 +1216,7 @@ namespace.apply_rebalance = function(config)
       if religion_thresholds == nil then
         religion_thresholds = {25, 50, 75, 100} -- vanilla thresholds are 24 49 74 94
       end
-      local assembled_code = core.assemble(discrete_scaling_code,{
+      local assembled_code = core.assemble(scaling_code,{
         threshold_1 = religion_thresholds[1],
         threshold_2 = religion_thresholds[2],
         threshold_3 = religion_thresholds[3],
@@ -1272,7 +1324,7 @@ namespace.apply_rebalance = function(config)
         }, flagon_inn_display_addr+7))
     end
     if beer_multipliers ~= nil then
-      local assembled_code = core.assemble(discrete_scaling_code,{
+      local assembled_code = core.assemble(scaling_code,{
         threshold_1 = beer_thresholds[1],
         threshold_2 = beer_thresholds[2],
         threshold_3 = beer_thresholds[3],
@@ -1288,7 +1340,6 @@ namespace.apply_rebalance = function(config)
         0x56, -- push esi
         0x8B, 0xC6 -- mov eax esi
       })
-      print(string.format("%x",beer_addr_1))
       core.insertCode(beer_addr_1+3, 48, assembled_code)
       core.writeCodeBytes(beer_addr_1+51, {
         0x5E  -- pop esi
