@@ -667,16 +667,25 @@
       "description": "Population gathering rates, Calculation is as follows: 2000/(value*game speed)",
       "properties": {
         "Skirmish": {
-          "description": "Population gathering rate values for skirmish&multiplayer matches",
-          "$ref": "#/$defs/population_gathering_rate_map"
+          "description": "Population gathering rate values for skirmish&multiplayer matches\n Can be defined as either a map of thresholds-gathering rates or an 21 item array.",
+          "oneOf": [
+            {"$ref": "#/$defs/population_gathering_rate_map"},
+            {"type":"array", "minItems": 21, "maxItems": 21}
+          ]
         },
         "Scenario_lt_100": {
-          "description": "Population gathering rate values for single player scenarios, where population is less than 100",
-          "$ref": "#/$defs/population_gathering_rate_map"
+          "description": "Population gathering rate values for single player scenarios, where population is less than 100\n Can be defined as either a map of thresholds-gathering rates or an 21 item array.",
+          "oneOf": [
+            {"$ref": "#/$defs/population_gathering_rate_map"},
+            {"type":"array", "minItems": 21, "maxItems": 21}
+          ]
         },
         "Scenario_gt_100": {
-          "description": "Population gathering rate values for single player scenarios, where population is more than 100",
-          "$ref": "#/$defs/population_gathering_rate_map"
+          "description": "Population gathering rate values for single player scenarios, where population is more than 100\n Can be defined as either a map of thresholds-gathering rates or an 21 item array.",
+          "oneOf": [
+            {"$ref": "#/$defs/population_gathering_rate_map"},
+            {"type":"array", "minItems": 21, "maxItems": 21}
+          ]
         },
         "population_upkeep": {
           "description": "Special upkeep system for skirmish&multiplayer matches. When defined, poeple gather slower, and leave faster as population grows.",

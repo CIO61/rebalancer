@@ -13,6 +13,15 @@ local function locate_aob(str)
   return core.AOBScan(str, 0x400000, 0x7FFFFF)
 end
 
+local function is_array(t)
+  local i = 0
+  for _ in pairs(t) do
+      i = i + 1
+      if t[i] == nil then return false end
+  end
+  return true
+end
+
 local pop_gathering_addr = locate_aob("8B 0C 85 ? ? ? ? EB 2D 8B 4E F0")
 local scenario_pgr_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
 local scenario_pgr_crowded_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
@@ -1093,24 +1102,42 @@ namespace.apply_rebalance = function(config)
     local Scenario_gt_100 = population_gathering_rate["Scenario_gt_100"]
     local population_upkeep = population_gathering_rate["population_upkeep"]
     if Skirmish ~= nil then
-      for threshold, value in pairs(Skirmish) do
-        local pgr_index = table.find(pop_thresholds, threshold)-1
-        address = skirmish_pgr_base + 4 * pgr_index
-        core.writeInteger(address, value)
+      if is_array(Skirmish) then
+        for pgr_index, value in ipairs(Skirmish) do
+          core.writeInteger(skirmish_pgr_base + 4 * (pgr_index-1), value)
+        end
+      else  -- legacy support
+        for threshold, value in pairs(Skirmish) do
+          local pgr_index = table.find(pop_thresholds, threshold)-1
+          address = skirmish_pgr_base + 4 * pgr_index
+          core.writeInteger(address, value)
+        end
       end
     end
     if Scenario_lt_100 ~= nil then
-      for threshold, value in pairs(Scenario_lt_100) do
-        local pgr_index = table.find(pop_thresholds, threshold)-1
-        address = scenario_pgr_base + 4 * pgr_index
-        core.writeInteger(address, value)
+      if is_array(Scenario_lt_100) then
+        for pgr_index, value in ipairs(Scenario_lt_100) do
+          core.writeInteger(scenario_pgr_base + 4 * (pgr_index-1), value)
+        end
+      else  -- legacy support
+        for threshold, value in pairs(Scenario_lt_100) do
+          local pgr_index = table.find(pop_thresholds, threshold)-1
+          address = scenario_pgr_base + 4 * pgr_index
+          core.writeInteger(address, value)
+        end
       end
     end
     if Scenario_gt_100 ~= nil then
-      for threshold, value in pairs(Scenario_gt_100) do
-        local pgr_index = table.find(pop_thresholds, threshold)-1
-        address = scenario_pgr_crowded_base + 4 * pgr_index
-        core.writeInteger(address, value)
+      if is_array(Scenario_gt_100) then
+        for pgr_index, value in ipairs(Scenario_gt_100) do
+          core.writeInteger(scenario_pgr_crowded_base + 4 * (pgr_index-1), value)
+        end
+      else  -- legacy support
+        for threshold, value in pairs(Scenario_gt_100) do
+          local pgr_index = table.find(pop_thresholds, threshold)-1
+          address = scenario_pgr_crowded_base + 4 * pgr_index
+          core.writeInteger(address, value)
+        end
       end
     end
     if population_upkeep ~= nil then
