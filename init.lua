@@ -171,6 +171,58 @@ local dog_threshold_addr = locate_aob("E8 ? ? ? ? 83 3D ? ? ? ? 19 7D 0D")+11
 -- leather_per_cow address
 local leather_per_cow_address = locate_aob("53 6A 03 6A 03 6A 05 52 50")
 
+local base_ranges_table_addr = locate_aob("36 00 00 00 4B 00 00 00 55 00 00 00 46 00 00 00 00 00 00 00 00 00 00 00 36")
+local proj_velocity_table_addr = locate_aob("7D 00 00 00 0A 00 00 00 1E 00 00 00 0F 00 00 00 64 00 00 00 64 00 00 00")
+local proj_archtype_table_addr = locate_aob("00 00 00 00 02 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00")
+
+local range_split_addr1 = locate_aob("8B 04 85 ? ? ? ? 0F AF C0 66 83 BC 37") -- 0x54B621
+local range_split_asm1 = templates.range_split_asm1  -- patch size should be 7
+-- archer_range arabbow_range horse_archer_range
+
+local range_split_addr2 = locate_aob("BD 64 0B 00 00 E9 A2 00 00 00") -- 0x43595D
+local range_split_asm2 = templates.range_split_asm2  -- patch size should be 5
+-- archer_range xbow_range arabbow_range horse_archer_range fbal_range
+
+local range_split_addr3 = locate_aob("BE 64 0B 00 00 E9 A5 00 00 00") -- 0x436339
+local range_split_asm3 = templates.range_split_asm3  -- patch size should be 5
+-- archer_range xbow_range arabbow_range horse_archer_range fbal_range
+
+local range_split_addr4 = locate_aob("BE 64 0B 00 00 0F 87 52 01 00 00") -- 0x435E2C
+local range_split_asm4 = templates.range_split_asm4  -- patch size should be 5
+-- archer_range xbow_range arabbow_range horse_archer_range
+
+local range_split_addr5 = locate_aob("B8 64 0B 00 00 EB 25 B8") -- 0x4369B2
+local range_split_asm5 = templates.range_split_asm5  -- patch size should be 5
+-- archer_range xbow_range arabbow_range horse_archer_range fbal_range
+
+local range_split_addr6 = locate_aob("BA 64 0B 00 00 EB 25 BA") -- 0x436AB9
+local range_split_asm6 = templates.range_split_asm6  -- patch size should be 5
+-- archer_range xbow_range arabbow_range horse_archer_range fbal_range
+
+local range_split_addr7 = locate_aob("BD 39 1C 00 00 EB 7D BD") -- 0x435985
+local range_split_asm7 = templates.range_split_asm7  -- patch size should be 5
+-- treb_range towerbal_range
+
+local range_split_addr8 = locate_aob("BE 39 1C 00 00 E9 7D 00 00 00 BE") -- 0x436361
+local range_split_asm8 = templates.range_split_asm8  -- patch size should be 5
+-- treb_range towerbal_range
+
+local range_split_addr9 = locate_aob("B8 39 1C 00 00 EB 09 B8") -- 0x4369CE
+local range_split_asm9 = templates.range_split_asm9  -- patch size should be 5
+-- treb_range towerbal_range
+
+local range_split_addr10 = locate_aob("BA 39 1C 00 00 EB 09 BA") -- 0x436AD5
+local range_split_asm10 = templates.range_split_asm10  -- patch size should be 5
+-- treb_range towerbal_range
+
+local range_split_addr11 = locate_aob("83 E9 03 F7 D9 1B C9")  -- 0x53D642
+local range_split_asm11 = templates.range_split_asm11 -- patch size should be 13
+-- catapult_range treb_range
+
+local range_split_addr12 = locate_aob("03 D1 83 FA 79 7E")  -- 0x57770C
+local range_split_asm12 = templates.range_split_asm12 -- patch size should be 5
+-- firethrower_range
+
 local function get_unit_melee_dmg_address(attacker, defender)
   local attacker_idx = table.find(unit_names, attacker) - 1
   local defender_idx = table.find(unit_names, defender) - 1
@@ -203,16 +255,16 @@ end
 local function ascension_extras()
   core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
 
-  -- {"description":"Spearmen running only enemies, code edit 1.
+  -- Spearmen running only enemies, code edit 1.
   core.writeCodeBytes(0x400000 + 0x15E47B, {
     0x7e, 0x36
   })
-  -- {"description":"Spearmen running only enemies, code edit 2.
+  -- Spearmen running only enemies, code edit 2.
   core.writeCodeBytes(0x400000 + 0x15E4B3, {
     0xE9, 0x74, 0xDE, 0x04, 0x00,
     0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
   })
-  -- {"description":"Spearmen running only enemies, code edit 3.
+  -- Spearmen running only enemies, code edit 3.
   core.writeCodeBytes(0x400000 + 0x1AC32C, {
     0x66, 0x81, 0xBE, 0xE2, 0xD2, 0x45, 0x01, 0xF0, 0x00,
     0x7F, 0x16,
@@ -222,7 +274,7 @@ local function ascension_extras()
     0x66, 0x89, 0xBE, 0xFA, 0xD2, 0x45, 0x01,
     0xE9, 0x61, 0x21, 0xFB, 0xFF
   })
-  -- {"description":"Spearman running trigger range around enemy units * 8.", "size":2,"value":240},
+  -- Spearman running trigger range around enemy units * 8.", "size":2,"value":240},
   core.writeCodeSmallInteger(0x400000+ 0x1AC333, 240)
 
   core.writeCodeByte(0x400000 + 0x13D63C, 42) -- AI Fireballista building harass range.   
@@ -638,6 +690,8 @@ namespace.apply_rebalance = function(config)
   local taxation = config["taxation"]
   local siege = config["siege"]
   local castle = config["castle"]
+  local ranges = config["ranges"]
+  local projectiles = config["projectiles"]
   local enable_ascension = config["enable_ascension"]
   local enable_ai_ascension = config["enable_ai_ascension"]
   local enable_iron_double_pickup = config["enable_iron_double_pickup"]
@@ -1595,6 +1649,148 @@ namespace.apply_rebalance = function(config)
       end
       if key == "dog_trigger_threshold" then
         core.writeCodeByte(dog_threshold_addr, val)
+      end
+    end
+  end
+
+  if ranges ~= nil then
+    local archer_range = ranges["archer_range"]
+    local xbow_range = ranges["xbow_range"]
+    local arabbow_range = ranges["arabbow_range"]
+    local slinger_range = ranges["slinger_range"]
+    local horse_archer_range = ranges["horse_archer_range"]
+    local firethrower_range = ranges["firethrower_range"]
+    local catapult_range = ranges["catapult_range"]
+    local treb_range = ranges["treb_range"]
+    local fbal_range = ranges["fbal_range"]
+    local towerbal_range = ranges["towerbal_range"]
+    local mangonel_range = ranges["mangonel_range"]
+
+    -- load default values if not specified
+    if archer_range == nil then archer_range = 54 end
+    if xbow_range == nil then xbow_range = 54 end
+    if arabbow_range == nil then arabbow_range = 54 end
+    if slinger_range == nil then slinger_range = 22 end
+    if horse_archer_range == nil then horse_archer_range = 54 end
+    if firethrower_range == nil then firethrower_range = 11 end
+    if catapult_range == nil then catapult_range = 75 end
+    if treb_range == nil then treb_range = 85 end
+    if fbal_range == nil then fbal_range = 54 end
+    if towerbal_range == nil then towerbal_range = 85 end
+    if mangonel_range == nil then mangonel_range = 70 end
+
+    local mapping_1 ={archer_range=archer_range, xbow_range=xbow_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range, fbal_range=fbal_range}
+    local mapping_2 ={treb_range=treb_range, towerbal_range=towerbal_range}
+
+    local code_1 = core.assemble(range_split_asm1, {archer_range=archer_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range}, 0)
+    local code_2 = core.assemble(range_split_asm2, mapping_1, 0)
+    local code_3 = core.assemble(range_split_asm3, mapping_1, 0)
+    local code_4 = core.assemble(range_split_asm4, {archer_range=archer_range, xbow_range=xbow_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range}, 0)
+    local code_5 = core.assemble(range_split_asm5, mapping_1, 0)
+    local code_6 = core.assemble(range_split_asm6, mapping_1, 0)
+    local code_7 = core.assemble(range_split_asm7, mapping_2, 0)
+    local code_8 = core.assemble(range_split_asm8, mapping_2, 0)
+    local code_9 = core.assemble(range_split_asm9, mapping_2, 0)
+    local code_10 = core.assemble(range_split_asm10, mapping_2, 0)
+    local code_11 = core.assemble(range_split_asm11, {catapult_range=catapult_range, treb_range=treb_range}, 0)
+    local code_12 = core.assemble(range_split_asm12, {firethrower_range=firethrower_range}, 0)
+
+    core.writeCodeInteger(base_ranges_table_addr, archer_range) -- "Archer base range.",
+    core.writeCodeInteger(base_ranges_table_addr + 24, xbow_range) -- "Crossbowman base range.",
+    core.writeCodeInteger(base_ranges_table_addr + 144, fbal_range) -- "Fireballista base range.",
+    -- Arab Archer base range?
+    -- Horse Archer base range?
+
+    -- Archers, xbowmen, fireballistas
+    core.insertCode(range_split_addr1, 7, code_1)
+    core.insertCode(range_split_addr2, 5, code_2)
+    core.insertCode(range_split_addr3, 5, code_3)
+    core.insertCode(range_split_addr4, 5, code_4)
+    core.insertCode(range_split_addr5, 5, code_5)
+    core.insertCode(range_split_addr6, 5, code_6)
+    
+    -- Trebuchets and Tower Ballistas
+    core.insertCode(range_split_addr7, 5, code_7)
+    core.insertCode(range_split_addr8, 5, code_8)
+    core.insertCode(range_split_addr9, 5, code_9)
+    core.insertCode(range_split_addr10, 5, code_10)
+    
+    core.insertCode(range_split_addr11, 13, code_11)
+    
+
+    -- slinger range addresses
+    core.writeCodeInteger(base_ranges_table_addr + 128, slinger_range) -- also +136 can be relevant
+    -- core.writeCodeInteger(base_ranges_table_addr + 136, slinger_range)
+    core.writeCodeInteger(range_split_addr2 + 11, slinger_range*slinger_range)
+    core.writeCodeInteger(range_split_addr4 + 126, slinger_range*slinger_range)
+    core.writeCodeInteger(range_split_addr3 + 11, slinger_range*slinger_range)
+    core.writeCodeInteger(range_split_addr5 + 8, slinger_range*slinger_range)
+    core.writeCodeInteger(range_split_addr6 + 8, slinger_range*slinger_range)
+
+    -- firethrower
+    core.insertCode(range_split_addr12, 5, code_12)  -- allowing for 4-byte sized ranges
+    core.writeCodeInteger(base_ranges_table_addr + 132, firethrower_range) -- also +140 can be relevant
+    -- core.writeCodeInteger(base_ranges_table_addr + 140, firethrower_range)
+    core.writeCodeInteger(range_split_addr2 + 21, firethrower_range*firethrower_range)
+    core.writeCodeInteger(range_split_addr4 + 164, firethrower_range*firethrower_range)
+    core.writeCodeInteger(range_split_addr3 + 21, firethrower_range*firethrower_range)
+    core.writeCodeInteger(range_split_addr5 + 15, firethrower_range*firethrower_range)
+    core.writeCodeInteger(range_split_addr6 + 15, firethrower_range*firethrower_range)
+
+    -- catapult
+    core.writeCodeInteger(base_ranges_table_addr + 4, catapult_range)
+    core.writeCodeInteger(range_split_addr2 + 31, catapult_range*catapult_range)
+    core.writeCodeInteger(range_split_addr4 + 189, catapult_range*catapult_range)
+    core.writeCodeInteger(range_split_addr3 + 31, catapult_range*catapult_range)
+    core.writeCodeInteger(range_split_addr5 - 650, catapult_range*catapult_range)  -- maybe find a new base address?
+    core.writeCodeInteger(range_split_addr5 - 264, catapult_range*catapult_range)  -- maybe find a new base address?
+    core.writeCodeInteger(range_split_addr5 + 22, catapult_range*catapult_range)
+    core.writeCodeInteger(range_split_addr6 + 22, catapult_range*catapult_range)
+
+    -- mangonel
+    core.writeCodeInteger(base_ranges_table_addr + 12, mangonel_range)
+    core.writeCodeInteger(range_split_addr2 + 48, mangonel_range*mangonel_range)
+    core.writeCodeInteger(range_split_addr4 + 209, mangonel_range*mangonel_range)
+    core.writeCodeInteger(range_split_addr3 + 51, mangonel_range*mangonel_range)
+    core.writeCodeInteger(range_split_addr5 - 636, mangonel_range*mangonel_range)  -- maybe find a new base address?
+    core.writeCodeInteger(range_split_addr5 - 250, mangonel_range*mangonel_range)  -- maybe find a new base address?
+    core.writeCodeInteger(range_split_addr9 + 8, mangonel_range*mangonel_range)
+    core.writeCodeInteger(range_split_addr10 + 8, mangonel_range*mangonel_range)
+
+    -- trebuchet
+    core.writeCodeInteger(range_split_addr4 + 199, treb_range*treb_range)
+    core.writeCodeInteger(range_split_addr5 - 643, treb_range*treb_range)  -- maybe find a new base address?
+    core.writeCodeInteger(range_split_addr5 - 257, treb_range*treb_range)  -- maybe find a new base address?
+
+    -- towerbal
+    core.writeCodeInteger(range_split_addr4 + 232, towerbal_range*towerbal_range)
+
+  end
+
+  if projectiles ~= nil then
+    local keyword_offset_map = {
+     arrow = 0,
+     catapult_rock = 4,
+     trebuchet_rock = 8,
+     mangonel_pebble = 12,
+     crossbow_bolt = 24,
+     towerbal_bolt = 76,
+     slinger_stone = 128,
+     firethrower_grenade = 132,
+     firebal_bolt = 144
+    }
+    for key, offset in pairs(keyword_offset_map) do
+      local projectile = projectiles[key]
+      if projectile ~= nil then
+        local velocity = projectile["velocity"]
+        local arch_type = projectile["arch_type"]
+        if velocity ~= nil then
+          core.writeCodeInteger(proj_velocity_table_addr+offset, velocity)
+        end
+        if arch_type ~= nil then
+          core.writeCodeInteger(proj_archtype_table_addr+offset, arch_type)
+        end
+
       end
     end
   end

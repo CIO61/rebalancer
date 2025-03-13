@@ -281,6 +281,19 @@
       "propertyNames": {
         "$ref": "#/$defs/popularity_threshold"
       }
+    },
+    "projectile_attributes": {
+      "type": "object",
+      "properties": {
+        "velocity": {
+          "type": "integer",
+          "description": "Velocity value for projectile, check individual projectile stats for values."
+        },
+        "arch_type": {
+          "type": "integer",
+          "description": "Arch type for the projectile, 0 is used by most units, 1 is used by trebuchets and mangonels, 2 is used by catapults by default\nWarning: changing arch type can cause your units to miss most of their shots, and sometimes even make them unable to shoot at all!"
+        }
+      }
     }
   },
   "properties": {
@@ -643,6 +656,96 @@
         "dog_trigger_threshold": {
           "type": "integer",
           "description": "Total enemy unit strength nearby a dogcage for it to release the dogs, use this in combination with powerLevel attribute of units."
+        }
+      }
+    },
+    "ranges": {
+      "type": "object",
+      "properties": {
+        "archer_range": {
+          "type": "integer",
+          "description": "Range for Archers, default is 54"
+        },
+        "xbow_range": {
+          "type": "integer",
+          "description": "Range for Crossbowmen, default is 54"
+        },
+        "arabbow_range": {
+          "type": "integer",
+          "description": "Range for Arabian Archers, default is 54"
+        },
+        "slinger_range": {
+          "type": "integer",
+          "description": "Range for Slingers, default is 22"
+        },
+        "horse_archer_range": {
+          "type": "integer",
+          "description": "Range for Horse Archers, default is 54"
+        },
+        "firethrower_range": {
+          "type": "integer",
+          "description": "Range for Firethrowers, default is 11"
+        },
+        "catapult_range": {
+          "type": "integer",
+          "description": "Range for Catapults, default is 75"
+        },
+        "treb_range": {
+          "type": "integer",
+          "description": "Range for Trebuchets, default is 85"
+        },
+        "fbal_range": {
+          "type": "integer",
+          "description": "Range for Fire Ballistas, default is 54"
+        },
+        "towerbal_range": {
+          "type": "integer",
+          "description": "Range for Tower Ballistas, default is 85"
+        },
+        "mangonel_range": {
+          "type": "integer",
+          "description": "Range for Mangonels, default is 70"
+        }
+      }
+    },
+    "projectiles": {
+      "type": "object",
+      "properties": {
+        "arrow": {
+          "description": "Projectile properties for Arrows\nDefault is 125 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "catapult_rock": {
+          "description": "Projectile properties for \nDefault is 10 velocity, Arch type of 2",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "trebuchet_rock": {
+          "description": "Projectile properties for \nDefault is 30 velocity, Arch type of 1",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "mangonel_pebble": {
+          "description": "Projectile properties for \nDefault is 15 velocity, Arch type of 1",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "crossbow_bolt": {
+          "description": "Projectile properties for \nDefault is 125 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "towerbal_bolt": {
+          "description": "Projectile properties for \nDefault is 170 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "slinger_stone": {
+          "description": "Projectile properties for \nDefault is 100 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "firethrower_grenade": {
+          "description": "Projectile properties for \nDefault is 80 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "firebal_bolt": {
+          "description": "Projectile properties for \nDefault is 125 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
         }
       }
     },
