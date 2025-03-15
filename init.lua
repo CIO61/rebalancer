@@ -116,13 +116,13 @@ local wheatfarmer_func = locate_aob("53 66 89 BE ? ? ? ? 6A 02") -- skirmish bon
 local brewer_func = locate_aob("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00") -- both produce amount and skirmish bonus is push ebp instead of push val
 
 local fletcher_func = locate_aob("55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 06 00 E8")
-local poleturner_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00", brewer_func+16, 0x7FFFFFF)  -- exact same AOB as brewer func, must uniqueify! (works bc brewer is changed before this scan)
+local poleturner_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00", brewer_func+16, 0x7FFFFF)  -- exact same AOB as brewer func, must uniqueify! (works bc brewer is changed before this scan)
 local blacksmith_func = locate_aob("55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 07 00 E8")  -- blacksmith has another call to calculategoodsproduced but its a mystery
 local custom_fletcher_code_addr = 0  -- defined when inserted as code
 local custom_poleturner_code_addr = 0  -- defined when inserted as code
 local custom_blacksmith_code_addr = 0  -- defined when inserted as code
 local tanner_func = locate_aob("53 53 50 66 89 AE ? ? ? ? E8 53 6C FD FF 66 89 86")
-local armourer_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", poleturner_func+16, 0x7FFFFFF)
+local armourer_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", poleturner_func+16, 0x7FFFFF)
 
 -- religion related addresses
 local religion_addr_1 = locate_aob("83 F8 18 7F 04 33 C9 EB 2C 83 F8 31 7F 07 B9 32 00 00 00 EB 20 83 F8 4A 7F 07 B9 64 00 00 00 EB 14 33 C9 83 F8 5E 0F 9F C1 83 E9 01 83 E1 CE 81 C1 C8 00 00 00 83 BE")
@@ -222,6 +222,22 @@ local range_split_asm11 = templates.range_split_asm11 -- patch size should be 13
 local range_split_addr12 = locate_aob("03 D1 83 FA 79 7E")  -- 0x57770C
 local range_split_asm12 = templates.range_split_asm12 -- patch size should be 5
 -- firethrower_range
+
+local scan_range_addr_archer = locate_aob("66 81 B8 ? ? ? ? 90 01 7F")
+local scan_range_addr_arabbow_1 = locate_aob("85 FF BD 90 01 00 00 7E 28 8B C3")
+local scan_range_addr_arabbow_2 = locate_aob("66 00 BD 90 01 00 00 66 39 AE ? ? ? ?")
+local scan_range_addr_horse_archer = locate_aob("69 D2 90 04 00 00 66 81 BA ? ? ? ? B0 01")
+local scan_range_addr_xbow = core.AOBScan("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_archer + 500, 0x7FFFFF)
+local scan_range_addr_xbow_2 = locate_aob("66 C7 86 ? ? ? ? 0A 00 66 81 BE ? ? ? ? 90 01")
+local scan_range_addr_slinger_1 = core.AOBScan("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_xbow + 500, 0x7FFFFF)
+local scan_range_addr_slinger_2 = locate_aob("03 F9 81 FF E4 01 00 00 7E 17 C7 86 ? ? ? ? D8 FF FF FF")
+local scan_range_addr_slinger_3 = locate_aob("89 8E ? ? ? ? 66 C7 86 ? ? ? ? 66 00 BD 90 01 00 00")
+local scan_range_addr_firethrower_1 = core.AOBScan("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_slinger_1 + 500, 0x7FFFFF)
+local scan_range_addr_fbal_1 = locate_aob("66 C7 86 ? ? ? ? 03 00 66 81 BE ? ? ? ? A8 02")
+local scan_range_addr_fbal_2 = locate_aob("0F AF FA 03 DF 81 FB 64 0B")
+local scan_range_addr_mango = locate_aob("0F 85 E0 00 00 00 66 81 BE ? ? ? ? A8 02")
+local scan_range_addr_towerbal_1 = locate_aob("C3 66 81 BE ? ? ? ? A8 02")
+local scan_range_addr_towerbal_2 = core.AOBScan("C3 66 81 BE ? ? ? ? A8 02", scan_range_addr_towerbal_1 + 250, 0x7FFFFF)
 
 local function get_unit_melee_dmg_address(attacker, defender)
   local attacker_idx = table.find(unit_names, attacker) - 1
@@ -1695,14 +1711,12 @@ namespace.apply_rebalance = function(config)
     local code_11 = core.assemble(range_split_asm11, {catapult_range=catapult_range, treb_range=treb_range}, 0)
     local code_12 = core.assemble(range_split_asm12, {firethrower_range=firethrower_range}, 0)
 
-    core.writeCodeInteger(base_ranges_table_addr, archer_range) -- "Archer base range.",
+    -- base ranges
     core.writeCodeInteger(base_ranges_table_addr + 24, xbow_range) -- "Crossbowman base range.",
     core.writeCodeInteger(base_ranges_table_addr + 144, fbal_range) -- "Fireballista base range.",
-    -- Arab Archer base range?
-    -- Horse Archer base range?
-
-    -- Archers, xbowmen, fireballistas
     core.insertCode(range_split_addr1, 7, code_1)
+
+    -- manual control
     core.insertCode(range_split_addr2, 5, code_2)
     core.insertCode(range_split_addr3, 5, code_3)
     core.insertCode(range_split_addr4, 5, code_4)
@@ -1765,6 +1779,46 @@ namespace.apply_rebalance = function(config)
     -- towerbal
     core.writeCodeInteger(range_split_addr4 + 232, towerbal_range*towerbal_range)
 
+    -- firebal
+    core.writeCodeInteger(range_split_addr4 + 271, fbal_range*fbal_range)
+
+    -- scan ranges
+    core.writeCodeSmallInteger(scan_range_addr_archer + 7, (archer_range-4)*8)
+    core.writeCodeSmallInteger(scan_range_addr_archer + 52, (archer_range-4)*8)
+    core.writeCodeSmallInteger(scan_range_addr_archer + 74, archer_range*8)
+
+    core.writeCodeInteger(scan_range_addr_arabbow_1 + 3, (arabbow_range-4)*8)
+    core.writeCodeSmallInteger(scan_range_addr_arabbow_1 + 87, arabbow_range*8)
+    core.writeCodeInteger(scan_range_addr_arabbow_2 + 3, (arabbow_range-4)*8)
+
+    core.writeCodeSmallInteger(scan_range_addr_horse_archer + 13, horse_archer_range*8)
+    core.writeCodeSmallInteger(scan_range_addr_horse_archer + 230, horse_archer_range*8)
+    core.writeCodeSmallInteger(scan_range_addr_horse_archer + 661, horse_archer_range*8)
+
+    
+    core.writeCodeSmallInteger(scan_range_addr_xbow + 10, (xbow_range-4)*8)
+    core.writeCodeSmallInteger(scan_range_addr_xbow + 32, xbow_range*8)
+    core.writeCodeSmallInteger(scan_range_addr_xbow_2 + 16, (xbow_range-4)*8)
+    
+    core.writeCodeSmallInteger(scan_range_addr_slinger_1 + 10, (archer_range-4)*8)  -- for some reason tied to archer range
+    core.writeCodeSmallInteger(scan_range_addr_slinger_1 + 32, (archer_range)*8)  -- for some reason tied to archer range
+    core.writeCodeInteger(scan_range_addr_slinger_2 + 4, slinger_range*slinger_range)
+    core.writeCodeInteger(scan_range_addr_slinger_3 + 16, (archer_range-4)*8)  -- for some reason tied to archer range
+    
+    core.writeCodeSmallInteger(scan_range_addr_firethrower_1 + 10, (archer_range-4)*8)  -- for some reason tied to archer range
+    core.writeCodeSmallInteger(scan_range_addr_firethrower_1 + 32, (archer_range)*8)  -- for some reason tied to archer range
+    
+    core.writeCodeSmallInteger(scan_range_addr_fbal_1 + 16, towerbal_range*8) -- for some reason tied to towerbal range
+    core.writeCodeSmallInteger(scan_range_addr_fbal_1 + 216, fbal_range*8)
+    core.writeCodeInteger(scan_range_addr_fbal_2 + 7, fbal_range*fbal_range)
+    core.writeCodeByte(scan_range_addr_fbal_1 + 73, fbal_range-2) -- ai range
+    core.writeCodeByte(range_split_addr11-6, fbal_range-2) -- also ai range
+
+    core.writeCodeSmallInteger(scan_range_addr_mango + 13, towerbal_range*8) -- for some reason tied to towerbal range
+    core.writeCodeSmallInteger(scan_range_addr_mango + 237, towerbal_range*8) -- for some reason tied to towerbal range
+
+    core.writeCodeSmallInteger(scan_range_addr_towerbal_1 + 8, towerbal_range*8)
+    core.writeCodeSmallInteger(scan_range_addr_towerbal_2 + 8, towerbal_range*8)
   end
 
   if projectiles ~= nil then
