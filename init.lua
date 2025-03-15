@@ -32,6 +32,7 @@ local building_array_base_addr = addresses.building_array_base_addr
 local unit_melee_toggles_base = addresses.unit_melee_toggles_base
 local unit_jester_unfriendly_base = addresses.unit_jester_unfriendly_base
 local unit_blessable_base = addresses.unit_blessable_base
+local unit_allowed_on_walls_base = addresses.unit_allowed_on_walls_base
 local towers_or_gates_base = addresses.towers_or_gates_base
 local unit_gold_jumplist_addr = addresses.unit_gold_jumplist_addr
 local tax_popularity_offset = addresses.tax_popularity_offset
@@ -167,6 +168,9 @@ local multipliers_addr_base = locate_aob("69 C0 FA 00 00 00 8B C8 B8 1F 85 EB 51
 local pitch_ditch_costaddr = locate_aob("5D 66 C7 06 01 00")+4
 local killing_pit_dmg_addr = locate_aob("75 7D 81 86 ? ? ? ? B0 B9 FF FF")+8
 local dog_threshold_addr = locate_aob("E8 ? ? ? ? 83 3D ? ? ? ? 19 7D 0D")+11
+local fire_damage_code_addr = locate_aob("66 83 FF 37 75 07 B8 19 00 00 00 EB 21 66 83 FF 35 75 09")
+local fire_damage_table_addr = 0 -- defined when allocated
+
 
 -- leather_per_cow address
 local leather_per_cow_address = locate_aob("53 6A 03 6A 03 6A 05 52 50")
@@ -409,6 +413,19 @@ local function enable_rebalance_features()
   mangonel_damage_table_addr = core.allocate(#unit_names*4)
   catapult_damage_table_addr = core.allocate(#unit_names*4)
   trebuchet_damage_table_addr = core.allocate(#unit_names*4)
+  fire_damage_table_addr = core.allocate(#unit_names*2)
+
+  for index, name in ipairs(unit_names) do
+    if name == "Lord" then
+      core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), 25)
+    elseif name == "Fireman" then
+      core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), 1)
+    elseif name == "Arabian firethrower" then
+      core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), 10)
+    else
+      core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), 100)
+    end
+  end
 
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
@@ -684,6 +701,13 @@ local function enable_rebalance_features()
     }, non_rax_unit_cost_func_addr+18
   ))
 
+  core.writeCodeBytes(fire_damage_code_addr, core.compile({
+    0x66, 0x8B, 0x04, 0x7D, core.itob(fire_damage_table_addr),  -- mov ax,[edi*2+fire_damage_table_addr]
+    0xBD, 0x01, 0x00, 0x00, 0x00,                               -- mov ebp,00000001
+    0xEB, 0x24                                                  -- jmp +24
+  }, fire_damage_code_addr)
+  )
+
 end
 
 namespace.enable = function(self, config)
@@ -785,6 +809,50 @@ namespace.apply_rebalance = function(config)
 
   end
 
+  if castle ~= nil then
+    local ditch_per_pitch = castle["ditch_per_pitch"]
+    local killing_pit_damage = castle["killing_pit_damage"]
+    local dog_trigger_threshold = castle["dog_trigger_threshold"]
+    local fire_damage = castle["fire_damage"]
+
+    if ditch_per_pitch ~= nil then
+      if ditch_per_pitch == 1 then -- 0
+        core.writeCodeSmallInteger(pitch_ditch_costaddr, 0)
+      elseif ditch_per_pitch == 2 then -- 3
+        core.writeCodeSmallInteger(pitch_ditch_costaddr, 3)
+      elseif ditch_per_pitch == 3 then -- 2
+        core.writeCodeSmallInteger(pitch_ditch_costaddr, 2)
+      elseif ditch_per_pitch == 4 then -- 1
+        core.writeCodeSmallInteger(pitch_ditch_costaddr, 1)
+      else
+        log(WARNING, "Ditch per pitch can only be a value from 1 to 4.")
+      end
+    end
+
+    if killing_pit_damage ~= nil then
+      if killing_pit_damage > 0 then  -- force negative value
+        killing_pit_damage = -killing_pit_damage
+      end
+      core.writeCodeInteger(killing_pit_dmg_addr, killing_pit_damage)
+    end
+
+    if dog_trigger_threshold ~= nil then 
+      core.writeCodeByte(dog_threshold_addr, dog_trigger_threshold)
+    end
+
+    if fire_damage ~= nil then
+      for index, name in ipairs(unit_names) do
+        if name == "Lord"
+        or name == "Fireman"
+        or name == "Arabian firethrower" then -- defaults are set once
+        else
+          core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), fire_damage)
+        end
+      end
+    end
+
+  end
+
   if units ~= nil then
     for unit, stats in pairs(units) do
       local health = stats["health"]
@@ -804,6 +872,8 @@ namespace.apply_rebalance = function(config)
       local powerLevel = stats["powerLevel"]
       local meleeEngage = stats["meleeEngage"]
       local isBlessable = stats["isBlessable"]
+      local allowedOnWalls = stats["allowedOnWalls"]
+      local fireDamage = stats["fireDamage"]
       local jesterUnfriendly = stats["jesterUnfriendly"]
 
       local goldCost = stats["goldCost"]
@@ -818,6 +888,8 @@ namespace.apply_rebalance = function(config)
       if stoneDamage ~= nil then core.writeInteger(unit_stone_dmg_base + unit_idx * 4, stoneDamage) end
       if meleeEngage ~= nil then core.writeInteger(unit_melee_toggles_base + 4*unit_idx, meleeEngage and 1 or 0) end
       if isBlessable ~= nil then core.writeInteger(unit_blessable_base + 4*unit_idx, isBlessable and 1 or 0) end
+      if allowedOnWalls ~= nil then core.writeInteger(unit_allowed_on_walls_base + 4*unit_idx, allowedOnWalls and 1 or 0) end
+      if fireDamage ~= nil then core.writeSmallInteger(fire_damage_table_addr + 2*unit_idx_p1, fireDamage) end
       if jesterUnfriendly ~= nil then core.writeInteger(unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0) end
       if ballistaBoltDamage ~= nil then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
       if mangonelDamage ~= nil then core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage) end
@@ -1639,34 +1711,6 @@ namespace.apply_rebalance = function(config)
       end
     end
 
-  end
-
-  if castle ~= nil then
-    for key, val in pairs(castle) do
-      if key == "ditch_per_pitch" then
-        -- (5-x) % 4 could be a simplification
-        if val == 1 then -- 0
-          core.writeCodeSmallInteger(pitch_ditch_costaddr, 0)
-        elseif val == 2 then -- 3
-          core.writeCodeSmallInteger(pitch_ditch_costaddr, 3)
-        elseif val == 3 then -- 2
-          core.writeCodeSmallInteger(pitch_ditch_costaddr, 2)
-        elseif val == 4 then -- 1
-          core.writeCodeSmallInteger(pitch_ditch_costaddr, 1)
-        else
-          log(WARNING, "Ditch per pitch can only be a value from 1 to 4.")
-        end
-      end
-      if key == "killing_pit_damage" then
-        if val > 0 then  -- force negative value
-          val = -val
-        end
-        core.writeCodeInteger(killing_pit_dmg_addr, val)
-      end
-      if key == "dog_trigger_threshold" then
-        core.writeCodeByte(dog_threshold_addr, val)
-      end
-    end
   end
 
   if ranges ~= nil then

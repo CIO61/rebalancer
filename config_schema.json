@@ -531,6 +531,10 @@
               "$ref": "#/$defs/numeric_string",
               "description": "Incoming damage from trebuchet rocks."
             },
+            "fireDamage": {
+              "$ref": "#/$defs/numeric_string",
+              "description": "Incoming damage from flames."
+            },
             "baseMeleeDamage": {
               "$ref": "#/$defs/numeric_string",
               "description": "Outgoing melee damage against every unit, unless otherwise specified in MeleeDamageVs section."
@@ -581,6 +585,10 @@
             "isBlessable": {
               "type": "boolean",
               "description": "Whether the unit is considered as a unit to be blessed by priest (mostly relevant for workers)."
+            },
+            "allowedOnWalls": {
+              "type": "boolean",
+              "description": "Whether the unit is allowed to go on top of walls."
             },
             "jesterUnfriendly": {
               "type": "boolean",
@@ -656,6 +664,10 @@
         "dog_trigger_threshold": {
           "type": "integer",
           "description": "Total enemy unit strength nearby a dogcage for it to release the dogs, use this in combination with powerLevel attribute of units."
+        },
+        "fire_damage": {
+          "type": "integer",
+          "description": "Common fire damage for all units (Vanilla is 100)"
         }
       }
     },
