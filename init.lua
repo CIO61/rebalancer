@@ -1800,13 +1800,13 @@ namespace.apply_rebalance = function(config)
     core.writeCodeSmallInteger(scan_range_addr_xbow + 32, xbow_range*8)
     core.writeCodeSmallInteger(scan_range_addr_xbow_2 + 16, (xbow_range-4)*8)
     
-    core.writeCodeSmallInteger(scan_range_addr_slinger_1 + 10, (archer_range-4)*8)  -- for some reason tied to archer range
-    core.writeCodeSmallInteger(scan_range_addr_slinger_1 + 32, (archer_range)*8)  -- for some reason tied to archer range
+    core.writeCodeSmallInteger(scan_range_addr_slinger_1 + 10, (slinger_range+5)*8)
+    core.writeCodeSmallInteger(scan_range_addr_slinger_1 + 32, (slinger_range+5)*8)
     core.writeCodeInteger(scan_range_addr_slinger_2 + 4, slinger_range*slinger_range)
-    core.writeCodeInteger(scan_range_addr_slinger_3 + 16, (archer_range-4)*8)  -- for some reason tied to archer range
+    core.writeCodeInteger(scan_range_addr_slinger_3 + 16, (slinger_range+5)*8)
     
-    core.writeCodeSmallInteger(scan_range_addr_firethrower_1 + 10, (archer_range-4)*8)  -- for some reason tied to archer range
-    core.writeCodeSmallInteger(scan_range_addr_firethrower_1 + 32, (archer_range)*8)  -- for some reason tied to archer range
+    core.writeCodeSmallInteger(scan_range_addr_firethrower_1 + 10, (firethrower_range+5)*8)
+    core.writeCodeSmallInteger(scan_range_addr_firethrower_1 + 32, (firethrower_range+5)*8)
     
     core.writeCodeSmallInteger(scan_range_addr_fbal_1 + 16, towerbal_range*8) -- for some reason tied to towerbal range
     core.writeCodeSmallInteger(scan_range_addr_fbal_1 + 216, fbal_range*8)

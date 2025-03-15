@@ -287,7 +287,7 @@
       "properties": {
         "velocity": {
           "type": "integer",
-          "description": "Velocity value for projectile, check individual projectile stats for values."
+          "description": "Velocity value for projectile, check individual projectile stats for values.\nAffects maximum range of the projectile, can also cause units to miss some their shots, use with care!"
         },
         "arch_type": {
           "type": "integer",
