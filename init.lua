@@ -243,6 +243,11 @@ local scan_range_addr_mango = locate_aob("0F 85 E0 00 00 00 66 81 BE ? ? ? ? A8 
 local scan_range_addr_towerbal_1 = locate_aob("C3 66 81 BE ? ? ? ? A8 02")
 local scan_range_addr_towerbal_2 = core.AOBScan("C3 66 81 BE ? ? ? ? A8 02", scan_range_addr_towerbal_1 + 250, 0x7FFFFF)
 
+local arabbow_rally_running_addr = locate_aob("66 89 AE ? ? ? ? 66 8B 8E ? ? ? ?")
+local slinger_rally_running_addr = locate_aob("66 89 86 ? ? ? ? 66 8B 96 ? ? ? ?")
+local assassin_rally_running_addr = locate_aob("66 89 86 ? ? ? ? 89 86 ? ? ? ? C7 86 ? ? ? ? 10 00 00 00 66 8B 96 ? ? ? ?")
+local firethrower_rally_running_addr = core.AOBScan("66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8", assassin_rally_running_addr, 0x7FFFFF)
+
 local function get_unit_melee_dmg_address(attacker, defender)
   local attacker_idx = table.find(unit_names, attacker) - 1
   local defender_idx = table.find(unit_names, defender) - 1
@@ -275,16 +280,15 @@ end
 local function ascension_extras()
   core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
 
-  -- Spearmen running only enemies, code edit 1.
   core.writeCodeBytes(0x400000 + 0x15E47B, {
     0x7e, 0x36
-  })
-  -- Spearmen running only enemies, code edit 2.
+  })  -- Spearmen running only enemies, code edit 1.
+
   core.writeCodeBytes(0x400000 + 0x15E4B3, {
     0xE9, 0x74, 0xDE, 0x04, 0x00,
     0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
-  })
-  -- Spearmen running only enemies, code edit 3.
+  })  -- Spearmen running only enemies, code edit 2.
+
   core.writeCodeBytes(0x400000 + 0x1AC32C, {
     0x66, 0x81, 0xBE, 0xE2, 0xD2, 0x45, 0x01, 0xF0, 0x00,
     0x7F, 0x16,
@@ -293,104 +297,11 @@ local function ascension_extras()
     0xE9, 0x73, 0x21, 0xFB, 0xFF, 0x89, 0x86, 0x44, 0xD0, 0x45, 0x01,
     0x66, 0x89, 0xBE, 0xFA, 0xD2, 0x45, 0x01,
     0xE9, 0x61, 0x21, 0xFB, 0xFF
-  })
-  -- Spearman running trigger range around enemy units * 8.", "size":2,"value":240},
-  core.writeCodeSmallInteger(0x400000+ 0x1AC333, 240)
-
-  core.writeCodeByte(0x400000 + 0x13D63C, 42) -- AI Fireballista building harass range.   
-  core.writeCodeByte(0x400000 + 0x13D64E, 68) -- AI Cata and Trebuchet building harass range.   
+  })  -- Spearmen running only enemies, code edit 3.
+  core.writeCodeSmallInteger(0x400000+ 0x1AC333, 240) -- Spearman running trigger range around enemy units * 8."
 
   core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
-
   core.writeCodeSmallInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
-
-  core.writeCodeInteger(0x400000 + 0x1B635C, 40) -- "Archer base range.",
-  core.writeCodeInteger(0x400000 + 0x1B6374, 40) -- "Crossbowman base range.",
-  core.writeCodeInteger(0x400000 + 0x1B63EC, 40) -- "Fireballista base range.",
-
-  core.writeCodeInteger(0x400000 + 0x3595E, 1600) -- "Archer, crossbowman and fireballista control range 1.",
-  core.writeCodeInteger(0x400000 + 0x35E2D, 1600) -- "Archer and crossbowman control range 2.",
-  core.writeCodeInteger(0x400000 + 0x35F3B, 1600) -- "Fireballista control range 2.",
-  core.writeCodeInteger(0x400000 + 0x3633A, 1600) -- "Archer, crossbowman and fireballista control range 3.",
-  core.writeCodeInteger(0x400000 + 0x369B3, 1600) -- "Archer, crossbowman and fireballista control range 4.",
-  core.writeCodeInteger(0x400000 + 0x36ABA, 1600) -- "Archer, crossbowman and fireballista control range 5.",
-
-  core.writeCodeInteger(0x400000 + 0x1B64FC, 125) -- "Archer projectile velocity.", 
-  core.writeCodeInteger(0x400000 + 0x1B642C, 0) -- "Archer projectile arch type.",
-
-  core.writeCodeInteger(0x400000 + 0x1B6514, 125) -- "Crossbowman projectile velocity.", 
-  core.writeCodeInteger(0x400000 + 0x1B6444, 0) -- "Crossbowman projectile arch type.",
-
-  core.writeCodeInteger(0x400000 + 0x1B658C, 125) -- "Fireballista projectile velocity.", 
-  core.writeCodeInteger(0x400000 + 0x1B64BC, 0) -- "Fireballista projectile arch type.",
-
-  local slinger_base_range = 18
-  core.writeCodeInteger(0x400000 + 0x1B63DC, slinger_base_range) -- "Slinger base range.",           
-  core.writeCodeInteger(0x400000 + 0x35968, slinger_base_range*slinger_base_range) -- "Slinger control range 1.",      
-  core.writeCodeInteger(0x400000 + 0x35EAA, slinger_base_range*slinger_base_range) -- "Slinger control range 2.",      
-  core.writeCodeInteger(0x400000 + 0x36344, slinger_base_range*slinger_base_range) -- "Slinger control range 3.",      
-  core.writeCodeInteger(0x400000 + 0x369BA, slinger_base_range*slinger_base_range) -- "Slinger control range 4.",      
-  core.writeCodeInteger(0x400000 + 0x36AC1, slinger_base_range*slinger_base_range) -- "Slinger control range 5.",      
-  core.writeCodeInteger(0x400000 + 0x1B657C, 100) -- "Slinger projectile velocity.",  
-  core.writeCodeInteger(0x400000 + 0x1B64AC, 0) -- "Slinger projectile arch type.", 
-
-  local firethrower_base_range = 11
-  core.writeCodeInteger(0x400000 + 0x1B63E0, firethrower_base_range) -- "Firethrower base range.",          
-  core.writeCodeInteger(0x400000 + 0x35972, firethrower_base_range*firethrower_base_range) -- "Firethrower control range 1.",     
-  core.writeCodeInteger(0x400000 + 0x35ED0, firethrower_base_range*firethrower_base_range) -- "Firethrower control range 2.",     
-  core.writeCodeInteger(0x400000 + 0x3634E, firethrower_base_range*firethrower_base_range) -- "Firethrower control range 3.",     
-  core.writeCodeInteger(0x400000 + 0x369C1, firethrower_base_range*firethrower_base_range) -- "Firethrower control range 4.",     
-  core.writeCodeInteger(0x400000 + 0x36AC8, firethrower_base_range*firethrower_base_range) -- "Firethrower control range 5.",     
-  core.writeCodeInteger(0x400000 + 0x1B6580, 80) -- "Firethrower projectile velocity.", 
-  core.writeCodeInteger(0x400000 + 0x1B64B0, 0) -- "Firethrower projectile arch type.",
-
-  local catapult_base_range = 57
-  core.writeCodeInteger(0x400000 + 0x1B6360, catapult_base_range) -- "Catapult base range.",           
-  core.writeCodeInteger(0x400000 + 0x3597C, catapult_base_range*catapult_base_range) -- "Catapult control range 1.",      
-  core.writeCodeInteger(0x400000 + 0x35EE9, catapult_base_range*catapult_base_range) -- "Catapult control range 2.",      
-  core.writeCodeInteger(0x400000 + 0x36358, catapult_base_range*catapult_base_range) -- "Catapult control range 3.",      
-  core.writeCodeInteger(0x400000 + 0x36728, catapult_base_range*catapult_base_range) -- "Catapult control range 4.",      
-  core.writeCodeInteger(0x400000 + 0x368AA, catapult_base_range*catapult_base_range) -- "Catapult control range 5.",      
-  core.writeCodeInteger(0x400000 + 0x369C8, catapult_base_range*catapult_base_range) -- "Catapult control range 6.",      
-  core.writeCodeInteger(0x400000 + 0x36ACF, catapult_base_range*catapult_base_range) -- "Catapult control range 7.",      
-  core.writeCodeInteger(0x400000 + 0x1B6500, 10) -- "Catapult projectile velocity.",  
-  core.writeCodeInteger(0x400000 + 0x1B6430, 2) -- "Catapult projectile arch type.", 
-
-  core.writeCodeInteger(0x400000 + 0x1B6364, 68) -- "Trebuchet base range.",                         
-  core.writeCodeInteger(0x400000 + 0x1B63A8, 68) -- "Tower ballista base range.",                    
-  core.writeCodeInteger(0x400000 + 0x35986, 4624) -- "Trebuchet and tower ballista control range 1.", 
-  core.writeCodeInteger(0x400000 + 0x35EF3, 4624) -- "Trebuchet control range 2.",                    
-  core.writeCodeInteger(0x400000 + 0x35F14, 4624) -- "Tower ballista control range 2.",               
-  core.writeCodeInteger(0x400000 + 0x36362, 4624) -- "Trebuchet and tower ballista control range 3.", 
-  core.writeCodeInteger(0x400000 + 0x3672F, 4624) -- "Trebuchet control range 4.",                    
-  core.writeCodeInteger(0x400000 + 0x368B1, 4624) -- "Trebuchet control range 5.",                    
-  core.writeCodeInteger(0x400000 + 0x369CF, 4624) -- "Trebuchet and tower ballista control range 6.", 
-  core.writeCodeInteger(0x400000 + 0x36AD6, 4624) -- "Trebuchet and tower ballista control range 7.", 
-  core.writeCodeInteger(0x400000 + 0x1B6504, 30) -- "Trebuchet projectile velocity.",                
-  core.writeCodeInteger(0x400000 + 0x1B6434, 1) -- "Trebuchet projectile arch type.",               
-  core.writeCodeInteger(0x400000 + 0x1B6548, 170) -- "Tower ballista projectile velocity.",           
-  core.writeCodeInteger(0x400000 + 0x1B6478, 0) -- "Tower ballista projectile arch type.",          
-
-  local mango_base_range = 54
-  core.writeCodeInteger(0x400000 + 0x1B6368, mango_base_range) -- "Mangonel base range.",
-  core.writeCodeInteger(0x400000 + 0x3598D, mango_base_range*mango_base_range) -- "Mangonel control range 1.",
-  core.writeCodeInteger(0x400000 + 0x35EFD, mango_base_range*mango_base_range) -- "Mangonel control range 2.",
-  core.writeCodeInteger(0x400000 + 0x3636C, mango_base_range*mango_base_range) -- "Mangonel control range 3.",
-  core.writeCodeInteger(0x400000 + 0x36736, mango_base_range*mango_base_range) -- "Mangonel control range 4.",
-  core.writeCodeInteger(0x400000 + 0x368B8, mango_base_range*mango_base_range) -- "Mangonel control range 5.",
-  core.writeCodeInteger(0x400000 + 0x369D6, mango_base_range*mango_base_range) -- "Mangonel control range 6.",
-  core.writeCodeInteger(0x400000 + 0x36ADD, mango_base_range*mango_base_range) -- "Mangonel control range 7.",
-  core.writeCodeInteger(0x400000 + 0x1B6508, 15) -- "Mangonel projectile velocity.",
-  core.writeCodeInteger(0x400000 + 0x1B6438, 1) -- "Mangonel projectile arch type.",
-
-  core.writeCodeInteger(0x400000 + 0x1B63B4, 60) -- "Projectile Range - cow", 
-  core.writeCodeInteger(0x400000 + 0x3597C, 3600) -- "Manual Control Range - Catapult, Cow Throw", 
-  core.writeCodeInteger(0x400000 + 0x36358, 3600) -- "Manual Control Range 2 - Catapult, Cow Throw", 
-
-  core.writeCodeBytes(0x400000 + 0x170A97, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})  -- no rally running for Arabian Archers
-  core.writeCodeBytes(0x400000 + 0x1734A2, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})  -- no rally running for Slingers
-  core.writeCodeBytes(0x400000 + 0x174A49, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})  -- no rally running for Assassins
-  core.writeCodeBytes(0x400000 + 0x177012, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})  -- no rally running for Fire Throwers
 end
 
 local function mp_ascension_extras()
@@ -398,13 +309,6 @@ local function mp_ascension_extras()
   core.writeCodeByte(0x400000 + 0x17A089, 0xB8)  -- Custom unit to closest enemy distance update rate cap, code adjustment 1
   core.writeCodeByte(0x400000 + 0x17A08E, 0x90)  -- Custom unit to closest enemy distance update rate cap, code adjustment 2
 
-  ascension_extras()
-end
-
-local function ai_ascension_extras()
-  core.writeCodeByte(0x400000 + 0x1328DD, 184) -- Fire damage, code adjustment 1.   
-  core.writeCodeByte(0x400000 + 0x1328E2, 144) -- Fire damage, code adjustment 2.   
-  core.writeCodeInteger(0x400000 + 0x1328DE, 75) -- Fire damage. 
   ascension_extras()
 end
 
@@ -735,6 +639,7 @@ namespace.apply_rebalance = function(config)
   local enable_ascension = config["enable_ascension"]
   local enable_ai_ascension = config["enable_ai_ascension"]
   local enable_iron_double_pickup = config["enable_iron_double_pickup"]
+  local disable_rally_runners = config["disable_rally_runners"]
   local leather_per_cow = config["leather_per_cow"]
   local address = 0
 
@@ -1797,9 +1702,9 @@ namespace.apply_rebalance = function(config)
 
     -- catapult
     core.writeCodeInteger(base_ranges_table_addr + 4, catapult_range)
-    core.writeCodeInteger(range_split_addr2 + 31, catapult_range*catapult_range)
+    core.writeCodeInteger(range_split_addr2 + 31, catapult_range*catapult_range)  -- also linked to cow throwing range
     core.writeCodeInteger(range_split_addr4 + 189, catapult_range*catapult_range)
-    core.writeCodeInteger(range_split_addr3 + 31, catapult_range*catapult_range)
+    core.writeCodeInteger(range_split_addr3 + 31, catapult_range*catapult_range)  -- also linked to cow throwing range
     core.writeCodeInteger(range_split_addr5 - 650, catapult_range*catapult_range)  -- maybe find a new base address?
     core.writeCodeInteger(range_split_addr5 - 264, catapult_range*catapult_range)  -- maybe find a new base address?
     core.writeCodeInteger(range_split_addr5 + 22, catapult_range*catapult_range)
@@ -1873,6 +1778,7 @@ namespace.apply_rebalance = function(config)
      mangonel_pebble = 12,
      crossbow_bolt = 24,
      towerbal_bolt = 76,
+     cow = 88,
      slinger_stone = 128,
      firethrower_grenade = 132,
      firebal_bolt = 144
@@ -1897,7 +1803,14 @@ namespace.apply_rebalance = function(config)
     double_iron_pickup()
   end
 
-  if leather_per_cow then
+  if disable_rally_runners then
+    core.writeCodeBytes(arabbow_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+    core.writeCodeBytes(slinger_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+    core.writeCodeBytes(assassin_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+    core.writeCodeBytes(firethrower_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+  end
+
+  if leather_per_cow ~= nil then
     core.writeCodeByte(leather_per_cow_address+2, leather_per_cow)
     core.writeCodeByte(leather_per_cow_address+4, leather_per_cow)
   end
@@ -1912,7 +1825,7 @@ namespace.apply_rebalance = function(config)
 
   if enable_ai_ascension ~= nil then
     if data.version.isExtreme() then
-      ai_ascension_extras()
+      ascension_extras()
     else
       log(WARNING, "AI Ascension mode is only supported in SHC Extreme!")
     end
