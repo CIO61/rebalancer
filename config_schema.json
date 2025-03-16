@@ -775,11 +775,11 @@
     },
     "enable_ascension": {
       "type": "boolean",
-      "description": "Whether to enable Ascension Mod-specific changes (only works on Extreme!), reach out to Krarilotus/CIO for more details"
+      "description": "Whether to enable Ascension Mod-specific changes (only works on Extreme!).\nApplies the following changes:\nUnits look bigger on minimap\nSpearmen sprint when near enemies\nHighground damage reduction from 66% to 50%.\nFlagon cap on Inns reduced to 400.\nUnits check for nearby enemies more often."
     },
     "enable_ai_ascension": {
       "type": "boolean",
-      "description": "Whether to enable AI Ascension Mod-specific changes (only works on Extreme!), reach out to Krarilotus for more details"
+      "description": "Whether to enable AI-Ascension Mod specific changes (only works on Extreme!)\nApplies same changes as enable_ascension, except units' enemy check-rate increase."
     },
     "population_gathering_rate": {
       "type": "object",
