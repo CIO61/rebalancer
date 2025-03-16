@@ -728,35 +728,35 @@
           "$ref": "#/$defs/projectile_attributes"
         },
         "catapult_rock": {
-          "description": "Projectile properties for \nDefault is 10 velocity, Arch type of 2",
+          "description": "Projectile properties for Catapult Rocks\nDefault is 10 velocity, Arch type of 2",
           "$ref": "#/$defs/projectile_attributes"
         },
         "trebuchet_rock": {
-          "description": "Projectile properties for \nDefault is 30 velocity, Arch type of 1",
+          "description": "Projectile properties for Trebuchet Rocks\nDefault is 30 velocity, Arch type of 1",
           "$ref": "#/$defs/projectile_attributes"
         },
         "mangonel_pebble": {
-          "description": "Projectile properties for \nDefault is 15 velocity, Arch type of 1",
+          "description": "Projectile properties for Mangonel Pebbles\nDefault is 15 velocity, Arch type of 1",
           "$ref": "#/$defs/projectile_attributes"
         },
         "crossbow_bolt": {
-          "description": "Projectile properties for \nDefault is 125 velocity, Arch type of 0",
+          "description": "Projectile properties for Crossbow Bolts\nDefault is 125 velocity, Arch type of 0",
           "$ref": "#/$defs/projectile_attributes"
         },
         "towerbal_bolt": {
-          "description": "Projectile properties for \nDefault is 170 velocity, Arch type of 0",
+          "description": "Projectile properties for Tower Ballista Bolts\nDefault is 170 velocity, Arch type of 0",
           "$ref": "#/$defs/projectile_attributes"
         },
         "slinger_stone": {
-          "description": "Projectile properties for \nDefault is 100 velocity, Arch type of 0",
+          "description": "Projectile properties for Slinger Stones\nDefault is 100 velocity, Arch type of 0",
           "$ref": "#/$defs/projectile_attributes"
         },
         "firethrower_grenade": {
-          "description": "Projectile properties for \nDefault is 80 velocity, Arch type of 0",
+          "description": "Projectile properties for Firethrower Grenades\nDefault is 80 velocity, Arch type of 0",
           "$ref": "#/$defs/projectile_attributes"
         },
         "firebal_bolt": {
-          "description": "Projectile properties for \nDefault is 125 velocity, Arch type of 0",
+          "description": "Projectile properties for Fire Ballista Bolts\nDefault is 125 velocity, Arch type of 0",
           "$ref": "#/$defs/projectile_attributes"
         }
       }
