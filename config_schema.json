@@ -663,7 +663,7 @@
         },
         "dog_trigger_threshold": {
           "type": "integer",
-          "description": "Total enemy unit strength nearby a dogcage for it to release the dogs, use this in combination with powerLevel attribute of units."
+          "description": "Total enemy unit strength nearby a dogcage for it to release the dogs, use this in combination with powerLevel attribute of units. \nVanilla is 25."
         },
         "fire_damage": {
           "type": "integer",
