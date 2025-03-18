@@ -1721,11 +1721,13 @@ namespace.apply_rebalance = function(config)
     core.writeCodeInteger(range_split_addr10 + 8, mangonel_range*mangonel_range)
 
     -- trebuchet
+    core.writeCodeInteger(base_ranges_table_addr + 8, treb_range)
     core.writeCodeInteger(range_split_addr4 + 199, treb_range*treb_range)
     core.writeCodeInteger(range_split_addr5 - 643, treb_range*treb_range)  -- maybe find a new base address?
     core.writeCodeInteger(range_split_addr5 - 257, treb_range*treb_range)  -- maybe find a new base address?
 
     -- towerbal
+    core.writeCodeInteger(base_ranges_table_addr + 76, towerbal_range)
     core.writeCodeInteger(range_split_addr4 + 232, towerbal_range*towerbal_range)
 
     -- firebal
