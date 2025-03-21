@@ -321,13 +321,13 @@ local function enable_rebalance_features()
 
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
-      core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), 25)
+      core.writeSmallInteger(fire_damage_table_addr + 2*index, 25)
     elseif name == "Fireman" then
-      core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), 1)
+      core.writeSmallInteger(fire_damage_table_addr + 2*index, 1)
     elseif name == "Arabian firethrower" then
-      core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), 10)
+      core.writeSmallInteger(fire_damage_table_addr + 2*index, 10)
     else
-      core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), 100)
+      core.writeSmallInteger(fire_damage_table_addr + 2*index, 100)
     end
   end
 
