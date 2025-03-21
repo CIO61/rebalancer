@@ -667,7 +667,7 @@
         },
         "fire_damage": {
           "type": "integer",
-          "description": "Common fire damage for all units (Vanilla is 100)"
+          "description": "Common fire damage for all units (Vanilla is 100).\nLord(Vanilla: 25), firemen(Vanilla: 1) and Firethrowers(Vanilla: 10) are not affected by this config value. Use unit based configuration for them instead."
         }
       }
     },
