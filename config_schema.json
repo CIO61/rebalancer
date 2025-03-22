@@ -282,6 +282,12 @@
         "$ref": "#/$defs/popularity_threshold"
       }
     },
+    "population_gathering_rate_array": {
+      "description": "Calculation is as follows: 2000/(value*game speed). Must be defined as 21-element integer array. Starting from the leave rate at <4 popularity to gathering rate @100 popularity",
+      "type": "array", 
+      "minItems": 21, 
+      "maxItems": 21
+    },
     "projectile_attributes": {
       "type": "object",
       "properties": {
@@ -828,6 +834,85 @@
       },
       "propertyNames": {
         "enum": ["Skirmish", "Scenario_lt_100", "Scenario_gt_100", "population_upkeep"]
+      }
+    },
+    "population": {
+      "type": "object",
+      "properties": {
+        "gathering_rate_skirmish": {
+          "title": "Population gathering rates in Skirmish matches.",
+          "$ref": "#/$defs/population_gathering_rate_array"
+        },
+        "gathering_rate_scenario_small_town": {
+          "title": "Population gathering rates in scenario/castle builder maps.",
+           "$ref": "#/$defs/population_gathering_rate_array"
+        },
+        "gathering_rate_scenario_large_town": {
+          "title": "Population gathering rates in scenario/castle builder maps.",
+           "$ref": "#/$defs/population_gathering_rate_array"
+        },
+        "large_town_threshold": {
+          "type": "integer",
+          "description": "Population threshold for triggering large town gathering rate in scenarios/castle builder maps. Vanilla is 100"
+        },
+        "civilian_upkeep": {
+          "description": "Special upkeep system for skirmish&multiplayer matches. When defined, poeple gather slower, and leave faster as population grows.",
+          "properties": {
+            "slower_gathering": {
+              "type": "integer",
+              "description": "Penalty factor for gathering rate, select any number from 1 to 5. 5 is most severe.",
+              "enum": [1, 2, 3, 4, 5]
+            },
+            "minimum_gathering": {
+              "type": "integer",
+              "description": "Minimum value after gathering rate penalty is applied, defaults to 4."
+            },
+            "faster_leaving": {
+              "type": "integer",
+              "description": "Boost factor for leaving rate, select any number from 1 to 5. 5 is most severe.",
+              "enum": [1, 2, 3, 4, 5]
+            }
+          }
+        },
+        "minimum_population": {
+          "type": "integer",
+          "description": "Minimum amount of people before people stop leaving your castle. Vanilla is 4."
+        },
+        "reset_population_threshold": {
+          "type": "integer",
+          "description": "When a castle's population drops to/below this value, popularity gets reset. Vanilla is 3."
+        },
+        "reset_popularity_threshold": {
+          "type": "integer",
+          "description": "When popularity is below this amount, popularity can be reset. Vanilla is 5000 (meaning 50 popularity)"
+        },
+        "reset_popularity_value": {
+          "type": "integer",
+          "description": "When a popularity reset is triggered, popularity is set this this value. Vanilla is 7500(meaning 75 popularity)"
+        },
+        "crowding": {
+          "type": "object",
+          "properties": {
+            "thresholds": {
+              "type": "array",
+              "description": "Thresholds of population/housing ratios for crowding effects to take effect.\nVanilla is [100, 120, 140, 160, 180]",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            },
+            "penalties": {
+              "type": "array",
+              "description": "Crowding effects for breaching each crowding threshold.\nVanilla is[-50, -100, -150, -200, -250]",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            }
+          }
+        }
       }
     }
   }

@@ -26,6 +26,13 @@ local pop_gathering_addr = locate_aob("8B 0C 85 ? ? ? ? EB 2D 8B 4E F0")
 local scenario_pgr_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
 local scenario_pgr_crowded_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
 local skirmish_pgr_base = locate_aob("F8 FF FF FF FA FF FF FF FB FF FF FF FC FF FF FF FD FF FF FF FD FF FF FF FE FF FF FF FE FF FF FF FF FF FF FF FF FF FF FF 0A 00 00 00 0C 00 00 00")
+local large_town_threshold_addr = locate_aob("83 BE ? ? ? ? 64 7E 09")+6
+local min_peasants_addr = locate_aob("83 FA 04 7E 3B") + 2
+local pop_reset_population_limit_addr = locate_aob("83 F9 03 7F 1F") + 2
+local pop_reset_popularity_limit_addr = pop_reset_population_limit_addr + 10
+local pop_reset_value_addr = pop_reset_population_limit_addr + 25
+local crowding_addr_1 = locate_aob("83 F8 64 7F 04 33 C0 EB 40 83 F8 78")
+local crowding_addr_2 = locate_aob("83 F8 64 7F 04 33 F6 EB 40 83 F8 78")
 
 local unit_array_base_addr = addresses.unit_array_base_addr
 local building_array_base_addr = addresses.building_array_base_addr
@@ -626,6 +633,7 @@ namespace.apply_rebalance = function(config)
   local buildings = config["buildings"]
   local units = config["units"]
   local resources = config["resources"]
+  local population = config["population"]
   local population_gathering_rate = config["population_gathering_rate"]
   local religion = config["religion"]
   local beer = config["beer"]
@@ -1143,7 +1151,8 @@ namespace.apply_rebalance = function(config)
     end
   end
 
-  if population_gathering_rate ~= nil then
+  if population_gathering_rate ~= nil then  -- DEPRECATED, WILL BE REMOVED LATER
+    log(WARNING, "population_gathering_rate is deprecated, use population section in the config instead.")
     local Skirmish = population_gathering_rate["Skirmish"]
     local Scenario_lt_100 = population_gathering_rate["Scenario_lt_100"]
     local Scenario_gt_100 = population_gathering_rate["Scenario_gt_100"]
@@ -1236,6 +1245,130 @@ namespace.apply_rebalance = function(config)
       },0)
       core.insertCode(pop_gathering_addr, 7, upkeep_code_bytes, pop_gathering_addr+7, "before")
     end
+  end
+
+  if population ~= nil then
+    local gathering_rate_skirmish = population["gathering_rate_skirmish"]
+    local gathering_rate_scenario_small_town = population["gathering_rate_scenario_small_town"]
+    local gathering_rate_scenario_large_town = population["gathering_rate_scenario_large_town"]
+    local large_town_threshold = population["large_town_threshold"]
+    local civilian_upkeep = population["civilian_upkeep"]
+    local minimum_population = population["minimum_population"]
+    local reset_population_threshold = population["reset_population_threshold"]
+    local reset_popularity_threshold = population["reset_popularity_threshold"]
+    local reset_popularity_value = population["reset_popularity_value"]
+    local crowding = population["crowding"]
+
+    if gathering_rate_skirmish ~= nil then
+      for pgr_index, value in ipairs(gathering_rate_skirmish) do
+        core.writeInteger(skirmish_pgr_base + 4 * (pgr_index-1), value)
+      end
+    end
+    if gathering_rate_scenario_small_town ~= nil then
+      for pgr_index, value in ipairs(gathering_rate_scenario_small_town) do
+        core.writeInteger(scenario_pgr_base + 4 * (pgr_index-1), value)
+      end
+    end
+    if gathering_rate_scenario_large_town ~= nil then
+      for pgr_index, value in ipairs(gathering_rate_scenario_large_town) do
+        core.writeInteger(scenario_pgr_crowded_base + 4 * (pgr_index-1), value)
+      end
+    end
+    if civilian_upkeep ~= nil then
+      local slower_gathering = civilian_upkeep["slower_gathering"]
+      local minimum_gathering = civilian_upkeep["minimum_gathering"]
+      local faster_leaving = civilian_upkeep["faster_leaving"]
+      if minimum_gathering == nil then
+        minimum_gathering = 4
+      end
+      if slower_gathering < 1 then
+        log(WARNING, "Upkeep values must be between 1 and 5")
+        slower_gathering = 1
+      end
+      if slower_gathering > 5 then
+        log(WARNING, "Upkeep values must be between 1 and 5")
+        slower_gathering = 5
+      end
+      if faster_leaving < 1 then
+        log(WARNING, "Upkeep values must be between 1 and 5")
+        faster_leaving = 1
+      end
+      if faster_leaving > 5 then
+        log(WARNING, "Upkeep values must be between 1 and 5")
+        faster_leaving = 5
+      end
+
+      local upkeep_code_bytes = core.assemble([[
+        push eax
+        mov eax, [esi+0x2110]
+        cmp ecx, 0
+        jl label_0
+        shr eax, gather_factor
+        cmp eax, ecx
+        jg label_2
+        jmp label_1
+            label_0:
+        shr eax, leave_factor
+            label_1:
+        sub ecx, eax
+        jmp end_label
+            label_2:
+        mov ecx, minimum_gather
+            end_label:
+        pop eax
+      ]],{
+        leave_factor = 7-faster_leaving,
+        minimum_gather = minimum_gathering,
+        gather_factor = 7-slower_gathering
+      },0)
+      core.insertCode(pop_gathering_addr, 7, upkeep_code_bytes, pop_gathering_addr+7, "before")
+    end
+    if minimum_population ~= nil then
+      core.writeCodeByte(min_peasants_addr, minimum_population)
+    end
+    if reset_population_threshold ~= nil then
+      core.writeCodeByte(pop_reset_population_limit_addr, reset_population_threshold)
+    end
+    if reset_popularity_threshold ~= nil then
+      core.writeCodeInteger(pop_reset_popularity_limit_addr, reset_popularity_threshold)
+    end
+    if reset_popularity_value ~= nil then
+      core.writeCodeInteger(pop_reset_value_addr, reset_popularity_value)
+    end
+    if large_town_threshold ~= nil then
+      core.writeCodeByte(large_town_threshold_addr, large_town_threshold)
+    end
+    if crowding ~= nil then
+      local thresholds = crowding["thresholds"]
+      local penalties = crowding["penalties"]
+      if thresholds ~= nil then
+        core.writeCodeByte(crowding_addr_1+15, thresholds[1])
+        core.writeCodeByte(crowding_addr_1+29, thresholds[2])
+        core.writeCodeInteger(crowding_addr_1+45, thresholds[3])
+        core.writeCodeInteger(crowding_addr_1+64, thresholds[4])
+        core.writeCodeInteger(crowding_addr_1+67, thresholds[5])
+
+        core.writeCodeByte(crowding_addr_2+15, thresholds[1])
+        core.writeCodeByte(crowding_addr_2+29, thresholds[2])
+        core.writeCodeInteger(crowding_addr_2+45, thresholds[3])
+        core.writeCodeInteger(crowding_addr_2+64, thresholds[4])
+        core.writeCodeInteger(crowding_addr_2+67, thresholds[5])
+      end
+      if penalties ~= nil then
+        core.writeCodeInteger(crowding_addr_1+2, penalties[1])
+        core.writeCodeInteger(crowding_addr_1+11, penalties[2])
+        core.writeCodeInteger(crowding_addr_1+22, penalties[3])
+        core.writeCodeByte(crowding_addr_1+36, penalties[4]-penalties[5])
+        core.writeCodeInteger(crowding_addr_1+52, penalties[5])
+
+        core.writeCodeInteger(crowding_addr_2+2, penalties[1])
+        core.writeCodeInteger(crowding_addr_2+11, penalties[2])
+        core.writeCodeInteger(crowding_addr_2+22, penalties[3])
+        core.writeCodeByte(crowding_addr_2+36, penalties[4]-penalties[5])
+        core.writeCodeInteger(crowding_addr_2+52, penalties[5])
+      end
+    end
+
   end
 
   if religion ~= nil then
