@@ -568,10 +568,6 @@
               "description": "Melee damage towards buildings",
               "$ref": "#/$defs/numeric_string"
             },
-            "fortificationDamagePenalty": {
-              "description": "Melee damage towards towers, is represented as penalty on buildingDamage\nCan be written as either a negative or normal number, it will be interpreted as negative either way.",
-              "$ref": "#/$defs/numeric_string"
-            },
             "fortificationDamage": {
               "description": "Melee damage towards sturdy buildings.(which is only towers in vanilla) Overrides fortificationDamagePenalty!",
               "$ref": "#/$defs/numeric_string"
@@ -786,55 +782,6 @@
     "enable_ai_ascension": {
       "type": "boolean",
       "description": "Whether to enable AI-Ascension Mod specific changes (only works on Extreme!)\nApplies same changes as enable_ascension, except units' enemy check-rate increase."
-    },
-    "population_gathering_rate": {
-      "type": "object",
-      "description": "Population gathering rates, Calculation is as follows: 2000/(value*game speed)",
-      "properties": {
-        "Skirmish": {
-          "description": "Population gathering rate values for skirmish&multiplayer matches\n Can be defined as either a map of thresholds-gathering rates or an 21 item array.",
-          "oneOf": [
-            {"$ref": "#/$defs/population_gathering_rate_map"},
-            {"type":"array", "minItems": 21, "maxItems": 21}
-          ]
-        },
-        "Scenario_lt_100": {
-          "description": "Population gathering rate values for single player scenarios, where population is less than 100\n Can be defined as either a map of thresholds-gathering rates or an 21 item array.",
-          "oneOf": [
-            {"$ref": "#/$defs/population_gathering_rate_map"},
-            {"type":"array", "minItems": 21, "maxItems": 21}
-          ]
-        },
-        "Scenario_gt_100": {
-          "description": "Population gathering rate values for single player scenarios, where population is more than 100\n Can be defined as either a map of thresholds-gathering rates or an 21 item array.",
-          "oneOf": [
-            {"$ref": "#/$defs/population_gathering_rate_map"},
-            {"type":"array", "minItems": 21, "maxItems": 21}
-          ]
-        },
-        "population_upkeep": {
-          "description": "Special upkeep system for skirmish&multiplayer matches. When defined, poeple gather slower, and leave faster as population grows.",
-          "properties": {
-            "slower_gathering": {
-              "type": "integer",
-              "description": "Penalty factor for gathering rate, select any number from 1 to 5. 5 is most severe.",
-              "enum": [1, 2, 3, 4, 5]
-            },
-            "minimum_gathering": {
-              "type": "integer",
-              "description": "Minimum value after gathering rate penalty is applied, defaults to 4."
-            },
-            "faster_leaving": {
-              "type": "integer",
-              "description": "Boost factor for leaving rate, select any number from 1 to 5. 5 is most severe.",
-              "enum": [1, 2, 3, 4, 5]
-            }
-          }
-        }
-      },
-      "propertyNames": {
-        "enum": ["Skirmish", "Scenario_lt_100", "Scenario_gt_100", "population_upkeep"]
-      }
     },
     "population": {
       "type": "object",

@@ -6,21 +6,9 @@ local building_names = constants.building_names
 local unit_names = constants.unit_names
 local military_ground_unit_names = constants.military_ground_unit_names
 local resource_names = constants.resource_names
-local pop_thresholds = constants.pop_thresholds
 local namespace = {}
 
-local function locate_aob(str)
-  return core.AOBScan(str, 0x400000, 0x7FFFFF)
-end
-
-local function is_array(t)
-  local i = 0
-  for _ in pairs(t) do
-      i = i + 1
-      if t[i] == nil then return false end
-  end
-  return true
-end
+local locate_aob = core.scanForAOB
 
 local pop_gathering_addr = locate_aob("8B 0C 85 ? ? ? ? EB 2D 8B 4E F0")
 local scenario_pgr_base = locate_aob("EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00")
@@ -67,24 +55,45 @@ local unit_xbow_dmg_base = locate_aob("98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A
 local unit_stone_dmg_base = locate_aob("88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00")
 local unit_speed_base = locate_aob("01 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00")
 
-local tunneller_building_melee_addr = locate_aob("F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8")
-local archer_building_melee_addr =     locate_aob("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98")  -- +6 +9
-local crossbow_building_melee_addr = locate_aob("33 FF 8D 44 00 02 8B D0 8B 44 24 10")
-local spearman_building_melee_addr =   locate_aob("F7 D9 1B C9 83 E1 FB 83 C1 08 0F BF 90")  -- +6 +9
-local maceman_building_melee_addr =    locate_aob("F7 D9 1B C9 83 E1 E1 83 C1 23 0F BF 98")  -- +6 +9
-local pikeman_building_melee_addr =  core.AOBScan("F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", tunneller_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
-local swordsman_building_melee_addr =  locate_aob("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98")  -- +6 +9
-local knight_building_melee_addr =   core.AOBScan("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98", swordsman_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
-local lord_building_melee_addr =          locate_aob("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8")
-local arabbow_building_melee_addr =     core.AOBScan("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", archer_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
-local slave_building_melee_addr =         locate_aob("0F BF 90 ? ? ? ? 8B 80 ? ? ? ? 6A 08")  -- +14
-local slinger_building_melee_addr =     core.AOBScan("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", arabbow_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
-local assassin_building_melee_addr =    core.AOBScan("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", lord_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
-local firethrower_building_melee_addr = core.AOBScan("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", slinger_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
-local horsearcher_building_melee_addr = core.AOBScan("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", firethrower_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
-local arabsword_building_melee_addr =   core.AOBScan("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", assassin_building_melee_addr+10, 0x7FFFFF)  -- +6 +9
-local monk_building_melee_addr =          locate_aob("F7 D9 1B C9 83 E1 EF 83 C1 14 0F BF A8 ? ? ? ? 6A 01")  -- +6 +9
-local ram_damage_addr = locate_aob("55 6A 32 52 8B 90 ? ? ? ? 51 52")  -- +3  
+local tunneller_building_melee_addr =   locate_aob("F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8")
+local archer_building_melee_addr =      locate_aob("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98")  -- +6 +9
+local crossbow_building_melee_addr =    locate_aob("33 FF 8D 44 00 02 8B D0 8B 44 24 10")
+local spearman_building_melee_addr =    locate_aob("F7 D9 1B C9 83 E1 FB 83 C1 08 0F BF 90")  -- +6 +9
+local maceman_building_melee_addr =     locate_aob("F7 D9 1B C9 83 E1 E1 83 C1 23 0F BF 98")  -- +6 +9
+local pikeman_building_melee_addr =     locate_aob("F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", tunneller_building_melee_addr+10)  -- +6 +9
+local swordsman_building_melee_addr =   locate_aob("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98")  -- +6 +9
+local knight_building_melee_addr =      locate_aob("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98", swordsman_building_melee_addr+10)  -- +6 +9
+local lord_building_melee_addr =        locate_aob("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8")
+local arabbow_building_melee_addr =     locate_aob("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", archer_building_melee_addr+10)  -- +6 +9
+local slave_building_melee_addr =       locate_aob("0F BF 90 ? ? ? ? 8B 80 ? ? ? ? 6A 08")  -- +14
+local slinger_building_melee_addr =     locate_aob("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", arabbow_building_melee_addr+10)  -- +6 +9
+local assassin_building_melee_addr =    locate_aob("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", lord_building_melee_addr+10)  -- +6 +9
+local firethrower_building_melee_addr = locate_aob("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", slinger_building_melee_addr+10)  -- +6 +9
+local horsearcher_building_melee_addr = locate_aob("F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", firethrower_building_melee_addr+10)  -- +6 +9
+local arabsword_building_melee_addr =   locate_aob("F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", assassin_building_melee_addr+10)  -- +6 +9
+local monk_building_melee_addr =        locate_aob("F7 D9 1B C9 83 E1 EF 83 C1 14 0F BF A8 ? ? ? ? 6A 01")  -- +6 +9
+local ram_damage_addr =                 locate_aob("55 6A 32 52 8B 90 ? ? ? ? 51 52")  -- +3  
+
+local unit_melee_damage_offset_map = {}
+unit_melee_damage_offset_map["Tunneler"] =             {building = tunneller_building_melee_addr+9,   fortification = tunneller_building_melee_addr+6,   wall = tunneller_building_melee_addr - 53}
+unit_melee_damage_offset_map["European archer"] =      {building = archer_building_melee_addr+9,      fortification = archer_building_melee_addr+6,      wall = archer_building_melee_addr - 53}
+unit_melee_damage_offset_map["European crossbowman"] = {building = crossbow_building_melee_addr+4,    fortification = crossbow_building_melee_addr+2,    wall = crossbow_building_melee_addr-62}
+unit_melee_damage_offset_map["European spearman"] =    {building = spearman_building_melee_addr+9,    fortification = spearman_building_melee_addr+6,    wall = spearman_building_melee_addr - 36}
+unit_melee_damage_offset_map["European pikeman"] =     {building = pikeman_building_melee_addr+9,     fortification = pikeman_building_melee_addr+6,     wall = pikeman_building_melee_addr - 55}
+unit_melee_damage_offset_map["European maceman"] =     {building = maceman_building_melee_addr+9,     fortification = maceman_building_melee_addr+6,     wall = maceman_building_melee_addr - 46}
+unit_melee_damage_offset_map["European swordsman"] =   {building = swordsman_building_melee_addr+9,   fortification = swordsman_building_melee_addr+6,   wall = swordsman_building_melee_addr - 55}
+unit_melee_damage_offset_map["European knight"] =      {building = knight_building_melee_addr+9,      fortification = knight_building_melee_addr+6,      wall = knight_building_melee_addr - 55}
+unit_melee_damage_offset_map["Monk"] =                 {building = monk_building_melee_addr+9,        fortification = monk_building_melee_addr+6,        wall = monk_building_melee_addr - 52}
+unit_melee_damage_offset_map["Lord"] =                 {building = lord_building_melee_addr+9,        fortification = lord_building_melee_addr+6,        wall = lord_building_melee_addr - 66}
+unit_melee_damage_offset_map["Battering ram"] =        {building = ram_damage_addr+2,                 fortification = "Not supported.",                  wall = "Not supported."}
+unit_melee_damage_offset_map["Arabian archer"] =       {building = arabbow_building_melee_addr+9,     fortification = arabbow_building_melee_addr+6,     wall = arabbow_building_melee_addr - 44}
+unit_melee_damage_offset_map["Arabian slave"] =        {building = slave_building_melee_addr+14,      fortification = "Not supported.",                  wall = "Not supported."}
+unit_melee_damage_offset_map["Arabian slinger"] =      {building = slinger_building_melee_addr+9,     fortification = slinger_building_melee_addr+6,     wall = slinger_building_melee_addr - 53}
+unit_melee_damage_offset_map["Arabian assassin"] =     {building = assassin_building_melee_addr+9,    fortification = assassin_building_melee_addr+6,    wall = assassin_building_melee_addr - 52}
+unit_melee_damage_offset_map["Arabian horse archer"] = {building = horsearcher_building_melee_addr+9, fortification = horsearcher_building_melee_addr+6, wall = horsearcher_building_melee_addr - 55}
+unit_melee_damage_offset_map["Arabian swordsman"] =    {building = arabsword_building_melee_addr+9,   fortification = arabsword_building_melee_addr+6,   wall = arabsword_building_melee_addr - 55}
+unit_melee_damage_offset_map["Arabian firethrower"] =  {building = firethrower_building_melee_addr+9, fortification = firethrower_building_melee_addr+6, wall = firethrower_building_melee_addr - 53}
+
 
 local unit_power_levels_addr = locate_aob("05 00 00 00 0A 00 00 00 04 00 00 00 0A 00 00 00 0A 00 00 00")
 local eu_unit_gold_cost_base = locate_aob("0C 00 00 00 14 00 00 00 08 00 00 00 14 00 00 00")
@@ -124,13 +133,14 @@ local wheatfarmer_func = locate_aob("53 66 89 BE ? ? ? ? 6A 02") -- skirmish bon
 local brewer_func = locate_aob("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00") -- both produce amount and skirmish bonus is push ebp instead of push val
 
 local fletcher_func = locate_aob("55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 06 00 E8")
-local poleturner_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00", brewer_func+16, 0x7FFFFF)  -- exact same AOB as brewer func, must uniqueify! (works bc brewer is changed before this scan)
+local poleturner_func = locate_aob("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00", brewer_func+16)  -- exact same AOB as brewer func
 local blacksmith_func = locate_aob("55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 07 00 E8")  -- blacksmith has another call to calculategoodsproduced but its a mystery
 local custom_fletcher_code_addr = 0  -- defined when inserted as code
 local custom_poleturner_code_addr = 0  -- defined when inserted as code
 local custom_blacksmith_code_addr = 0  -- defined when inserted as code
 local tanner_func = locate_aob("53 53 50 66 89 AE ? ? ? ? E8 53 6C FD FF 66 89 86")
-local armourer_func = core.AOBScan("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", poleturner_func+16, 0x7FFFFF)
+local armourer_func = locate_aob("55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", poleturner_func+16)
+local resource_production_offset_map = {}  -- defined under enable_rebalance_features
 
 -- religion related addresses
 local religion_addr_1 = locate_aob("83 F8 18 7F 04 33 C9 EB 2C 83 F8 31 7F 07 B9 32 00 00 00 EB 20 83 F8 4A 7F 07 B9 64 00 00 00 EB 14 33 C9 83 F8 5E 0F 9F C1 83 E9 01 83 E1 CE 81 C1 C8 00 00 00 83 BE")
@@ -189,71 +199,59 @@ local proj_archtype_table_addr = locate_aob("00 00 00 00 02 00 00 00 01 00 00 00
 local range_split_addr1 = locate_aob("8B 04 85 ? ? ? ? 0F AF C0 66 83 BC 37") -- 0x54B621
 local range_split_asm1 = templates.range_split_asm1  -- patch size should be 7
 -- archer_range arabbow_range horse_archer_range
-
 local range_split_addr2 = locate_aob("BD 64 0B 00 00 E9 A2 00 00 00") -- 0x43595D
 local range_split_asm2 = templates.range_split_asm2  -- patch size should be 5
 -- archer_range xbow_range arabbow_range horse_archer_range fbal_range
-
 local range_split_addr3 = locate_aob("BE 64 0B 00 00 E9 A5 00 00 00") -- 0x436339
 local range_split_asm3 = templates.range_split_asm3  -- patch size should be 5
 -- archer_range xbow_range arabbow_range horse_archer_range fbal_range
-
 local range_split_addr4 = locate_aob("BE 64 0B 00 00 0F 87 52 01 00 00") -- 0x435E2C
 local range_split_asm4 = templates.range_split_asm4  -- patch size should be 5
 -- archer_range xbow_range arabbow_range horse_archer_range
-
 local range_split_addr5 = locate_aob("B8 64 0B 00 00 EB 25 B8") -- 0x4369B2
 local range_split_asm5 = templates.range_split_asm5  -- patch size should be 5
 -- archer_range xbow_range arabbow_range horse_archer_range fbal_range
-
 local range_split_addr6 = locate_aob("BA 64 0B 00 00 EB 25 BA") -- 0x436AB9
 local range_split_asm6 = templates.range_split_asm6  -- patch size should be 5
 -- archer_range xbow_range arabbow_range horse_archer_range fbal_range
-
 local range_split_addr7 = locate_aob("BD 39 1C 00 00 EB 7D BD") -- 0x435985
 local range_split_asm7 = templates.range_split_asm7  -- patch size should be 5
 -- treb_range towerbal_range
-
 local range_split_addr8 = locate_aob("BE 39 1C 00 00 E9 7D 00 00 00 BE") -- 0x436361
 local range_split_asm8 = templates.range_split_asm8  -- patch size should be 5
 -- treb_range towerbal_range
-
 local range_split_addr9 = locate_aob("B8 39 1C 00 00 EB 09 B8") -- 0x4369CE
 local range_split_asm9 = templates.range_split_asm9  -- patch size should be 5
 -- treb_range towerbal_range
-
 local range_split_addr10 = locate_aob("BA 39 1C 00 00 EB 09 BA") -- 0x436AD5
 local range_split_asm10 = templates.range_split_asm10  -- patch size should be 5
 -- treb_range towerbal_range
-
 local range_split_addr11 = locate_aob("83 E9 03 F7 D9 1B C9")  -- 0x53D642
 local range_split_asm11 = templates.range_split_asm11 -- patch size should be 13
 -- catapult_range treb_range
-
 local range_split_addr12 = locate_aob("03 D1 83 FA 79 7E")  -- 0x57770C
 local range_split_asm12 = templates.range_split_asm12 -- patch size should be 5
 -- firethrower_range
-
 local scan_range_addr_archer = locate_aob("66 81 B8 ? ? ? ? 90 01 7F")
 local scan_range_addr_arabbow_1 = locate_aob("85 FF BD 90 01 00 00 7E 28 8B C3")
 local scan_range_addr_arabbow_2 = locate_aob("66 00 BD 90 01 00 00 66 39 AE ? ? ? ?")
 local scan_range_addr_horse_archer = locate_aob("69 D2 90 04 00 00 66 81 BA ? ? ? ? B0 01")
-local scan_range_addr_xbow = core.AOBScan("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_archer + 500, 0x7FFFFF)
+local scan_range_addr_xbow = locate_aob("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_archer + 500)
 local scan_range_addr_xbow_2 = locate_aob("66 C7 86 ? ? ? ? 0A 00 66 81 BE ? ? ? ? 90 01")
-local scan_range_addr_slinger_1 = core.AOBScan("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_xbow + 500, 0x7FFFFF)
+local scan_range_addr_slinger_1 = locate_aob("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_xbow + 500)
 local scan_range_addr_slinger_2 = locate_aob("03 F9 81 FF E4 01 00 00 7E 17 C7 86 ? ? ? ? D8 FF FF FF")
 local scan_range_addr_slinger_3 = locate_aob("89 8E ? ? ? ? 66 C7 86 ? ? ? ? 66 00 BD 90 01 00 00")
-local scan_range_addr_firethrower_1 = core.AOBScan("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_slinger_1 + 500, 0x7FFFFF)
+local scan_range_addr_firethrower_1 = locate_aob("0F B7 88 ? ? ? ? 66 81 F9 90 01", scan_range_addr_slinger_1 + 500)
 local scan_range_addr_fbal_1 = locate_aob("66 C7 86 ? ? ? ? 03 00 66 81 BE ? ? ? ? A8 02")
 local scan_range_addr_fbal_2 = locate_aob("0F AF FA 03 DF 81 FB 64 0B")
 local scan_range_addr_mango = locate_aob("0F 85 E0 00 00 00 66 81 BE ? ? ? ? A8 02")
 local scan_range_addr_towerbal_1 = locate_aob("C3 66 81 BE ? ? ? ? A8 02")
-local scan_range_addr_towerbal_2 = core.AOBScan("C3 66 81 BE ? ? ? ? A8 02", scan_range_addr_towerbal_1 + 250, 0x7FFFFF)
+local scan_range_addr_towerbal_2 = locate_aob("C3 66 81 BE ? ? ? ? A8 02", scan_range_addr_towerbal_1 + 250)
 
 local arabbow_rally_running_addr = locate_aob("66 89 AE ? ? ? ? 66 8B 8E ? ? ? ?")
 local slinger_rally_running_addr = locate_aob("66 89 86 ? ? ? ? 66 8B 96 ? ? ? ?")
 local assassin_rally_running_addr = locate_aob("66 89 86 ? ? ? ? 89 86 ? ? ? ? C7 86 ? ? ? ? 10 00 00 00 66 8B 96 ? ? ? ?")
-local firethrower_rally_running_addr = core.AOBScan("66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8", assassin_rally_running_addr, 0x7FFFFF)
+local firethrower_rally_running_addr = locate_aob("66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8", assassin_rally_running_addr)
 
 local function get_unit_melee_dmg_address(attacker, defender)
   local attacker_idx = table.find(unit_names, attacker) - 1
@@ -382,7 +380,8 @@ local function enable_rebalance_features()
     end
   end
 
-  core.writeCodeBytes(crossbow_building_melee_addr-12, core.compile({  -- enables fully changing melee damage of xbows to buildings
+   -- enable fully changing melee damage of xbows to buildings
+  core.writeCodeBytes(crossbow_building_melee_addr-12, core.compile({ 
     0x8B, 0x04, 0x95, core.itob(towers_or_gates_base), -- mov eax,[edx*4+005B9980]
     0x3C, 0x01,                                        -- cmp al,01
     0x75, 0x04,                                        -- jne 0055CE06
@@ -393,19 +392,23 @@ local function enable_rebalance_features()
   }, crossbow_building_melee_addr-12)
   )
 
-  core.writeCodeByte(baker_func, 0x90)  -- nop out original push ebx
+  -- enable skirmish bonus&delivery modification for bakers
+  core.writeCodeByte(baker_func, 0x90)
   core.insertCode(baker_func, 8, {}, baker_func+6, "after")
   core.writeCodeBytes(baker_func+6, {0x6A, 0x00})
 
-  core.writeCodeByte(wheatfarmer_func, 0x90)  -- nop out original push ebx
+  -- enable skirmish bonus&delivery modification for wheat farmers
+  core.writeCodeByte(wheatfarmer_func, 0x90)
   core.insertCode(wheatfarmer_func, 8, {}, wheatfarmer_func+6, "after")
   core.writeCodeBytes(wheatfarmer_func+6, {0x6A, 0x00})
 
-  core.writeCodeByte(brewer_func, 0x90)  -- nop out original push ebp
-  core.writeCodeByte(brewer_func+8, 0x90)  -- nop out original push ebp
+  -- enable skirmish bonus&delivery modification for brewers
+  core.writeCodeByte(brewer_func, 0x90)
+  core.writeCodeByte(brewer_func+8, 0x90)
   core.insertCode(brewer_func, 9, {}, brewer_func+5, "after")
   core.writeCodeBytes(brewer_func+5, {0x6A, 0x01, 0x6A, 0x01})
 
+  -- enable skirmish bonus&delivery modification for bows/xbows
   local custom_fletcher_code = {
     0x50,                                       -- push eax
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
@@ -425,6 +428,7 @@ local function enable_rebalance_features()
   core.writeCodeBytes(fletcher_func, {0x90, 0x90})
   custom_fletcher_code_addr = core.insertCode(fletcher_func, 9, custom_fletcher_code, fletcher_func+9, "after")
 
+  -- enable skirmish bonus&delivery modification for spears/pikes
   local custom_poleturner_code = {
     0x50,                                       -- push eax
     0x8B, 0xC7,                                 -- mov eax, edi
@@ -445,6 +449,7 @@ local function enable_rebalance_features()
   core.writeCodeByte(poleturner_func+8, 0x90)
   custom_poleturner_code_addr = core.insertCode(poleturner_func, 9, custom_poleturner_code, poleturner_func+9, "after")
 
+  -- enable skirmish bonus&delivery modification for maces/swords
   local custom_blacksmith_code = {
     0x50,                                       -- push eax
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
@@ -464,17 +469,39 @@ local function enable_rebalance_features()
   core.writeCodeBytes(blacksmith_func, {0x90, 0x90})
   custom_blacksmith_code_addr = core.insertCode(blacksmith_func, 9, custom_blacksmith_code, blacksmith_func+9, "after")
 
+  -- enable skirmish bonus&delivery modification for tanners
   core.writeCodeBytes(tanner_func, {0x90, 0x90, 0x90})
   core.insertCode(tanner_func, 10, {}, tanner_func+5, "after")
   core.writeCodeBytes(tanner_func+5, {0x6A, 0x01, 0x6A, 0x01, 0x50})
 
-  -- exact same AOB start as brewer AND poleturner!
-
+  -- enable skirmish bonus&delivery modification for armourers
   core.writeCodeByte(armourer_func, 0x90)
   core.writeCodeByte(armourer_func+8, 0x90)
   core.insertCode(armourer_func, 9, {}, armourer_func+5, "after")
   core.writeCodeBytes(armourer_func+5, {0x6A, 0x01, 0x6A, 0x01})
 
+  resource_production_offset_map["Wood"] =    {baseDelivery=woodcutter_func+10,             skirmishBonus=woodcutter_func+1}
+  resource_production_offset_map["Stone"] =   {baseDelivery=quarry_grunt_func+3,            skirmishBonus=quarry_grunt_func+1}
+  resource_production_offset_map["Iron"] =    {baseDelivery=ironminer_func+9,               skirmishBonus=ironminer_func+1}
+  resource_production_offset_map["Pitch"] =   {baseDelivery=pitchman_func+10,               skirmishBonus=pitchman_func+1}
+  resource_production_offset_map["Meat"] =    {baseDelivery=hunter_func+10,                 skirmishBonus=hunter_func+1}
+  resource_production_offset_map["Apple"] =   {baseDelivery=apple_farmer_func+3,            skirmishBonus=apple_farmer_func+1}
+  resource_production_offset_map["Cheese"] =  {baseDelivery=dairy_farmer_func+10,           skirmishBonus=dairy_farmer_func+1}
+  resource_production_offset_map["Hop"] =     {baseDelivery=hops_farmer_func+5,             skirmishBonus=hops_farmer_func+1}
+  resource_production_offset_map["Bread"] =   {baseDelivery=baker_func+9,                   skirmishBonus=baker_func+7}
+  resource_production_offset_map["Wheat"] =   {baseDelivery=wheatfarmer_func+9,             skirmishBonus=wheatfarmer_func+7}
+  resource_production_offset_map["Flour"] =   {baseDelivery="Not supported.",               skirmishBonus="Not supported."}
+  resource_production_offset_map["Beer"] =    {baseDelivery=brewer_func+8,                  skirmishBonus=brewer_func+6}
+  resource_production_offset_map["Bow"] =     {baseDelivery=custom_fletcher_code_addr+36,   skirmishBonus=custom_fletcher_code_addr+34}
+  resource_production_offset_map["Xbow"] =    {baseDelivery=custom_fletcher_code_addr+42,   skirmishBonus=custom_fletcher_code_addr+40}
+  resource_production_offset_map["Spear"] =   {baseDelivery=custom_poleturner_code_addr+38, skirmishBonus=custom_poleturner_code_addr+36}
+  resource_production_offset_map["Pike"] =    {baseDelivery=custom_poleturner_code_addr+44, skirmishBonus=custom_poleturner_code_addr+42}
+  resource_production_offset_map["Mace"] =    {baseDelivery=custom_blacksmith_code_addr+36, skirmishBonus=custom_blacksmith_code_addr+34}
+  resource_production_offset_map["Sword"] =   {baseDelivery=custom_blacksmith_code_addr+42, skirmishBonus=custom_blacksmith_code_addr+40}
+  resource_production_offset_map["Leather"] = {baseDelivery=tanner_func+8,                  skirmishBonus=tanner_func+6}
+  resource_production_offset_map["Armor"] =   {baseDelivery=armourer_func+8,                skirmishBonus=armourer_func+6}
+
+  -- enable custom taxation multipliers
   tax_table_addr = core.allocate(12*2)
   local custom_tax_instructions = {
     0x8A, 0x44, 0x24, 0x0C,                          -- mov eax [esp+0C]
@@ -521,11 +548,12 @@ local function enable_rebalance_features()
   core.writeCodeBytes(tax_addr, core.compile(tax_jumpout_instructions, tax_addr))
   core.writeCodeBytes(bribe_addr, core.compile(bribe_jumpout_instructions, bribe_addr))
   core.writeCodeBytes(custom_tax_addr, core.compile(custom_tax_instructions, custom_tax_addr))
-  local default_tax_table = {"1.00", "0.8", "0.6", "0.0", "0.6", "0.8", "1.0", "1.2", "1.4", "1.6", "1.8", "2.0"}
+  local default_tax_table = {"1.0", "0.8", "0.6", "0.0", "0.6", "0.8", "1.0", "1.2", "1.4", "1.6", "1.8", "2.0"}
   for idx, tax_val in ipairs(default_tax_table) do
     core.writeCodeSmallInteger(tax_table_addr+2*(idx-1), math.floor(tax_val*100))
   end
 
+  -- enable per-unit damage definition for ballistas, catapults and trebuchets
   core.writeCodeBytes(ballista_damage_addr-14,
     core.compile({
       0x75, 0x13,                                                     -- jne 005322D2
@@ -548,10 +576,9 @@ local function enable_rebalance_features()
     }, ballista_damage_addr-14)
   )
 
-  for i=57,124 do
-    core.writeCodeByte(ballista_damage_addr+i, 0x90) -- nop out remaining bytes
-  end
+  for i=57,124 do core.writeCodeByte(ballista_damage_addr+i, 0x90) end -- nop out remaining bytes
 
+  -- enable per-unit damage definition for mangonels
   core.writeCodeBytes(mangonel_damage_addr,
     core.compile({
       0x49, -- sub ecx
@@ -559,10 +586,9 @@ local function enable_rebalance_features()
       0xE9, core.itob(339)  -- jmp 339 bytes forward
     }, mangonel_damage_addr)
   )
-  for i=14,153,5 do
-    core.writeCodeBytes(mangonel_damage_addr+i, {0xBB, 0,0,0,0}) -- fill 140 bytes with trash
-  end
+  for i=14,153,5 do core.writeCodeBytes(mangonel_damage_addr+i, {0xBB, 0,0,0,0}) end -- fill 140 bytes with trash
 
+  -- enable unit display costs&actual costs to be read from same place
   core.writeCodeBytes(non_rax_unit_display_cost_func_addr+14,{
     0xB3, 0x1E, -- mov bl, engineer_cost
     0xEB, 0x0F,
@@ -582,7 +608,6 @@ local function enable_rebalance_features()
     },unit_gold_jumplist_addr)
   )
 
-  -- non_rax_unit_cost_func_addr
   core.writeCodeByte(non_rax_unit_cost_func_addr+6, 70)  -- compare unit id with arab bow
 
   core.writeCodeBytes(non_rax_unit_cost_func_addr+18, core.compile({
@@ -623,7 +648,9 @@ end
 
 namespace.enable = function(self, config)
   local file = io.open(config["balance_config_file_selector"], "rb")
+---@diagnostic disable-next-line: need-check-nil
   local spec = file:read("*all")
+---@diagnostic disable-next-line: undefined-global
   local rebalance_cfg = yaml.parse(spec)
   enable_rebalance_features()
   namespace.apply_rebalance(rebalance_cfg)
@@ -722,6 +749,7 @@ namespace.apply_rebalance = function(config)
 
   end
 
+  -- castle changes need to come before units, due to fire damages on units
   if castle ~= nil then
     local ditch_per_pitch = castle["ditch_per_pitch"]
     local killing_pit_damage = castle["killing_pit_damage"]
@@ -863,183 +891,33 @@ namespace.apply_rebalance = function(config)
 
       end
 
-      if buildingDamage ~= nil then
-        if unit == "Tunneler" then
-          core.writeCodeByte(tunneller_building_melee_addr+9, buildingDamage)
-        elseif unit == "European archer" then
-          core.writeCodeByte(archer_building_melee_addr+9, buildingDamage)
-        elseif unit == "European crossbowman" then
-          core.writeCodeByte(crossbow_building_melee_addr+4, buildingDamage)
-        elseif unit == "European spearman" then
-          core.writeCodeByte(spearman_building_melee_addr+9, buildingDamage)
-        elseif unit == "European pikeman" then
-          core.writeCodeByte(pikeman_building_melee_addr+9, buildingDamage)
-        elseif unit == "European maceman" then
-          core.writeCodeByte(maceman_building_melee_addr+9, buildingDamage)
-        elseif unit == "European swordsman" then
-          core.writeCodeByte(swordsman_building_melee_addr+9, buildingDamage)
-        elseif unit == "European knight" then
-          core.writeCodeByte(knight_building_melee_addr+9, buildingDamage)
-        elseif unit == "Monk" then
-          core.writeCodeByte(monk_building_melee_addr+9, buildingDamage)
-        elseif unit == "Lord" then
-          core.writeCodeByte(lord_building_melee_addr+9, buildingDamage)
-        elseif unit == "Battering ram" then
-          core.writeCodeByte(ram_damage_addr+2, buildingDamage)
-        elseif unit == "Arabian archer" then
-          core.writeCodeByte(arabbow_building_melee_addr+9, buildingDamage)
-        elseif unit == "Arabian slave" then
-          core.writeCodeByte(slave_building_melee_addr+14, buildingDamage)
-        elseif unit == "Arabian slinger" then
-          core.writeCodeByte(slinger_building_melee_addr+9, buildingDamage)
-        elseif unit == "Arabian assassin" then
-          core.writeCodeByte(assassin_building_melee_addr+9, buildingDamage)
-        elseif unit == "Arabian horse archer" then
-          core.writeCodeByte(horsearcher_building_melee_addr+9, buildingDamage)
-        elseif unit == "Arabian swordsman" then
-          core.writeCodeByte(arabsword_building_melee_addr+9, buildingDamage)
-        elseif unit == "Arabian firethrower" then
-          core.writeCodeByte(firethrower_building_melee_addr+9, buildingDamage)
-        end
-      end
+      if buildingDamage ~= nil then core.writeCodeByte(unit_melee_damage_offset_map[unit]["building"], buildingDamage) end
 
       if fortificationDamagePenalty ~= nil then
-        log(WARNING, string.format("[%s] fortificationDamagePenalty is deprecated and will be removed soon, update your config to use fortificationDamage instead!", unit))
-        if fortificationDamagePenalty > 0 then
-          fortificationDamagePenalty = -fortificationDamagePenalty
-        end
-        if unit == "Tunneler" then
-          core.writeCodeByte(tunneller_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "European archer" then
-          core.writeCodeByte(archer_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "European crossbowman" then
-          core.writeCodeByte(crossbow_building_melee_addr+2, fortificationDamagePenalty*-1)
-        elseif unit == "European spearman" then
-          core.writeCodeByte(spearman_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "European pikeman" then
-          core.writeCodeByte(pikeman_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "European maceman" then
-          core.writeCodeByte(maceman_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "European swordsman" then
-          core.writeCodeByte(swordsman_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "European knight" then
-          core.writeCodeByte(knight_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "Monk" then
-          core.writeCodeByte(monk_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "Lord" then
-          core.writeCodeByte(lord_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "Battering ram" then
-          log(WARNING, "Battering ram fortificationDamagePenalty is not supported.")
-        elseif unit == "Arabian archer" then
-          core.writeCodeByte(arabbow_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "Arabian slave" then
-          log(WARNING, "Arabian slave fortificationDamagePenalty is not supported.")
-        elseif unit == "Arabian slinger" then
-          core.writeCodeByte(slinger_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "Arabian assassin" then
-          core.writeCodeByte(assassin_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "Arabian horse archer" then
-          core.writeCodeByte(horsearcher_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "Arabian swordsman" then
-          core.writeCodeByte(arabsword_building_melee_addr+6, fortificationDamagePenalty)
-        elseif unit == "Arabian firethrower" then
-          core.writeCodeByte(firethrower_building_melee_addr+6, fortificationDamagePenalty)
-        end
+        log(ERROR, string.format("[%s] fortificationDamagePenalty is removed, update your config to use fortificationDamage instead!", unit))
       end
 
       if fortificationDamage ~= nil then
-        if unit == "Tunneler" then
-          local fdp = core.readByte(tunneller_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(tunneller_building_melee_addr+6, -fdp)
-        elseif unit == "European archer" then
-          local fdp = core.readByte(archer_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(archer_building_melee_addr+6, -fdp)
-        elseif unit == "European crossbowman" then
-          local fdp = core.readByte(crossbow_building_melee_addr+4) - fortificationDamage
-          core.writeCodeByte(crossbow_building_melee_addr+2, fdp)
-        elseif unit == "European spearman" then
-          local fdp = core.readByte(spearman_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(spearman_building_melee_addr+6, -fdp)
-        elseif unit == "European pikeman" then
-          local fdp = core.readByte(pikeman_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(pikeman_building_melee_addr+6, -fdp)
-        elseif unit == "European maceman" then
-          local fdp = core.readByte(maceman_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(maceman_building_melee_addr+6, -fdp)
-        elseif unit == "European swordsman" then
-          local fdp = core.readByte(swordsman_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(swordsman_building_melee_addr+6, -fdp)
-        elseif unit == "European knight" then
-          local fdp = core.readByte(knight_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(knight_building_melee_addr+6, -fdp)
-        elseif unit == "Monk" then
-          local fdp = core.readByte(monk_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(monk_building_melee_addr+6, -fdp)
-        elseif unit == "Lord" then
-          local fdp = core.readByte(lord_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(lord_building_melee_addr+6, -fdp)
-        elseif unit == "Battering ram" then
-          log(WARNING, "Battering ram fortificationDamage is not supported.")
-        elseif unit == "Arabian archer" then
-          local fdp = core.readByte(arabbow_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(arabbow_building_melee_addr+6, -fdp)
-        elseif unit == "Arabian slave" then
-          log(WARNING, "Arabian slave fortificationDamage is not supported.")
-        elseif unit == "Arabian slinger" then
-          local fdp = core.readByte(slinger_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(slinger_building_melee_addr+6, -fdp)
-        elseif unit == "Arabian assassin" then
-          local fdp = core.readByte(assassin_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(assassin_building_melee_addr+6, -fdp)
-        elseif unit == "Arabian horse archer" then
-          local fdp = core.readByte(horsearcher_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(horsearcher_building_melee_addr+6, -fdp)
-        elseif unit == "Arabian swordsman" then
-          local fdp = core.readByte(arabsword_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(arabsword_building_melee_addr+6, -fdp)
-        elseif unit == "Arabian firethrower" then
-          local fdp = core.readByte(firethrower_building_melee_addr+9) - fortificationDamage
-          core.writeCodeByte(firethrower_building_melee_addr+6, -fdp)
+        address = unit_melee_damage_offset_map[unit]["fortification"]
+        if address == "Not supported." then
+          log(WARNING, string.format("[%s] fortificationDamage is not supported.", unit))
+        else
+          local fdp = core.readByte(unit_melee_damage_offset_map[unit]["building"]) - fortificationDamage
+          print(unit, fortificationDamage, fdp)
+          if unit == "European crossbowman" then
+            core.writeCodeByte(address, fdp)  -- special case.
+          else
+            core.writeCodeByte(address, -fdp)
+          end
         end
       end
 
       if wallDamage ~= nil then
-        if unit == "Tunneler" then
-          core.writeCodeInteger(tunneller_building_melee_addr - 53, wallDamage)
-        elseif unit == "European archer" then
-          core.writeCodeInteger(archer_building_melee_addr - 53, wallDamage)
-        elseif unit == "European crossbowman" then
-          core.writeCodeInteger(crossbow_building_melee_addr-62, wallDamage)
-        elseif unit == "European spearman" then
-          core.writeCodeInteger(spearman_building_melee_addr - 36, wallDamage)
-        elseif unit == "European pikeman" then
-          core.writeCodeInteger(pikeman_building_melee_addr - 55, wallDamage)
-        elseif unit == "European maceman" then
-          core.writeCodeInteger(maceman_building_melee_addr - 46, wallDamage)
-        elseif unit == "European swordsman" then
-          core.writeCodeInteger(swordsman_building_melee_addr - 55, wallDamage)
-        elseif unit == "European knight" then
-          core.writeCodeInteger(knight_building_melee_addr - 55, wallDamage)
-        elseif unit == "Monk" then
-          core.writeCodeInteger(monk_building_melee_addr - 52, wallDamage)
-        elseif unit == "Lord" then
-          core.writeCodeInteger(lord_building_melee_addr - 66, wallDamage)
-        elseif unit == "Battering ram" then
-          log(WARNING, "Battering ram wallDamage is not supported.")
-        elseif unit == "Arabian archer" then
-          core.writeCodeInteger(arabbow_building_melee_addr - 44, wallDamage)
-        elseif unit == "Arabian slave" then
-          log(WARNING, "Arabian slave wallDamage is not supported.")
-        elseif unit == "Arabian slinger" then
-          core.writeCodeInteger(slinger_building_melee_addr - 53, wallDamage)
-        elseif unit == "Arabian assassin" then
-          core.writeCodeInteger(assassin_building_melee_addr - 52, wallDamage)
-        elseif unit == "Arabian horse archer" then
-          core.writeCodeInteger(horsearcher_building_melee_addr - 55, wallDamage)
-        elseif unit == "Arabian swordsman" then
-          core.writeCodeInteger(arabsword_building_melee_addr - 55, wallDamage) -- from 64
-        elseif unit == "Arabian firethrower" then
-          core.writeCodeInteger(firethrower_building_melee_addr - 53, wallDamage)
+        address = unit_melee_damage_offset_map[unit]["wall"]
+        if address == "Not supported." then
+          log(WARNING, string.format("[%s] wallDamage is not supported.", unit))
+        else
+          core.writeCodeByte(address, wallDamage)
         end
       end
 
@@ -1057,194 +935,35 @@ namespace.apply_rebalance = function(config)
         address = resource_buy_base + 4 * res_index
         core.writeInteger(address, buy)
       end
+
       if sell ~= nil then
         address = resource_sell_base + 4 * res_index
         core.writeInteger(address, sell)
       end
+
       if baseDelivery ~= nil then
-        if res_name == "Wood" then
-          core.writeCodeByte(woodcutter_func+10, baseDelivery)
-        elseif res_name == "Stone" then
-          core.writeCodeByte(quarry_grunt_func+3, baseDelivery)
-        elseif res_name == "Iron" then
-          core.writeCodeByte(ironminer_func+9, baseDelivery)
-        elseif res_name == "Pitch" then
-          core.writeCodeByte(pitchman_func+10, baseDelivery)
-        elseif res_name == "Meat" then
-          core.writeCodeByte(hunter_func+10, baseDelivery)
-        elseif res_name == "Apple" then
-          core.writeCodeByte(apple_farmer_func+3, baseDelivery)
-        elseif res_name == "Cheese" then
-          core.writeCodeByte(dairy_farmer_func+10, baseDelivery)
-        elseif res_name == "Hop" then
-          core.writeCodeByte(hops_farmer_func+5, baseDelivery)
-        elseif res_name == "Bread" then
-          core.writeCodeByte(baker_func+9, baseDelivery)
-        elseif res_name == "Wheat" then
-          core.writeCodeByte(wheatfarmer_func+9, baseDelivery)
-        elseif res_name == "Flour" then
-          log(WARNING, "Flour production cannot be modified.")
-        elseif res_name == "Beer" then
-          core.writeCodeByte(brewer_func+8, baseDelivery)
-        elseif res_name == "Bow" then
-          core.writeCodeByte(custom_fletcher_code_addr+36, baseDelivery)
-        elseif res_name == "Xbow" then
-          core.writeCodeByte(custom_fletcher_code_addr+42, baseDelivery)
-        elseif res_name == "Spear" then
-          core.writeCodeByte(custom_poleturner_code_addr+38, baseDelivery)
-        elseif res_name == "Pike" then
-          core.writeCodeByte(custom_poleturner_code_addr+44, baseDelivery)
-        elseif res_name == "Mace" then
-          core.writeCodeByte(custom_blacksmith_code_addr+36, baseDelivery)
-        elseif res_name == "Sword" then
-          core.writeCodeByte(custom_blacksmith_code_addr+42, baseDelivery)
-        elseif res_name == "Leather" then
-          core.writeCodeByte(tanner_func+8, baseDelivery)
-        elseif res_name == "Armor" then
-          core.writeCodeByte(armourer_func+8, baseDelivery)
+        address = resource_production_offset_map[res_name]["baseDelivery"]
+        if address == "Not supported." then
+          log(WARNING, string.format("%s  production cannot be modified.", res_name))
+        else
+          core.writeCodeByte(address, baseDelivery)
         end
       end
+
       if skirmishBonus ~= nil then
         local sb = skirmishBonus and 1 or 0
-        if res_name == "Wood" then
-          core.writeCodeByte(woodcutter_func + 1, sb)
-        elseif res_name == "Stone" then
-          core.writeCodeByte(quarry_grunt_func+1, sb)
-        elseif res_name == "Iron" then
-          core.writeCodeByte(ironminer_func+1, sb)
-        elseif res_name == "Pitch" then
-          core.writeCodeByte(pitchman_func+1, sb)
-        elseif res_name == "Meat" then
-          core.writeCodeByte(hunter_func+1, sb)
-        elseif res_name == "Apple" then
-          core.writeCodeByte(apple_farmer_func+1, sb)
-        elseif res_name == "Cheese" then
-          core.writeCodeByte(dairy_farmer_func+1, sb)
-        elseif res_name == "Hop" then
-          core.writeCodeByte(hops_farmer_func+1, sb)
-        elseif res_name == "Bread" then
-          core.writeCodeByte(baker_func+7, sb)
-        elseif res_name == "Wheat" then
-          core.writeCodeByte(wheatfarmer_func+7, sb)
-        elseif res_name == "Flour" then
-          log(WARNING, "Flour production cannot be modified.")
-        elseif res_name == "Beer" then
-          core.writeCodeByte(brewer_func+6, sb)
-        elseif res_name == "Bow" then
-          core.writeCodeByte(custom_fletcher_code_addr+34, sb)
-        elseif res_name == "Xbow" then
-          core.writeCodeByte(custom_fletcher_code_addr+40, sb)
-        elseif res_name == "Spear" then
-          core.writeCodeByte(custom_poleturner_code_addr+36, sb)
-        elseif res_name == "Pike" then
-          core.writeCodeByte(custom_poleturner_code_addr+42, sb)
-        elseif res_name == "Mace" then
-          core.writeCodeByte(custom_blacksmith_code_addr+34, sb)
-        elseif res_name == "Sword" then
-          core.writeCodeByte(custom_blacksmith_code_addr+40, sb)
-        elseif res_name == "Leather" then
-          core.writeCodeByte(tanner_func+6, sb)
-        elseif res_name == "Armor" then
-          core.writeCodeByte(armourer_func+6, sb)
+        address = resource_production_offset_map[res_name]["skirmishBonus"]
+        if address == "Not supported." then
+          log(WARNING, string.format("%s  production cannot be modified.", res_name))
+        else
+          core.writeCodeByte(address, sb)
         end
       end
     end
   end
 
-  if population_gathering_rate ~= nil then  -- DEPRECATED, WILL BE REMOVED LATER
-    log(WARNING, "population_gathering_rate is deprecated, use population section in the config instead.")
-    local Skirmish = population_gathering_rate["Skirmish"]
-    local Scenario_lt_100 = population_gathering_rate["Scenario_lt_100"]
-    local Scenario_gt_100 = population_gathering_rate["Scenario_gt_100"]
-    local population_upkeep = population_gathering_rate["population_upkeep"]
-    if Skirmish ~= nil then
-      if is_array(Skirmish) then
-        for pgr_index, value in ipairs(Skirmish) do
-          core.writeInteger(skirmish_pgr_base + 4 * (pgr_index-1), value)
-        end
-      else  -- legacy support
-        for threshold, value in pairs(Skirmish) do
-          local pgr_index = table.find(pop_thresholds, threshold)-1
-          address = skirmish_pgr_base + 4 * pgr_index
-          core.writeInteger(address, value)
-        end
-      end
-    end
-    if Scenario_lt_100 ~= nil then
-      if is_array(Scenario_lt_100) then
-        for pgr_index, value in ipairs(Scenario_lt_100) do
-          core.writeInteger(scenario_pgr_base + 4 * (pgr_index-1), value)
-        end
-      else  -- legacy support
-        for threshold, value in pairs(Scenario_lt_100) do
-          local pgr_index = table.find(pop_thresholds, threshold)-1
-          address = scenario_pgr_base + 4 * pgr_index
-          core.writeInteger(address, value)
-        end
-      end
-    end
-    if Scenario_gt_100 ~= nil then
-      if is_array(Scenario_gt_100) then
-        for pgr_index, value in ipairs(Scenario_gt_100) do
-          core.writeInteger(scenario_pgr_crowded_base + 4 * (pgr_index-1), value)
-        end
-      else  -- legacy support
-        for threshold, value in pairs(Scenario_gt_100) do
-          local pgr_index = table.find(pop_thresholds, threshold)-1
-          address = scenario_pgr_crowded_base + 4 * pgr_index
-          core.writeInteger(address, value)
-        end
-      end
-    end
-    if population_upkeep ~= nil then
-      local slower_gathering = population_upkeep["slower_gathering"]
-      local minimum_gathering = population_upkeep["minimum_gathering"]
-      local faster_leaving = population_upkeep["faster_leaving"]
-      if minimum_gathering == nil then
-        minimum_gathering = 4
-      end
-      if slower_gathering < 1 then
-        log(WARNING, "Upkeep values must be between 1 and 5")
-        slower_gathering = 1
-      end
-      if slower_gathering > 5 then
-        log(WARNING, "Upkeep values must be between 1 and 5")
-        slower_gathering = 5
-      end
-      if faster_leaving < 1 then
-        log(WARNING, "Upkeep values must be between 1 and 5")
-        faster_leaving = 1
-      end
-      if faster_leaving > 5 then
-        log(WARNING, "Upkeep values must be between 1 and 5")
-        faster_leaving = 5
-      end
-
-      local upkeep_code_bytes = core.assemble([[
-        push eax
-        mov eax, [esi+0x2110]
-        cmp ecx, 0
-        jl label_0
-        shr eax, gather_factor
-        cmp eax, ecx
-        jg label_2
-        jmp label_1
-            label_0:
-        shr eax, leave_factor
-            label_1:
-        sub ecx, eax
-        jmp end_label
-            label_2:
-        mov ecx, minimum_gather
-            end_label:
-        pop eax
-      ]],{
-        leave_factor = 7-faster_leaving,
-        minimum_gather = minimum_gathering,
-        gather_factor = 7-slower_gathering
-      },0)
-      core.insertCode(pop_gathering_addr, 7, upkeep_code_bytes, pop_gathering_addr+7, "before")
-    end
+  if population_gathering_rate ~= nil then
+    log(ERROR, "population_gathering_rate is removed, use population section in the config instead.")
   end
 
   if population ~= nil then
@@ -1804,15 +1523,14 @@ namespace.apply_rebalance = function(config)
     core.insertCode(range_split_addr4, 5, code_4)
     core.insertCode(range_split_addr5, 5, code_5)
     core.insertCode(range_split_addr6, 5, code_6)
-    
+
     -- Trebuchets and Tower Ballistas
     core.insertCode(range_split_addr7, 5, code_7)
     core.insertCode(range_split_addr8, 5, code_8)
     core.insertCode(range_split_addr9, 5, code_9)
     core.insertCode(range_split_addr10, 5, code_10)
-    
+
     core.insertCode(range_split_addr11, 13, code_11)
-    
 
     -- slinger range addresses
     core.writeCodeInteger(base_ranges_table_addr + 128, slinger_range) -- also +136 can be relevant
@@ -1879,19 +1597,18 @@ namespace.apply_rebalance = function(config)
     core.writeCodeSmallInteger(scan_range_addr_horse_archer + 230, horse_archer_range*8)
     core.writeCodeSmallInteger(scan_range_addr_horse_archer + 661, horse_archer_range*8)
 
-    
     core.writeCodeSmallInteger(scan_range_addr_xbow + 10, (xbow_range-4)*8)
     core.writeCodeSmallInteger(scan_range_addr_xbow + 32, xbow_range*8)
     core.writeCodeSmallInteger(scan_range_addr_xbow_2 + 16, (xbow_range-4)*8)
-    
+
     core.writeCodeSmallInteger(scan_range_addr_slinger_1 + 10, (slinger_range+5)*8)
     core.writeCodeSmallInteger(scan_range_addr_slinger_1 + 32, (slinger_range+5)*8)
     core.writeCodeInteger(scan_range_addr_slinger_2 + 4, slinger_range*slinger_range)
     core.writeCodeInteger(scan_range_addr_slinger_3 + 16, (slinger_range+5)*8)
-    
+
     core.writeCodeSmallInteger(scan_range_addr_firethrower_1 + 10, (firethrower_range+5)*8)
     core.writeCodeSmallInteger(scan_range_addr_firethrower_1 + 32, (firethrower_range+5)*8)
-    
+
     core.writeCodeSmallInteger(scan_range_addr_fbal_1 + 16, towerbal_range*8) -- for some reason tied to towerbal range
     core.writeCodeSmallInteger(scan_range_addr_fbal_1 + 216, fbal_range*8)
     core.writeCodeInteger(scan_range_addr_fbal_2 + 7, fbal_range*fbal_range)
