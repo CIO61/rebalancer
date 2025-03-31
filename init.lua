@@ -196,42 +196,19 @@ local base_ranges_table_addr = locate_aob("36 00 00 00 4B 00 00 00 55 00 00 00 4
 local proj_velocity_table_addr = locate_aob("7D 00 00 00 0A 00 00 00 1E 00 00 00 0F 00 00 00 64 00 00 00 64 00 00 00")
 local proj_archtype_table_addr = locate_aob("00 00 00 00 02 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00")
 
-local range_split_addr1 = locate_aob("8B 04 85 ? ? ? ? 0F AF C0 66 83 BC 37") -- 0x54B621
-local range_split_asm1 = templates.range_split_asm1  -- patch size should be 7
--- archer_range arabbow_range horse_archer_range
-local range_split_addr2 = locate_aob("BD 64 0B 00 00 E9 A2 00 00 00") -- 0x43595D
-local range_split_asm2 = templates.range_split_asm2  -- patch size should be 5
--- archer_range xbow_range arabbow_range horse_archer_range fbal_range
-local range_split_addr3 = locate_aob("BE 64 0B 00 00 E9 A5 00 00 00") -- 0x436339
-local range_split_asm3 = templates.range_split_asm3  -- patch size should be 5
--- archer_range xbow_range arabbow_range horse_archer_range fbal_range
-local range_split_addr4 = locate_aob("BE 64 0B 00 00 0F 87 52 01 00 00") -- 0x435E2C
-local range_split_asm4 = templates.range_split_asm4  -- patch size should be 5
--- archer_range xbow_range arabbow_range horse_archer_range
-local range_split_addr5 = locate_aob("B8 64 0B 00 00 EB 25 B8") -- 0x4369B2
-local range_split_asm5 = templates.range_split_asm5  -- patch size should be 5
--- archer_range xbow_range arabbow_range horse_archer_range fbal_range
-local range_split_addr6 = locate_aob("BA 64 0B 00 00 EB 25 BA") -- 0x436AB9
-local range_split_asm6 = templates.range_split_asm6  -- patch size should be 5
--- archer_range xbow_range arabbow_range horse_archer_range fbal_range
-local range_split_addr7 = locate_aob("BD 39 1C 00 00 EB 7D BD") -- 0x435985
-local range_split_asm7 = templates.range_split_asm7  -- patch size should be 5
--- treb_range towerbal_range
-local range_split_addr8 = locate_aob("BE 39 1C 00 00 E9 7D 00 00 00 BE") -- 0x436361
-local range_split_asm8 = templates.range_split_asm8  -- patch size should be 5
--- treb_range towerbal_range
-local range_split_addr9 = locate_aob("B8 39 1C 00 00 EB 09 B8") -- 0x4369CE
-local range_split_asm9 = templates.range_split_asm9  -- patch size should be 5
--- treb_range towerbal_range
-local range_split_addr10 = locate_aob("BA 39 1C 00 00 EB 09 BA") -- 0x436AD5
-local range_split_asm10 = templates.range_split_asm10  -- patch size should be 5
--- treb_range towerbal_range
-local range_split_addr11 = locate_aob("83 E9 03 F7 D9 1B C9")  -- 0x53D642
-local range_split_asm11 = templates.range_split_asm11 -- patch size should be 13
--- catapult_range treb_range
-local range_split_addr12 = locate_aob("03 D1 83 FA 79 7E")  -- 0x57770C
-local range_split_asm12 = templates.range_split_asm12 -- patch size should be 5
--- firethrower_range
+local range_split_addr1 = locate_aob("8B 04 85 ? ? ? ? 0F AF C0 66 83 BC 37") -- (0x54B621)  -- patch size should be 7
+local range_split_addr2 = locate_aob("BD 64 0B 00 00 E9 A2 00 00 00") -- (0x43595D)  -- patch size should be 5
+local range_split_addr3 = locate_aob("BE 64 0B 00 00 E9 A5 00 00 00") -- (0x436339)  -- patch size should be 5
+local range_split_addr4 = locate_aob("BE 64 0B 00 00 0F 87 52 01 00 00") -- (0x435E2C)  -- patch size should be 5
+local range_split_addr5 = locate_aob("B8 64 0B 00 00 EB 25 B8") -- (0x4369B2)  -- patch size should be 5
+local range_split_addr6 = locate_aob("BA 64 0B 00 00 EB 25 BA") -- (0x436AB9)  -- patch size should be 5
+local range_split_addr7 = locate_aob("BD 39 1C 00 00 EB 7D BD") -- (0x435985)  -- patch size should be 5
+local range_split_addr8 = locate_aob("BE 39 1C 00 00 E9 7D 00 00 00 BE") -- (0x436361)  -- patch size should be 5
+local range_split_addr9 = locate_aob("B8 39 1C 00 00 EB 09 B8") -- (0x4369CE)  -- patch size should be 5
+local range_split_addr10 = locate_aob("BA 39 1C 00 00 EB 09 BA") -- (0x436AD5)  -- patch size should be 5
+local range_split_addr11 = locate_aob("83 E9 03 F7 D9 1B C9")  -- (0x53D642)1 -- patch size should be 13
+local range_split_addr12 = locate_aob("03 D1 83 FA 79 7E")  -- (0x57770C)2 -- patch size should be 5
+
 local scan_range_addr_archer = locate_aob("66 81 B8 ? ? ? ? 90 01 7F")
 local scan_range_addr_arabbow_1 = locate_aob("85 FF BD 90 01 00 00 7E 28 8B C3")
 local scan_range_addr_arabbow_2 = locate_aob("66 00 BD 90 01 00 00 66 39 AE ? ? ? ?")
@@ -1499,18 +1476,18 @@ namespace.apply_rebalance = function(config)
     local mapping_1 ={archer_range=archer_range, xbow_range=xbow_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range, fbal_range=fbal_range}
     local mapping_2 ={treb_range=treb_range, towerbal_range=towerbal_range}
 
-    local code_1 = core.assemble(range_split_asm1, {archer_range=archer_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range}, 0)
-    local code_2 = core.assemble(range_split_asm2, mapping_1, 0)
-    local code_3 = core.assemble(range_split_asm3, mapping_1, 0)
-    local code_4 = core.assemble(range_split_asm4, {archer_range=archer_range, xbow_range=xbow_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range}, 0)
-    local code_5 = core.assemble(range_split_asm5, mapping_1, 0)
-    local code_6 = core.assemble(range_split_asm6, mapping_1, 0)
-    local code_7 = core.assemble(range_split_asm7, mapping_2, 0)
-    local code_8 = core.assemble(range_split_asm8, mapping_2, 0)
-    local code_9 = core.assemble(range_split_asm9, mapping_2, 0)
-    local code_10 = core.assemble(range_split_asm10, mapping_2, 0)
-    local code_11 = core.assemble(range_split_asm11, {catapult_range=catapult_range, treb_range=treb_range}, 0)
-    local code_12 = core.assemble(range_split_asm12, {firethrower_range=firethrower_range}, 0)
+    local code_1 = core.assemble(templates.range_split_asm1, {archer_range=archer_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range}, 0)
+    local code_2 = core.assemble(templates.range_split_asm2, mapping_1, 0)
+    local code_3 = core.assemble(templates.range_split_asm3, mapping_1, 0)
+    local code_4 = core.assemble(templates.range_split_asm4, {archer_range=archer_range, xbow_range=xbow_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range}, 0)
+    local code_5 = core.assemble(templates.range_split_asm5, mapping_1, 0)
+    local code_6 = core.assemble(templates.range_split_asm6, mapping_1, 0)
+    local code_7 = core.assemble(templates.range_split_asm7, mapping_2, 0)
+    local code_8 = core.assemble(templates.range_split_asm8, mapping_2, 0)
+    local code_9 = core.assemble(templates.range_split_asm9, mapping_2, 0)
+    local code_10 = core.assemble(templates.range_split_asm10, mapping_2, 0)
+    local code_11 = core.assemble(templates.range_split_asm11, {catapult_range=catapult_range, treb_range=treb_range}, 0)
+    local code_12 = core.assemble(templates.range_split_asm12, {firethrower_range=firethrower_range}, 0)
 
     -- base ranges
     core.writeCodeInteger(base_ranges_table_addr + 24, xbow_range) -- "Crossbowman base range.",
