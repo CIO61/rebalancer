@@ -880,7 +880,6 @@ namespace.apply_rebalance = function(config)
           log(WARNING, string.format("[%s] fortificationDamage is not supported.", unit))
         else
           local fdp = core.readByte(unit_melee_damage_offset_map[unit]["building"]) - fortificationDamage
-          print(unit, fortificationDamage, fdp)
           if unit == "European crossbowman" then
             core.writeCodeByte(address, fdp)  -- special case.
           else
@@ -1269,7 +1268,7 @@ namespace.apply_rebalance = function(config)
         core.writeCodeInteger(food_addr_1 + 1, ration_bonuses[1])
         core.writeCodeInteger(food_addr_1 + 70, ration_bonuses[1])
         core.writeCodeInteger(food_addr_1 + 61, ration_bonuses[2])
-        core.writeCodeByte(food_addr_1 + 44, ration_bonuses[3])
+        core.writeCodeByte(food_addr_1 + 44, ration_bonuses[3]-3)
         core.writeCodeInteger(food_addr_1 + 31, ration_bonuses[4])
 
         core.writeCodeInteger(food_addr_2 + 1, ration_bonuses[1])
