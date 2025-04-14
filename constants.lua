@@ -106,7 +106,7 @@ return {
         "Pond",
         "Bear cave",
         "European Outpost",
-        "Mercenary Outpost"
+        "Arabian Outpost"
     },
     unit_names = {
         "Peasant",
