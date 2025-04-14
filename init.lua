@@ -445,7 +445,7 @@ local function enable_rebalance_features()
   resource_production_offset_map["Iron"] =    {baseDelivery=ironminer_func+9,               skirmishBonus=ironminer_func+1}
   resource_production_offset_map["Pitch"] =   {baseDelivery=pitchman_func+10,               skirmishBonus=pitchman_func+1}
   resource_production_offset_map["Meat"] =    {baseDelivery=hunter_func+10,                 skirmishBonus=hunter_func+1}
-  resource_production_offset_map["Apple"] =   {baseDelivery=apple_farmer_func+3,            skirmishBonus=apple_farmer_func+1}
+  resource_production_offset_map["Fruit"] =   {baseDelivery=apple_farmer_func+3,            skirmishBonus=apple_farmer_func+1}
   resource_production_offset_map["Cheese"] =  {baseDelivery=dairy_farmer_func+10,           skirmishBonus=dairy_farmer_func+1}
   resource_production_offset_map["Hop"] =     {baseDelivery=hops_farmer_func+5,             skirmishBonus=hops_farmer_func+1}
   resource_production_offset_map["Bread"] =   {baseDelivery=baker_func+9,                   skirmishBonus=baker_func+7}
@@ -829,6 +829,7 @@ local function edit_units(units)
 
     end
 
+    print(unit)
     if buildingDamage ~= nil then core.writeCodeByte(unit_melee_damage_offset_map[unit]["building"], buildingDamage) end
 
     if fortificationDamagePenalty ~= nil then
@@ -880,6 +881,7 @@ local function edit_resources(resources)
     end
 
     if baseDelivery ~= nil then
+      print(res_name)
       address = resource_production_offset_map[res_name]["baseDelivery"]
       if address == "Not supported." then
         log(WARNING, string.format("%s  production cannot be modified.", res_name))
