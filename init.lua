@@ -750,7 +750,7 @@ local function edit_units(units)
     local wallDamage = stats["wallDamage"]
     local powerLevel = stats["powerLevel"]
     local meleeEngage = stats["meleeEngage"]
-    local isBlessable = stats["isBlessable"]
+    local isBlessable = stats["notBlessable"]
     local allowedOnWalls = stats["allowedOnWalls"]
     local fireDamage = stats["fireDamage"]
     local jesterUnfriendly = stats["jesterUnfriendly"]

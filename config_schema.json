@@ -584,9 +584,9 @@
               "type": "boolean",
               "description": "Whether the unit engages in melee combat or not."
             },
-            "isBlessable": {
+            "notBlessable": {
               "type": "boolean",
-              "description": "Whether the unit is considered as a unit to be blessed by priest (mostly relevant for workers)."
+              "description": "Whether the unit is not considered as a unit to be blessed by priest (mostly relevant for workers)."
             },
             "allowedOnWalls": {
               "type": "boolean",
