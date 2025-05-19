@@ -282,17 +282,17 @@ local function enable_rebalance_features()
   mangonel_damage_table_addr = core.allocate(#unit_names*4)
   catapult_damage_table_addr = core.allocate(#unit_names*4)
   trebuchet_damage_table_addr = core.allocate(#unit_names*4)
-  fire_damage_table_addr = core.allocate(#unit_names*2)
+  fire_damage_table_addr = core.allocate(#unit_names*4)
 
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
-      core.writeSmallInteger(fire_damage_table_addr + 2*index, 25)
+      core.writeSmallInteger(fire_damage_table_addr + 4*index, 25)
     elseif name == "Fireman" then
-      core.writeSmallInteger(fire_damage_table_addr + 2*index, 1)
+      core.writeSmallInteger(fire_damage_table_addr + 4*index, 1)
     elseif name == "Arabian firethrower" then
-      core.writeSmallInteger(fire_damage_table_addr + 2*index, 10)
+      core.writeSmallInteger(fire_damage_table_addr + 4*index, 10)
     else
-      core.writeSmallInteger(fire_damage_table_addr + 2*index, 100)
+      core.writeSmallInteger(fire_damage_table_addr + 4*index, 100)
     end
   end
 
@@ -598,9 +598,9 @@ local function enable_rebalance_features()
   ))
 
   core.writeCodeBytes(fire_damage_code_addr, core.compile({
-    0x66, 0x8B, 0x04, 0x7D, core.itob(fire_damage_table_addr),  -- mov ax,[edi*2+fire_damage_table_addr]
-    0xBD, 0x01, 0x00, 0x00, 0x00,                               -- mov ebp,00000001
-    0xEB, 0x24                                                  -- jmp +24
+    0x8B, 0x04, 0xBD, core.itob(fire_damage_table_addr),  -- mov ax,[edi*4+fire_damage_table_addr]
+    0xBD, 0x01, 0x00, 0x00, 0x00,                         -- mov ebp,00000001
+    0xEB, 0x25                                            -- jmp +24
   }, fire_damage_code_addr)
   )
 
@@ -720,7 +720,7 @@ local function edit_castle(castle)
       or name == "Fireman"
       or name == "Arabian firethrower" then -- defaults are set once
       else
-        core.writeSmallInteger(fire_damage_table_addr + 2*(index-1), fire_damage)
+        core.writeSmallInteger(fire_damage_table_addr + 4*(index-1), fire_damage)
       end
     end
   end
@@ -768,7 +768,7 @@ local function edit_units(units)
     if meleeEngage ~= nil then core.writeInteger(unit_melee_toggles_base + 4*unit_idx, meleeEngage and 1 or 0) end
     if isBlessable ~= nil then core.writeInteger(unit_blessable_base + 4*unit_idx, isBlessable and 1 or 0) end
     if allowedOnWalls ~= nil then core.writeInteger(unit_allowed_on_walls_base + 4*unit_idx, allowedOnWalls and 1 or 0) end
-    if fireDamage ~= nil then core.writeSmallInteger(fire_damage_table_addr + 2*unit_idx_p1, fireDamage) end
+    if fireDamage ~= nil then core.writeSmallInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
     if jesterUnfriendly ~= nil then core.writeInteger(unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0) end
     if ballistaBoltDamage ~= nil then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
     if mangonelDamage ~= nil then core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage) end
@@ -829,7 +829,6 @@ local function edit_units(units)
 
     end
 
-    print(unit)
     if buildingDamage ~= nil then core.writeCodeByte(unit_melee_damage_offset_map[unit]["building"], buildingDamage) end
 
     if fortificationDamagePenalty ~= nil then
@@ -881,7 +880,6 @@ local function edit_resources(resources)
     end
 
     if baseDelivery ~= nil then
-      print(res_name)
       address = resource_production_offset_map[res_name]["baseDelivery"]
       if address == "Not supported." then
         log(WARNING, string.format("%s  production cannot be modified.", res_name))
