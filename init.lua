@@ -28,7 +28,7 @@ local unit_melee_toggles_base = addresses.unit_melee_toggles_base
 local unit_jester_unfriendly_base = addresses.unit_jester_unfriendly_base
 local unit_blessable_base = addresses.unit_blessable_base
 local unit_allowed_on_walls_base = addresses.unit_allowed_on_walls_base
-local unit_ignored_by_pits_base = addresses.unit_ignored_by_pits_base
+local unit_melee_immunity_base = addresses.unit_melee_immunity_base
 local towers_or_gates_base = addresses.towers_or_gates_base
 local unit_gold_jumplist_addr = addresses.unit_gold_jumplist_addr
 local tax_popularity_offset = addresses.tax_popularity_offset
@@ -763,7 +763,7 @@ local function edit_units(units)
     local powerLevel = stats["powerLevel"]
     local meleeEngage = stats["meleeEngage"]
     local notBlessable = stats["notBlessable"]
-    local canAvoidPits = stats["canAvoidPits"]
+    local meleeImmunity = stats["meleeImmunity"]
     local allowedOnWalls = stats["allowedOnWalls"]
     local fireDamage = stats["fireDamage"]
     local jesterUnfriendly = stats["jesterUnfriendly"]
@@ -783,7 +783,7 @@ local function edit_units(units)
     if allowedOnWalls ~= nil then core.writeInteger(unit_allowed_on_walls_base + 4*unit_idx, allowedOnWalls and 1 or 0) end
     if fireDamage ~= nil then core.writeSmallInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
     if jesterUnfriendly ~= nil then core.writeInteger(unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0) end
-    if canAvoidPits ~= nil then core.writeInteger(unit_ignored_by_pits_base + 4*unit_idx, canAvoidPits and 1 or 0) end
+    if meleeImmunity ~= nil then core.writeInteger(unit_melee_immunity_base + 4*unit_idx, meleeImmunity and 1 or 0) end
     if ballistaBoltDamage ~= nil then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
     if mangonelDamage ~= nil then core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage) end
     if catapultRockDamage ~= nil then core.writeInteger(catapult_damage_table_addr + 4*unit_idx, catapultRockDamage) end
