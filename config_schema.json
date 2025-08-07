@@ -196,7 +196,7 @@
         "Pond",
         "Bear cave",
         "European Outpost",
-        "Mercenary Outpost"
+        "Arabian Outpost"
       ]
     },
     "resource_name": {
@@ -269,6 +269,36 @@
       "maxItems": 4,
       "items": {
         "type": "integer"
+      }
+    },
+    "population_gathering_rate_map": {
+      "type": "object",
+      "patternProperties": {
+        "": {
+          "type": "integer"
+        }
+      },
+      "propertyNames": {
+        "$ref": "#/$defs/popularity_threshold"
+      }
+    },
+    "population_gathering_rate_array": {
+      "description": "Calculation is as follows: 2000/(value*game speed). Must be defined as 21-element integer array. Starting from the leave rate at <4 popularity to gathering rate @100 popularity",
+      "type": "array", 
+      "minItems": 21, 
+      "maxItems": 21
+    },
+    "projectile_attributes": {
+      "type": "object",
+      "properties": {
+        "velocity": {
+          "type": "integer",
+          "description": "Velocity value for projectile, check individual projectile stats for values.\nAffects maximum range of the projectile, can also cause units to miss some their shots, use with care!"
+        },
+        "arch_type": {
+          "type": "integer",
+          "description": "Arch type for the projectile, 0 is used by most units, 1 is used by trebuchets and mangonels, 2 is used by catapults by default\nWarning: changing arch type can cause your units to miss most of their shots, and sometimes even make them unable to shoot at all!"
+        }
       }
     }
   },
@@ -343,6 +373,10 @@
           "description": "Popularity bonus for each coverage level of religion\nVanilla is [50, 100, 150, 200]",
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
+        "multipliers": {
+          "description": "Alternative to \"bonuses\", makes it so that every percentage of coverage is counted towards popularity, calculation is made in percentage*value\n[2, 2, 2, 2] would be equivalent of Vanilla.",
+          "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
+        },
         "cathedral_bonus": {
           "description": "Popularity bonus for building cathedral.\nVanilla is 50",
           "type": "integer"
@@ -366,7 +400,7 @@
         },
         "productivity": {
           "type": "array",
-          "description": "Productivity bonuses, from -5 fear factor to +5 fear factor\nVanilla is [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]",
+          "description": "Productivity bonuses, from -5 fear factor to +5 fear factor\nVanilla is [150, 140, 130, 120, 110, 100, 90, 80, 70, 60, 50]",
           "minItems": 11,
           "maxItems": 11,
           "items": {
@@ -388,7 +422,7 @@
         },
         "resting_factor": {
           "type": "integer",
-          "description": "Multiplier for how much walking to gardens is required, vanilla is 1. Making this value bigger would mean less walking between good things under positive fear factor"
+          "description": "Multiplier for how much walking to gardens is counted towards the required, vanilla is 1. Making this value bigger would mean less walking between good things under positive fear factor"
         }
       }
     },
@@ -428,6 +462,10 @@
         },
         "bonuses": {
           "description": "Popularity bonus for each coverage level of beer\nVanilla is [50, 100, 150, 200]",
+          "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
+        },
+        "multipliers": {
+          "description": "Alternative to \"bonuses\", makes it so that every percentage of coverage is counted towards popularity, calculation is made in percentage*value\n[2, 2, 2, 2] would be equivalent of Vanilla.",
           "$ref": "#/$defs/4_step_coverage_threshold_or_bonus_value"
         },
         "coverage_per_inn": {
@@ -499,6 +537,10 @@
               "$ref": "#/$defs/numeric_string",
               "description": "Incoming damage from trebuchet rocks."
             },
+            "fireDamage": {
+              "$ref": "#/$defs/numeric_string",
+              "description": "Incoming damage from flames."
+            },
             "baseMeleeDamage": {
               "$ref": "#/$defs/numeric_string",
               "description": "Outgoing melee damage against every unit, unless otherwise specified in MeleeDamageVs section."
@@ -526,10 +568,6 @@
               "description": "Melee damage towards buildings",
               "$ref": "#/$defs/numeric_string"
             },
-            "fortificationDamagePenalty": {
-              "description": "Melee damage towards towers, is represented as penalty on buildingDamage\nCan be written as either a negative or normal number, it will be interpreted as negative either way.",
-              "$ref": "#/$defs/numeric_string"
-            },
             "fortificationDamage": {
               "description": "Melee damage towards sturdy buildings.(which is only towers in vanilla) Overrides fortificationDamagePenalty!",
               "$ref": "#/$defs/numeric_string"
@@ -546,13 +584,21 @@
               "type": "boolean",
               "description": "Whether the unit engages in melee combat or not."
             },
-            "isBlessable": {
+            "notBlessable": {
               "type": "boolean",
-              "description": "Whether the unit is considered as a unit to be blessed by priest (mostly relevant for workers)."
+              "description": "Whether the unit is not considered as a unit to be blessed by priest (mostly relevant for workers)."
+            },
+            "allowedOnWalls": {
+              "type": "boolean",
+              "description": "Whether the unit is allowed to go on top of walls."
             },
             "jesterUnfriendly": {
               "type": "boolean",
               "description": "Whether the unit does not want jester to visit him."
+            },
+            "canAvoidPits": {
+              "type": "boolean",
+              "description": "Whether the unit can walk over killing pits without triggering them."
             }
           }
         }
@@ -623,7 +669,101 @@
         },
         "dog_trigger_threshold": {
           "type": "integer",
-          "description": "Total enemy unit strength nearby a dogcage for it to release the dogs, use this in combination with powerLevel attribute of units."
+          "description": "Total enemy unit strength nearby a dogcage for it to release the dogs, use this in combination with powerLevel attribute of units. \nVanilla is 25."
+        },
+        "fire_damage": {
+          "type": "integer",
+          "description": "Common fire damage for all units (Vanilla is 100).\nLord(Vanilla: 25), firemen(Vanilla: 1) and Firethrowers(Vanilla: 10) are not affected by this config value. Use unit based configuration for them instead."
+        }
+      }
+    },
+    "ranges": {
+      "type": "object",
+      "properties": {
+        "archer_range": {
+          "type": "integer",
+          "description": "Range for Archers, default is 54"
+        },
+        "xbow_range": {
+          "type": "integer",
+          "description": "Range for Crossbowmen, default is 54"
+        },
+        "arabbow_range": {
+          "type": "integer",
+          "description": "Range for Arabian Archers, default is 54"
+        },
+        "slinger_range": {
+          "type": "integer",
+          "description": "Range for Slingers, default is 22"
+        },
+        "horse_archer_range": {
+          "type": "integer",
+          "description": "Range for Horse Archers, default is 54"
+        },
+        "firethrower_range": {
+          "type": "integer",
+          "description": "Range for Firethrowers, default is 11"
+        },
+        "catapult_range": {
+          "type": "integer",
+          "description": "Range for Catapults, default is 75"
+        },
+        "treb_range": {
+          "type": "integer",
+          "description": "Range for Trebuchets, default is 85"
+        },
+        "fbal_range": {
+          "type": "integer",
+          "description": "Range for Fire Ballistas, default is 54"
+        },
+        "towerbal_range": {
+          "type": "integer",
+          "description": "Range for Tower Ballistas, default is 85"
+        },
+        "mangonel_range": {
+          "type": "integer",
+          "description": "Range for Mangonels, default is 70"
+        }
+      }
+    },
+    "projectiles": {
+      "type": "object",
+      "properties": {
+        "arrow": {
+          "description": "Projectile properties for Arrows\nDefault is 125 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "catapult_rock": {
+          "description": "Projectile properties for Catapult Rocks\nDefault is 10 velocity, Arch type of 2",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "trebuchet_rock": {
+          "description": "Projectile properties for Trebuchet Rocks\nDefault is 30 velocity, Arch type of 1",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "mangonel_pebble": {
+          "description": "Projectile properties for Mangonel Pebbles\nDefault is 15 velocity, Arch type of 1",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "crossbow_bolt": {
+          "description": "Projectile properties for Crossbow Bolts\nDefault is 125 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "towerbal_bolt": {
+          "description": "Projectile properties for Tower Ballista Bolts\nDefault is 170 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "slinger_stone": {
+          "description": "Projectile properties for Slinger Stones\nDefault is 100 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "firethrower_grenade": {
+          "description": "Projectile properties for Firethrower Grenades\nDefault is 80 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
+        },
+        "firebal_bolt": {
+          "description": "Projectile properties for Fire Ballista Bolts\nDefault is 125 velocity, Arch type of 0",
+          "$ref": "#/$defs/projectile_attributes"
         }
       }
     },
@@ -631,36 +771,99 @@
       "type": "boolean",
       "description": "Whether to enable double iron pickup mode, where iron worker waits and collects 2 ingots at once from iron mine. Note that this does not affect iron delivery amount by itself!"
     },
+    "disable_rally_runners": {
+      "type": "boolean",
+      "description": "Makes Arabian Archers, Slingers, Assassins and Firethrowers walk to their rally point instead of running."
+    },
     "leather_per_cow": {
       "type": "integer",
       "description": "How many leather armor deliveries can be made from one cow.\nVanilla is 3"
     },
     "enable_ascension": {
       "type": "boolean",
-      "description": "Whether to enable Ascension Mod-specific changes (only works on Extreme!), reach out to Krarilotus/CIO for more details"
+      "description": "Whether to enable Ascension Mod-specific changes (only works on Extreme!).\nApplies the following changes:\nUnits look bigger on minimap\nSpearmen sprint when near enemies\nHighground damage reduction from 66% to 50%.\nFlagon cap on Inns reduced to 400.\nUnits check for nearby enemies more often."
     },
     "enable_ai_ascension": {
       "type": "boolean",
-      "description": "Whether to enable AI Ascension Mod-specific changes (only works on Extreme!), reach out to Krarilotus for more details"
+      "description": "Whether to enable AI-Ascension Mod specific changes (only works on Extreme!)\nApplies same changes as enable_ascension, except units' enemy check-rate increase."
     },
-    "population_gathering_rate": {
+    "population": {
       "type": "object",
-      "description": "Population gathering rates, Calculation is as follows: 2000/(value*game speed) In scenarios, population hitting 100 means different peasant gathering rate.",
-      "patternProperties": {
-        "": {
-          "type": "object",
-          "patternProperties": {
-            "": {
-              "type": "integer"
+      "properties": {
+        "gathering_rate_skirmish": {
+          "title": "Population gathering rates in Skirmish matches.",
+          "$ref": "#/$defs/population_gathering_rate_array"
+        },
+        "gathering_rate_scenario_small_town": {
+          "title": "Population gathering rates in scenario/castle builder maps.",
+           "$ref": "#/$defs/population_gathering_rate_array"
+        },
+        "gathering_rate_scenario_large_town": {
+          "title": "Population gathering rates in scenario/castle builder maps.",
+           "$ref": "#/$defs/population_gathering_rate_array"
+        },
+        "large_town_threshold": {
+          "type": "integer",
+          "description": "Population threshold for triggering large town gathering rate in scenarios/castle builder maps. Vanilla is 100"
+        },
+        "civilian_upkeep": {
+          "description": "Special upkeep system for skirmish&multiplayer matches. When defined, poeple gather slower, and leave faster as population grows.",
+          "properties": {
+            "slower_gathering": {
+              "type": "integer",
+              "description": "Penalty factor for gathering rate, select any number from 1 to 5. 5 is most severe.",
+              "enum": [1, 2, 3, 4, 5]
+            },
+            "minimum_gathering": {
+              "type": "integer",
+              "description": "Minimum value after gathering rate penalty is applied, defaults to 4."
+            },
+            "faster_leaving": {
+              "type": "integer",
+              "description": "Boost factor for leaving rate, select any number from 1 to 5. 5 is most severe.",
+              "enum": [1, 2, 3, 4, 5]
             }
-          },
-          "propertyNames": {
-            "$ref": "#/$defs/popularity_threshold"
+          }
+        },
+        "minimum_population": {
+          "type": "integer",
+          "description": "Minimum amount of people before people stop leaving your castle. Vanilla is 4."
+        },
+        "reset_population_threshold": {
+          "type": "integer",
+          "description": "When a castle's population drops to/below this value, popularity gets reset. Vanilla is 3."
+        },
+        "reset_popularity_threshold": {
+          "type": "integer",
+          "description": "When popularity is below this amount, popularity can be reset. Vanilla is 5000 (meaning 50 popularity)"
+        },
+        "reset_popularity_value": {
+          "type": "integer",
+          "description": "When a popularity reset is triggered, popularity is set this this value. Vanilla is 7500(meaning 75 popularity)"
+        },
+        "crowding": {
+          "type": "object",
+          "properties": {
+            "thresholds": {
+              "type": "array",
+              "description": "Thresholds of population/housing ratios for crowding effects to take effect.\nVanilla is [100, 120, 140, 160, 180]",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            },
+            "penalties": {
+              "type": "array",
+              "description": "Crowding effects for breaching each crowding threshold.\nVanilla is[-50, -100, -150, -200, -250]",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            }
           }
         }
-      },
-      "propertyNames": {
-        "enum": ["Skirmish", "Scenario_lt_100", "Scenario_gt_100"]
       }
     }
   }
