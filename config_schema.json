@@ -473,8 +473,12 @@
           "type": "integer"
         },
         "flagons_per_beer": {
-          "description": "How many flagons are supplied from 1 unit of beer, vanilla is 160",
+          "description": "How many flagons are supplied from 1 unit of beer, Vanilla is 160",
           "type": "integer"
+        },
+        "flagon_cap": {
+          "type": "integer",
+          "description": "[SHC Extreme Only Feature] How many flagons can an Inn store. Vanilla is 500"
         }
       }
     },
@@ -779,13 +783,21 @@
       "type": "integer",
       "description": "How many leather armor deliveries can be made from one cow.\nVanilla is 3"
     },
-    "enable_ascension": {
+    "enable_spearmen_conditional_run": {
       "type": "boolean",
-      "description": "Whether to enable Ascension Mod-specific changes (only works on Extreme!).\nApplies the following changes:\nUnits look bigger on minimap\nSpearmen sprint when near enemies\nHighground damage reduction from 66% to 50%.\nFlagon cap on Inns reduced to 400.\nUnits check for nearby enemies more often."
+      "description": "[SHC Extreme Only Feature] When enabled, spearmen will start sprinting when there are enemy units nearby, even when not in aggressive stance.\nThis feature is incompatible with running units plugin!"
     },
-    "enable_ai_ascension": {
+    "reduce_height_advantage": {
       "type": "boolean",
-      "description": "Whether to enable AI-Ascension Mod specific changes (only works on Extreme!)\nApplies same changes as enable_ascension, except units' enemy check-rate increase."
+      "description": "[SHC Extreme Only Feature] In original game, projectiles do 66% less damage when shooting at higher elevation (that is higher by 30 units at least).\nThis setting reduces it to 50%"
+    },
+    "increase_enemy_check_frequency": {
+      "type": "boolean",
+      "description": "[SHC Extreme Only Feature] Increases check frequency for nearby enemy units for military. Not recommended for high game speeds!"
+    },
+    "increase_minimap_unit_size": {
+      "type": "boolean",
+      "description": "[SHC Extreme Only Feature] Increases unit dot size in minimap, making them more noticable."
     },
     "population": {
       "type": "object",

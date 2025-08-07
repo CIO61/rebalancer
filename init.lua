@@ -243,17 +243,38 @@ local iron_wait_addr = locate_aob("33 C9 39 88 ? ? ? ? 0F 94 C1 8D 4C 09 03")
 local iron_subtract_addr = locate_aob("FF 6A ? 8D 80 ? ? ? ? 6A ? 51 E8")
 
 
-local function ascension_extras()
-  core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
+local function extreme_only_feature_check(warning_message)
+  if data.version.isExtreme() then
+    return true
+  end
+  log(WARNING, warning_message)
+  return false
+end
 
+local function reduce_height_advantage()
+  core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
+end
+
+local function increase_enemy_check_frequency()
+  core.writeCodeInteger(0x400000 + 0x17A08A, 20) -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
+  core.writeCodeByte(0x400000 + 0x17A089, 0xB8)  -- Custom unit to closest enemy distance update rate cap, code adjustment 1
+  core.writeCodeByte(0x400000 + 0x17A08E, 0x90)  -- Custom unit to closest enemy distance update rate cap, code adjustment 2
+end
+
+local function increase_minimap_unit_size()
+  core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
+end
+
+
+local function enable_spearmen_conditional_run()
   core.writeCodeBytes(0x400000 + 0x15E47B, {
     0x7e, 0x36
-  })  -- Spearmen running only enemies, code edit 1.
+  })
 
   core.writeCodeBytes(0x400000 + 0x15E4B3, {
     0xE9, 0x74, 0xDE, 0x04, 0x00,
     0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
-  })  -- Spearmen running only enemies, code edit 2.
+  })
 
   core.writeCodeBytes(0x400000 + 0x1AC32C, {
     0x66, 0x81, 0xBE, 0xE2, 0xD2, 0x45, 0x01, 0xF0, 0x00,
@@ -263,19 +284,9 @@ local function ascension_extras()
     0xE9, 0x73, 0x21, 0xFB, 0xFF, 0x89, 0x86, 0x44, 0xD0, 0x45, 0x01,
     0x66, 0x89, 0xBE, 0xFA, 0xD2, 0x45, 0x01,
     0xE9, 0x61, 0x21, 0xFB, 0xFF
-  })  -- Spearmen running only enemies, code edit 3.
+  })
+
   core.writeCodeSmallInteger(0x400000+ 0x1AC333, 240) -- Spearman running trigger range around enemy units * 8."
-
-  core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
-  core.writeCodeSmallInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
-end
-
-local function mp_ascension_extras()
-  core.writeCodeInteger(0x400000 + 0x17A08A, 20) -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
-  core.writeCodeByte(0x400000 + 0x17A089, 0xB8)  -- Custom unit to closest enemy distance update rate cap, code adjustment 1
-  core.writeCodeByte(0x400000 + 0x17A08E, 0x90)  -- Custom unit to closest enemy distance update rate cap, code adjustment 2
-
-  ascension_extras()
 end
 
 local function enable_rebalance_features()
@@ -1125,6 +1136,7 @@ local function edit_beer(beer)
   local beer_coverage = beer["coverage_per_inn"]
   local beer_flagons = beer["flagons_per_beer"]
   local beer_multipliers = beer["multipliers"]
+  local beer_flagon_cap = beer["flagon_cap"]
   if beer_thresholds == nil then
     beer_thresholds = {25, 50, 75, 100}
   else
@@ -1218,6 +1230,11 @@ local function edit_beer(beer)
     })
     -- beer_addr_3 (62 bytes) info: eax target: eax
     core.insertCode(beer_addr_3, 62, assembled_code)
+  end
+  if beer_flagon_cap ~= nil then
+    if extreme_only_feature_check("Beer flagon cap editing is only available for SHC Extreme!") then
+      core.writeCodeSmallInteger(0x400000 + 0x1418A0, beer_flagon_cap)
+    end
   end
 end
 
@@ -1635,19 +1652,27 @@ namespace.apply_rebalance = function(config)
     core.writeCodeBytes(firethrower_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
   end
 
-  if config["enable_ascension"] ~= nil then
-    if data.version.isExtreme() then
-      mp_ascension_extras()
-    else
-      log(WARNING, "Ascension mode is only supported in SHC Extreme!")
+  if config["enable_spearmen_conditional_run"] then
+    if extreme_only_feature_check("enable_spearmen_conditional_run is only available for SHC Extreme!") then
+      enable_spearmen_conditional_run()
     end
   end
 
-  if config["enable_ai_ascension"] ~= nil then
-    if data.version.isExtreme() then
-      ascension_extras()
-    else
-      log(WARNING, "AI Ascension mode is only supported in SHC Extreme!")
+  if config["reduce_height_advantage"] then
+    if extreme_only_feature_check("reduce_height_advantage is only available for SHC Extreme!") then
+      reduce_height_advantage()
+    end
+  end
+
+  if config["increase_enemy_check_frequency"] ~= nil then
+    if extreme_only_feature_check("increase_enemy_check_frequency is only available for SHC Extreme!") then
+      increase_enemy_check_frequency()
+    end
+  end
+
+  if config["increase_minimap_unit_size"] ~= nil then
+    if extreme_only_feature_check("increase_minimap_unit_size is only available for SHC Extreme!") then
+      increase_minimap_unit_size()
     end
   end
 
