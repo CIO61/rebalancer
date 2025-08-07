@@ -298,13 +298,13 @@ local function enable_rebalance_features()
 
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
-      core.writeSmallInteger(fire_damage_table_addr + 4*index, 25)
+      core.writeInteger(fire_damage_table_addr + 4*index, 25)
     elseif name == "Fireman" then
-      core.writeSmallInteger(fire_damage_table_addr + 4*index, 1)
+      core.writeInteger(fire_damage_table_addr + 4*index, 1)
     elseif name == "Arabian firethrower" then
-      core.writeSmallInteger(fire_damage_table_addr + 4*index, 10)
+      core.writeInteger(fire_damage_table_addr + 4*index, 10)
     else
-      core.writeSmallInteger(fire_damage_table_addr + 4*index, 100)
+      core.writeInteger(fire_damage_table_addr + 4*index, 100)
     end
   end
 
@@ -732,7 +732,7 @@ local function edit_castle(castle)
       or name == "Fireman"
       or name == "Arabian firethrower" then -- defaults are set once
       else
-        core.writeSmallInteger(fire_damage_table_addr + 4*(index-1), fire_damage)
+        core.writeInteger(fire_damage_table_addr + 4*index, fire_damage)
       end
     end
   end
@@ -781,7 +781,7 @@ local function edit_units(units)
     if meleeEngage ~= nil then core.writeInteger(unit_melee_toggles_base + 4*unit_idx, meleeEngage and 1 or 0) end
     if notBlessable ~= nil then core.writeInteger(unit_blessable_base + 4*unit_idx, notBlessable and 1 or 0) end
     if allowedOnWalls ~= nil then core.writeInteger(unit_allowed_on_walls_base + 4*unit_idx, allowedOnWalls and 1 or 0) end
-    if fireDamage ~= nil then core.writeSmallInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
+    if fireDamage ~= nil then core.writeInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
     if jesterUnfriendly ~= nil then core.writeInteger(unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0) end
     if meleeImmunity ~= nil then core.writeInteger(unit_melee_immunity_base + 4*unit_idx, meleeImmunity and 1 or 0) end
     if ballistaBoltDamage ~= nil then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
