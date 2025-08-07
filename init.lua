@@ -244,7 +244,16 @@ local iron_subtract_addr = locate_aob("FF 6A ? 8D 80 ? ? ? ? 6A ? 51 E8")
 
 
 local function ascension_extras()
-  core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
+  core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.",   
+
+  core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
+  core.writeCodeSmallInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
+end
+
+local function mp_ascension_extras()
+  core.writeCodeInteger(0x400000 + 0x17A08A, 20) -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
+  core.writeCodeByte(0x400000 + 0x17A089, 0xB8)  -- Custom unit to closest enemy distance update rate cap, code adjustment 1
+  core.writeCodeByte(0x400000 + 0x17A08E, 0x90)  -- Custom unit to closest enemy distance update rate cap, code adjustment 2
 
   core.writeCodeBytes(0x400000 + 0x15E47B, {
     0x7e, 0x36
@@ -265,15 +274,6 @@ local function ascension_extras()
     0xE9, 0x61, 0x21, 0xFB, 0xFF
   })  -- Spearmen running only enemies, code edit 3.
   core.writeCodeSmallInteger(0x400000+ 0x1AC333, 240) -- Spearman running trigger range around enemy units * 8."
-
-  core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
-  core.writeCodeSmallInteger(0x400000 + 0x1418A0, 400) -- Flagon threshold in an inn.   
-end
-
-local function mp_ascension_extras()
-  core.writeCodeInteger(0x400000 + 0x17A08A, 20) -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
-  core.writeCodeByte(0x400000 + 0x17A089, 0xB8)  -- Custom unit to closest enemy distance update rate cap, code adjustment 1
-  core.writeCodeByte(0x400000 + 0x17A08E, 0x90)  -- Custom unit to closest enemy distance update rate cap, code adjustment 2
 
   ascension_extras()
 end
