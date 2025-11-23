@@ -1283,20 +1283,50 @@ end
 local function edit_fear_factor(fear_factor)
   local popularity_per_good_level = fear_factor["popularity_per_good_level"]
   local popularity_per_bad_level = fear_factor["popularity_per_bad_level"]
+  local popularity_table = fear_factor["popularity_table"]
   local productivity = fear_factor["productivity"]
   local coverage = fear_factor["coverage"]
   local combat_bonus = fear_factor["combat_bonus"]
   local resting_factor = fear_factor["resting_factor"]
 
-  if popularity_per_good_level ~= nil then
-    core.writeCodeByte(ff_addr_1 + 13, popularity_per_good_level)
-    core.writeCodeByte(ff_addr_2 + 13, popularity_per_good_level)
-    core.writeCodeByte(ff_addr_3 + 14, popularity_per_good_level)
-  end
-  if popularity_per_bad_level ~= nil then
-    core.writeCodeByte(ff_addr_1 + 23, popularity_per_bad_level)
-    core.writeCodeByte(ff_addr_2 + 25, popularity_per_bad_level)
-    core.writeCodeByte(ff_addr_3 + 28, popularity_per_bad_level)
+  if popularity_table ~= nil then
+    local pop_table_addr = core.allocate(11*4)
+
+    for idx, pop_val in ipairs(popularity_table) do
+      core.writeCodeInteger(pop_table_addr+4*(idx-1), pop_val)
+    end
+
+    core.insertCode(ff_addr_1+6, 22, core.assemble([[
+      mov eax, [eax*4 + table_addr]
+    ]], {
+      table_addr=pop_table_addr+20
+    }, 0))
+
+    core.insertCode(ff_addr_2+6, 26, core.assemble([[
+      mov eax, [eax*4 + table_addr]
+      mov esi, eax
+    ]], {
+      table_addr=pop_table_addr+20
+    }, 0))
+
+    core.insertCode(ff_addr_3+7, 36, core.assemble([[
+      mov eax, [eax*4 + table_addr]
+      mov [esp+0x1C], eax
+    ]], {
+      table_addr=pop_table_addr+20
+    }, 0))
+
+  else
+    if popularity_per_good_level ~= nil then
+      core.writeCodeByte(ff_addr_1 + 13, popularity_per_good_level)
+      core.writeCodeByte(ff_addr_2 + 13, popularity_per_good_level)
+      core.writeCodeByte(ff_addr_3 + 14, popularity_per_good_level)
+    end
+    if popularity_per_bad_level ~= nil then
+      core.writeCodeByte(ff_addr_1 + 23, popularity_per_bad_level)
+      core.writeCodeByte(ff_addr_2 + 25, popularity_per_bad_level)
+      core.writeCodeByte(ff_addr_3 + 28, popularity_per_bad_level)
+    end
   end
   if productivity ~= nil then
     core.writeCodeInteger(productivity_addr + 2, productivity[1])
