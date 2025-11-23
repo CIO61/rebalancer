@@ -407,6 +407,15 @@
             "type": "integer"
           }
         },
+        "popularity_table": {
+          "type": "array",
+          "description": "Popularity effects for each fear factor level. Overrides popularity_per_good/bad_level values!\nVanilla is [-125, -100, -75, -50, -25, 0, 25, 50, 75, 100, 125]",
+          "minItems": 11,
+          "maxItems": 11,
+          "items": {
+            "type": "integer"
+          }
+        },
         "combat_bonus": {
           "type": "array",
           "description": "Combat bonus percentages, from -5 fear factor to +5 fear factor\nVanilla is [75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125]",
