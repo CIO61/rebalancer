@@ -100,7 +100,8 @@ end
 local function scanOnce(signature, from, to)
   local ok, address = pcall(core.scanForAOB, signature, from, to)
   if not ok or type(address) ~= "number" or address < from or address >= to then
-    return nil, "signature not found"
+    return nil, "signature not found (the game code there differs: another module changed it, "
+      .. "or this game version is not supported)"
   end
   local again, other = pcall(core.scanForAOB, signature, address + 1, to)
   if again and type(other) == "number" and other > address and other < to then
@@ -114,7 +115,9 @@ end
   itself (so a site is found again after it has been written). `value` is the offset of the
   value in the match, `width` its size in bytes, `default` the game's value (the same in
   Stronghold Crusader 1.41 and Crusader Extreme 1.41). `inside` limits the search to a window
-  after another site, for sites that must lie in the same function.
+  after another site, for sites that must lie in the same function. `calls` = { offset of an
+  `E8` call in the match, name in FUNCTIONS }: that call must reach that game function, found by its
+  own signature, with `mov ecx, <object>` right before it.
 ]]
 local SITES = {
   -- TileMapState::getCastleBuildRangeForMapSize: a switch on the map size returning the
@@ -137,16 +140,16 @@ local SITES = {
     signature = "83 3D ? ? ? ? 00 0F 84 ? ? ? ? 33 DB 8B 4C 24 50 51 53 8B CE E8 ? ? ? ? "
       .. "8B 96 ? ? ? ? 8B 86 ? ? ? ? 8B 4C 24 40 6A ? 03 D5 52 03 C7 50 51 B9 ? ? ? ? E8",
     values = { radius = { value = 45, width = 1, default = 3, min = 0, max = 127 } },
-    near_check = 58,
+    calls = { at = 58, fn = "enemy_near_check" },
   },
-  -- Same function, siege tent case (catapult, trebuchet, siege tower, ram, shield and the
-  -- type-358 tent); skipped only in the map editor and the "Siege That" mode.
+  -- Same function, siege tent case (catapult, trebuchet, siege tower, ram, shield, and the fire
+  -- ballista tent, mapper 358); skipped only in the map editor and the "Siege That" mode.
   siege_tent_enemy_radius = {
     signature = "A1 ? ? ? ? 83 F8 01 0F 84 ? ? ? ? 83 F8 06 0F 84 ? ? ? ? 33 DB 8B 44 24 50 50 "
       .. "53 8B CE E8 ? ? ? ? 8B 8E ? ? ? ? 8B 96 ? ? ? ? 8B 44 24 40 6A ? 03 CD 51 03 D7 52 50 "
       .. "B9 ? ? ? ? E8",
     values = { radius = { value = 55, width = 1, default = 3, min = 0, max = 127 } },
-    near_check = 68,
+    calls = { at = 68, fn = "enemy_near_check" },
   },
   -- TileMapState::validateWallPlacementAtTile, reached only from the AI's AIV building steps:
   -- enemy unit distance for each wall, crenel and stair tile the AI places.
@@ -154,7 +157,7 @@ local SITES = {
     signature = "A9 81 00 30 60 75 ? 8B 4C 24 14 6A ? 53 55 51 B9 ? ? ? ? E8 ? ? ? ? 85 C0 75 ? "
       .. "8B 54 24 14 6A 02 53 55 52 B9",
     values = { radius = { value = 12, width = 1, default = 5, min = 0, max = 127 } },
-    near_check = 21,
+    calls = { at = 21, fn = "enemy_near_check" },
   },
   -- UnitsState::findNearestEnemyAndHeadTowardsIt: the search range of units in aggressive and
   -- defensive stance, in the game's distance units (8 per tile).
@@ -187,10 +190,37 @@ local SITES = {
   aggressive_melee_building_range = {
     signature = "0F BF 56 5C 3B DA 7C ? 8B 44 24 10 6A ? 50 B9 ? ? ? ? E8",
     values = { range = { value = 13, width = 1, default = 15, min = 1, max = 127 } },
+    calls = { at = 20, fn = "building_search" },
   },
 }
 
+-- Game functions the sites call, each found by its own signature (unique in the code section).
+local FUNCTIONS = {
+  -- PathFindingState::isEnemyTooCloseUnk(player, x, y, radius), ret 0x10: both tile coordinates
+  -- are bounds-checked (0..399), then the radius (4th argument) is squared for the distance test.
+  -- The test is strict (distance squared < radius squared), so a radius of 0 never refuses.
+  enemy_near_check = "8B 54 24 08 81 FA 8F 01 00 00 56 77 1E 8B 74 24 10 81 FE 8F 01 00 00 77 12 "
+    .. "8B C6 69 C0 90 01 00 00 80 BC 10 ? ? ? ? 00 75 06 33 C0 5E C2 10 00 8B 44 24 14 53 55 "
+    .. "8B E8 0F AF E8",
+  -- PathFindingState::aggressiveStanceTargetBuildingAtRange(unit, range): starts by reading the
+  -- unit's record (unit index * 0x490).
+  building_search = "83 EC 14 8B 44 24 18 69 C0 90 04 00 00 53 55 0F BF A8",
+}
+
 local resolved = {}   -- site name -> { address = match, problem = text }
+local functions = {}  -- function name -> { address = start, problem = text }
+
+local function resolveFunction(name)
+  if functions[name] == nil then
+    local from, to, problem = codeSection()
+    local address
+    if problem == nil then
+      address, problem = scanOnce(FUNCTIONS[name], from, to)
+    end
+    functions[name] = { address = address, problem = problem }
+  end
+  return functions[name].address, functions[name].problem
+end
 
 local function checkSite(name, site, address)
   if site == SITES.castle_build_range then
@@ -208,6 +238,17 @@ local function checkSite(name, site, address)
     -- Both instructions read the same unit field (units already chasing this enemy).
     if readUnsigned(address + 3, 4) ~= readUnsigned(address + 13, 4) then
       return "the counter field does not match"
+    end
+  end
+  if site.calls ~= nil then
+    -- The value is passed to one particular game function; this site must call exactly that one.
+    local expected, problem = resolveFunction(site.calls.fn)
+    if expected == nil then
+      return site.calls.fn .. ": " .. problem
+    end
+    local call = address + site.calls.at
+    if readUnsigned(call - 5, 1) ~= 0xB9 or callTarget(call) ~= expected then
+      return "the call after the value does not reach " .. site.calls.fn
     end
   end
   return nil
@@ -243,30 +284,6 @@ local function resolve(name)
   end
   resolved[name] = { address = address, problem = problem }
   return address, problem
-end
-
--- The enemy-near check the three placement radii are passed to must be one and the same game
--- function, called on the same object.
-local function checkNearCalls()
-  local target, object
-  for _, name in ipairs({ "storage_enemy_radius", "siege_tent_enemy_radius", "ai_wall_enemy_radius" }) do
-    local address, problem = resolve(name)
-    if address == nil then
-      return name .. ": " .. problem
-    end
-    local call = address + SITES[name].near_check
-    local this = readUnsigned(call - 4, 4)
-    local callee = callTarget(call)
-    if readUnsigned(call - 5, 1) ~= 0xB9 or callee == nil then
-      return name .. ": no enemy-near check after the value"
-    end
-    if target == nil then
-      target, object = callee, this
-    elseif callee ~= target or this ~= object then
-      return name .. ": the enemy-near check differs from the other placement sites"
-    end
-  end
-  return nil
 end
 
 --[[
@@ -329,9 +346,36 @@ end
 -- The balance file sections. Keys that are left out keep the game's values.
 ---------------------------------------------------------------------------------------------
 
+-- A section of the balance file: a table, else nothing of it is applied. Unknown keys get a
+-- warning (a typo would otherwise silently keep the game's value).
+local function section(value, name, known)
+  if value == nil then
+    return nil
+  end
+  if type(value) ~= "table" then
+    log(ERROR, string.format("%s%s not applied: it must be an object, not %s", LOG_PREFIX, name, type(value)))
+    return nil
+  end
+  local allowed = {}
+  for _, key in ipairs(known) do
+    allowed[key] = true
+  end
+  for key in pairs(value) do
+    if not allowed[key] then
+      log(WARNING, string.format("%s%s: unknown key '%s' ignored", LOG_PREFIX, name, tostring(key)))
+    end
+  end
+  return value
+end
+
 -- "building_placement": castle build range per map size and distances to enemy units.
 function namespace.edit_building_placement(placement)
-  local range = placement["castle_build_range"]
+  placement = section(placement, "building_placement", { "castle_build_range", "enemy_unit_radius" })
+  if placement == nil then
+    return
+  end
+  local range = section(placement["castle_build_range"], "building_placement.castle_build_range",
+    { "map_160", "map_200", "map_300", "map_400" })
   if range ~= nil then
     local writes = {}
     for _, size in ipairs({ "map_160", "map_200", "map_300", "map_400" }) do
@@ -345,7 +389,8 @@ function namespace.edit_building_placement(placement)
     end
   end
 
-  local radius = placement["enemy_unit_radius"]
+  local radius = section(placement["enemy_unit_radius"], "building_placement.enemy_unit_radius",
+    { "storage", "siege_tents", "ai_walls" })
   if radius ~= nil then
     for _, entry in ipairs({
       { "storage", "storage_enemy_radius" },
@@ -355,8 +400,7 @@ function namespace.edit_building_placement(placement)
       local key, site = entry[1], entry[2]
       if radius[key] ~= nil then
         local label = "building_placement.enemy_unit_radius." .. key
-        namespace.apply(label, { { site = site, value = "radius", to = radius[key], label = label } },
-          checkNearCalls)
+        namespace.apply(label, { { site = site, value = "radius", to = radius[key], label = label } })
       end
     end
   end
@@ -364,6 +408,11 @@ end
 
 -- "stances": search ranges of the aggressive and defensive stance and what they go after.
 function namespace.edit_stances(stances)
+  stances = section(stances, "stances", { "aggressive_range", "defensive_range", "max_units_per_enemy",
+    "aggressive_melee_building_range" })
+  if stances == nil then
+    return
+  end
   local aggressive, defensive = stances["aggressive_range"], stances["defensive_range"]
   if aggressive ~= nil or defensive ~= nil then
     -- One group: the game tells the two stances apart by the defensive value, so the ranges must
@@ -402,8 +451,10 @@ namespace.defaults = default
 
 -- For tests: the site table and a way to forget resolved addresses.
 namespace._sites = SITES
+namespace._functions = FUNCTIONS
 namespace._reset = function()
   resolved = {}
+  functions = {}
   codeFirst, codeEnd, codeProblem = nil, nil, nil
 end
 
