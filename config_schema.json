@@ -692,12 +692,12 @@
     },
     "building_placement": {
       "type": "object",
-      "description": "Where buildings may be placed. Applies to players and AI lords alike (the AI places its buildings through the same checks), and to the red/green placement preview. Leave a key out to keep the game's value.",
+      "description": "Building placement rules for players and AI lords.",
       "additionalProperties": false,
       "properties": {
         "castle_build_range": {
           "type": "object",
-          "description": "How far from their own keep (in tiles) a lord may place castle parts: walls, towers, gatehouses, gates and moat; killing pits, pitch ditches, drawbridges and dog cages may be 5 tiles further out. Near an ally's keep, half the range counts. Checked in skirmish, Crusader trail and multiplayer, not in 1-player modes. The game reads this one value everywhere it checks the range: placement, the red/green preview, the wall drag and moat digging.\nLowering it can stop AI lords from finishing castle layouts that reach further out.",
+          "description": "How far from their keep (in tiles) lords may build castle parts, per map size. Not checked in 1-player modes.\nLowering it can stop AI lords from finishing their castles.",
           "additionalProperties": false,
           "properties": {
             "map_160": {
@@ -728,26 +728,26 @@
         },
         "enemy_unit_radius": {
           "type": "object",
-          "description": "How close (in tiles, as a circle) enemy units may stand before a building can no longer be placed. 0 turns the check off. The other placement distances keep the game's values.",
+          "description": "How close (in tiles) enemy units may be when placing these buildings. 0 turns the check off.",
           "additionalProperties": false,
           "properties": {
             "storage": {
               "type": "integer",
               "minimum": 0,
               "maximum": 127,
-              "description": "Stockpile, granary and armoury. Checked in skirmish, Crusader trail and multiplayer; 1-player modes do not check it. Vanilla is 3"
+              "description": "Stockpile, granary and armoury. Vanilla is 3"
             },
             "siege_tents": {
               "type": "integer",
               "minimum": 0,
               "maximum": 127,
-              "description": "Siege tents: catapult, trebuchet, siege tower, battering ram, portable shield and fire ballista. Checked in every mode except the map editor and Siege That. Vanilla is 3"
+              "description": "Siege tents. Vanilla is 3"
             },
             "ai_walls": {
               "type": "integer",
               "minimum": 0,
               "maximum": 127,
-              "description": "AI lords only: each wall, crenellation and stair tile the AI builds from its castle layout. Players' walls are not affected. Vanilla is 5"
+              "description": "Walls built by AI lords. Vanilla is 5"
             }
           }
         }
@@ -755,32 +755,32 @@
     },
     "stances": {
       "type": "object",
-      "description": "How units in defensive and aggressive stance look for enemies. Applies to every unit, the AI's too. Leave a key out to keep the game's value.",
+      "description": "How units in defensive and aggressive stance look for enemies.",
       "additionalProperties": false,
       "properties": {
         "aggressive_range": {
           "type": "integer",
           "minimum": 1,
           "maximum": 3200,
-          "description": "How far units in aggressive stance look for an enemy, in the game's distance units (8 per tile). Must differ from defensive_range. Vanilla is 200 (25 tiles)"
+          "description": "Search range in aggressive stance (8 per tile). Must differ from defensive_range. Vanilla is 200"
         },
         "defensive_range": {
           "type": "integer",
           "minimum": 1,
           "maximum": 127,
-          "description": "How far units in defensive stance look for an enemy, measured from the spot they were told to hold, in the game's distance units (8 per tile). Must differ from aggressive_range. Vanilla is 40 (5 tiles)"
+          "description": "Search range in defensive stance, from the held position (8 per tile). Must differ from aggressive_range. Vanilla is 40"
         },
         "max_units_per_enemy": {
           "type": "integer",
           "minimum": 2,
           "maximum": 1000,
-          "description": "How many units in defensive or aggressive stance may go after the same enemy; further units look for another one. Vanilla is 3"
+          "description": "How many units may go after the same enemy. Vanilla is 3"
         },
         "aggressive_melee_building_range": {
           "type": "integer",
           "minimum": 1,
           "maximum": 127,
-          "description": "How far (in tiles) melee units in aggressive stance look for an enemy building to attack. The game searches the ground around each group, so large values make that search slower. Vanilla is 15"
+          "description": "How far (in tiles) aggressive melee units look for an enemy building to attack. Large values cost performance. Vanilla is 15"
         }
       }
     },
