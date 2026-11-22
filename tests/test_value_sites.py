@@ -91,7 +91,7 @@ class Image:
         return [i for i in range(len(self.mem)) if self.mem[i] != self.original[i]]
 
 
-def runtime(image, extreme):
+def runtime(image, extreme, miss=None):
     lua = lua54.LuaRuntime(unpack_returned_tuples=True)
     logs = []
     g = lua.globals()
@@ -120,6 +120,7 @@ def runtime(image, extreme):
 
     g.py_read_bytes, g.py_read_int, g.py_read_short, g.py_read_byte = read_bytes, read_int, read_short, read_byte
     g.py_write_code_bytes, g.py_scan, g.py_log, g.py_extreme = write_code_bytes, scan, log, extreme
+    g.py_miss = miss   # what scanForAOB returns on a miss: nil here, 0 as the framework documents
     lua.execute('''
         ERROR, WARNING, INFO, DEBUG = 1, 2, 3, 4
         log = function(level, message) py_log(level, message) end
@@ -128,7 +129,7 @@ def runtime(image, extreme):
           readByte = py_read_byte, writeCodeBytes = py_write_code_bytes,
           scanForAOB = function(signature, low, high)
             local found = py_scan(signature, low, high)
-            if found == nil then return nil end
+            if found == nil then return py_miss end
             return math.tointeger(found)
           end,
         }
@@ -148,10 +149,11 @@ def dump_lua(lua, value):
 class ValueSites:
     edition = None
     image = None
+    miss = None
 
     def setUp(self):
         self.image = Image(os.path.join(GAME, EXES[self.edition]))
-        self.lua, self.logs = runtime(self.image, self.edition == 'Extreme')
+        self.lua, self.logs = runtime(self.image, self.edition == 'Extreme', self.miss)
         self.rebalancer = self.lua.eval('(require("init"))')
         self.image.scans.clear()
         self.sites = self.lua.eval('(require("value_sites"))')
@@ -297,15 +299,73 @@ class ValueSites:
         self.assert_refused({'stances': {'max_units_per_enemy': 5}}, 'headers at 0x400000')
         self.assertEqual(self.image.scans, [])
 
-    def test_placement_sites_share_one_enemy_check(self):
-        spec = self.sites._sites['ai_wall_enemy_radius']
+    def corrupt_call(self, site):
+        spec = self.sites._sites[site]
         found = self.image.scan(spec.signature, 0x401000, 0x59E000)
-        call = found + spec.near_check
+        call = found + spec.calls.at
         rel = struct.unpack('<i', self.image.read(call + 1, 4))[0]
         self.image.mem[call + 1 - self.image.base:call + 5 - self.image.base] = struct.pack('<i', rel + 16)
         self.image.original = bytes(self.image.mem)
-        self.assert_refused({'building_placement': {'enemy_unit_radius': {'ai_walls': 7}}}, 'differs')
 
+    def test_radius_site_must_call_the_enemy_check(self):
+        self.corrupt_call('ai_wall_enemy_radius')
+        self.assert_refused({'building_placement': {'enemy_unit_radius': {'ai_walls': 7}}},
+                            'does not reach enemy_near_check')
+
+    def test_melee_site_must_call_the_building_search(self):
+        self.corrupt_call('aggressive_melee_building_range')
+        self.assert_refused({'stances': {'aggressive_melee_building_range': 35}}, 'does not reach building_search')
+
+    def test_radius_settings_stand_alone(self):
+        # another module changed the AI wall code: storage and siege tents still apply
+        address, _ = self.address('ai_wall_enemy_radius', 'radius')
+        self.image.mem[address - 12 - self.image.base] = 0x90   # first byte of that signature
+        self.image.original = bytes(self.image.mem)
+        self.apply({'building_placement': {'enemy_unit_radius': {'storage': 15, 'siege_tents': 7, 'ai_walls': 7}}})
+        self.assertEqual(self.value_at('storage_enemy_radius', 'radius')[0], 15)
+        self.assertEqual(self.value_at('siege_tent_enemy_radius', 'radius')[0], 7)
+        self.assertEqual(len(self.errors()), 1)
+        self.assertIn('ai_walls not applied', self.errors()[0])
+
+    def test_ucp2_legacy_ai_rebuild_either_order(self):
+        # UCP2 Legacy's ai_rebuild finds this signature and writes 0x01 at its start
+        legacy = ('0C 0F 8C 93 00 00 00 A9 00 04 00 00 0F 85 88 00 00 00 85 C9 0F 85 80 00 00 00 '
+                  'A8 14 75 7C A9 81')
+        found = self.image.scan(legacy, 0x401000, 0x59E000)
+        self.assertIsNotNone(found)
+        # Rebalancer after Legacy
+        self.image.mem[found - self.image.base] = 0x01
+        self.apply({'building_placement': {'enemy_unit_radius': {'ai_walls': 7}}})
+        self.assertEqual(self.errors(), [])
+        self.assertEqual(self.value_at('ai_wall_enemy_radius', 'radius')[0], 7)
+        # Legacy after Rebalancer: its signature still matches once on the changed code
+        self.setUp()
+        self.apply({'building_placement': {'enemy_unit_radius': {'ai_walls': 7}}})
+        self.assertEqual(self.image.scan(legacy, 0x401000, 0x59E000), found)
+        self.assertIsNone(self.image.scan(legacy, found + 1, 0x59E000))
+
+    def test_section_must_be_an_object(self):
+        self.assert_refused({'building_placement': 5}, 'must be an object')
+        self.setUp()
+        self.assert_refused({'building_placement': {'castle_build_range': 70}}, 'must be an object')
+
+    def test_unknown_key_warns(self):
+        self.apply({'stances': {'max_units_per_enemy': 5, 'max_unit_per_enemy': 6}})
+        self.assertEqual(self.errors(), [])
+        self.assertEqual(self.value_at('stance_units_per_enemy', 'count')[0], 5)
+        warnings = [m for level, m in self.logs if level == 2]
+        self.assertTrue(any("unknown key 'max_unit_per_enemy'" in m for m in warnings), warnings)
+
+
+class ZeroOnMiss:
+    """The framework documents 0 (not nil) for a missing signature."""
+    miss = 0
+
+    def test_missing_signature_zero(self):
+        ValueSites.test_missing_signature(self)
+
+    def test_every_key_at_once_zero(self):
+        ValueSites.test_every_key_at_once(self)
 
 def load_tests(loader, tests, pattern):
     suite = unittest.TestSuite()
@@ -313,6 +373,9 @@ def load_tests(loader, tests, pattern):
         if os.path.isfile(os.path.join(GAME, exe)):
             case = type('ValueSites' + edition, (ValueSites, unittest.TestCase), {'edition': edition})
             suite.addTests(loader.loadTestsFromTestCase(case))
+            zero = type('ZeroOnMiss' + edition, (ZeroOnMiss, ValueSites, unittest.TestCase), {'edition': edition})
+            suite.addTest(zero('test_missing_signature_zero'))
+            suite.addTest(zero('test_every_key_at_once_zero'))
         else:
             print('skipped, not found: ' + os.path.join(GAME, exe))
     return suite
