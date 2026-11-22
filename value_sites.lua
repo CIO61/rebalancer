@@ -106,7 +106,8 @@ local function find_code_section()
   local base_of_code = IMAGE_BASE + core.readInteger(optional_header + 0x14)
   local size_of_code = core.readInteger(optional_header + 0x04)
   local size_of_image = core.readInteger(optional_header + 0x38)
-  if size_of_code <= 0 or base_of_code + size_of_code > IMAGE_BASE + size_of_image then
+  if base_of_code < IMAGE_BASE or size_of_code <= 0 or size_of_image <= 0
+      or base_of_code + size_of_code > IMAGE_BASE + size_of_image then
     return { problem = "the game executable's code section is not where its headers say" }
   end
   return { first = base_of_code, stop = base_of_code + size_of_code }
@@ -205,8 +206,9 @@ local function resolve(name)
 end
 
 -- Writes all `writes` ({ site, value, to, label, keep }) or, if one can't be verified, none.
--- `keep` marks a value that is only checked and stays the game's.
-local function apply(setting, writes)
+-- `keep` marks a value that is only checked and stays the game's. `check`, if given, runs once all
+-- values are valid and returns a reason to refuse, or nil.
+local function apply(setting, writes, check)
   local plan = {}
   for _, entry in ipairs(writes) do
     local value = SITES[entry.site].values[entry.value]
@@ -230,6 +232,11 @@ local function apply(setting, writes)
     end
     plan[#plan + 1] = { at = at, value = value, to = wanted, current = current, label = entry.label,
       keep = entry.keep }
+  end
+  local problem = check and check()
+  if problem ~= nil then
+    log(ERROR, string.format("%s not applied: %s", setting, problem))
+    return false
   end
   for _, step in ipairs(plan) do
     if step.current ~= step.to then
@@ -255,12 +262,8 @@ local function section(value, name, known)
     log(ERROR, string.format("%s not applied: it must be an object, not %s", name, type(value)))
     return nil
   end
-  local allowed = {}
-  for _, key in ipairs(known) do
-    allowed[key] = true
-  end
   for key in pairs(value) do
-    if not allowed[key] then
+    if not table.find(known, key) then
       log(WARNING, string.format("%s: unknown key '%s' ignored", name, tostring(key)))
     end
   end
@@ -312,21 +315,26 @@ function namespace.edit_stances(stances)
   end
   local aggressive, defensive = stances["aggressive_range"], stances["defensive_range"]
   if aggressive ~= nil or defensive ~= nil then
-    local new_aggressive = aggressive or default("stance_ranges", "aggressive")
-    local new_defensive = defensive or default("stance_ranges", "defensive")
-    if new_aggressive == new_defensive then
-      log(ERROR, "stances.aggressive_range/defensive_range not applied: aggressive_range and "
-        .. "defensive_range must differ (the game tells the two stances apart by the defensive range)")
-    else
-      apply("stances.aggressive_range/defensive_range", {
-        { site = "stance_ranges", value = "aggressive", to = new_aggressive,
-          label = "stances.aggressive_range", keep = aggressive == nil },
-        { site = "stance_ranges", value = "defensive", to = new_defensive,
-          label = "stances.defensive_range", keep = defensive == nil },
-        { site = "defensive_stance_check", value = "defensive", to = new_defensive,
-          label = "stances.defensive_range (stance check)", keep = defensive == nil },
-      })
+    local new_aggressive, new_defensive = aggressive, defensive
+    if new_aggressive == nil then
+      new_aggressive = default("stance_ranges", "aggressive")
     end
+    if new_defensive == nil then
+      new_defensive = default("stance_ranges", "defensive")
+    end
+    apply("stances.aggressive_range/defensive_range", {
+      { site = "stance_ranges", value = "aggressive", to = new_aggressive,
+        label = "stances.aggressive_range", keep = aggressive == nil },
+      { site = "stance_ranges", value = "defensive", to = new_defensive,
+        label = "stances.defensive_range", keep = defensive == nil },
+      { site = "defensive_stance_check", value = "defensive", to = new_defensive,
+        label = "stances.defensive_range (stance check)", keep = defensive == nil },
+    }, function()
+      if math.tointeger(new_aggressive) == math.tointeger(new_defensive) then
+        return "aggressive_range and defensive_range must differ "
+          .. "(the game tells the two stances apart by the defensive range)"
+      end
+    end)
   end
 
   if stances["max_units_per_enemy"] ~= nil then

@@ -150,6 +150,8 @@ def dump_lua(lua, value):
     """A Python dict/number as a Lua table literal."""
     if isinstance(value, dict):
         return '{' + ', '.join('[%r] = %s' % (k, dump_lua(lua, v)) for k, v in value.items()) + '}'
+    if isinstance(value, bool):
+        return 'true' if value else 'false'
     return repr(value)
 
 
@@ -305,6 +307,21 @@ class ValueSites:
         self.image.original = bytes(self.image.mem)
         self.assert_refused({'stances': {'max_units_per_enemy': 5}}, 'headers at 0x400000')
         self.assertEqual(self.image.scans, [])
+
+    def test_code_section_outside_the_image(self):
+        nt = struct.unpack_from('<I', self.image.mem, 0x3C)[0]
+        struct.pack_into('<I', self.image.mem, nt + 24 + 0x14, 0xFFFFF000)   # BaseOfCode
+        self.image.original = bytes(self.image.mem)
+        self.assert_refused({'stances': {'max_units_per_enemy': 5}}, 'not where its headers say')
+        self.assertEqual(self.image.scans, [])
+
+    def test_numeric_string_equal_to_the_other_range(self):
+        self.assert_refused({'stances': {'aggressive_range': '40'}}, 'must differ')
+        self.setUp()
+        self.assert_refused({'stances': {'aggressive_range': '60', 'defensive_range': 60}}, 'must differ')
+
+    def test_false_is_not_a_range(self):
+        self.assert_refused({'stances': {'aggressive_range': False}}, 'whole number')
 
     def corrupt_call(self, site):
         spec = self.sites.sites[site]
