@@ -1681,10 +1681,9 @@ namespace.apply_rebalance = function(config)
   apply_rebalance_function(edit_ranges, config["ranges"])
   apply_rebalance_function(edit_projectiles, config["projectiles"])
   apply_rebalance_function(edit_leather_per_cow, config["leather_per_cow"])
-  -- Settings found by verified signatures (value_sites.lua). Called through require: this file
-  -- already has the 200 local variables Lua allows in one function.
-  apply_rebalance_function(require("value_sites").edit_building_placement, config["building_placement"])
-  apply_rebalance_function(require("value_sites").edit_stances, config["stances"])
+  local value_sites = require("value_sites")
+  apply_rebalance_function(value_sites.edit_building_placement, config["building_placement"])
+  apply_rebalance_function(value_sites.edit_stances, config["stances"])
 
   if config["population_gathering_rate"] then
     log(ERROR, "population_gathering_rate is removed, use population section in the config instead.")

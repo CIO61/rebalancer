@@ -107,7 +107,7 @@ def runtime(image, extreme, miss=None):
         return struct.unpack('<h', image.read(int(address), 2))[0]
 
     def read_byte(address):
-        return struct.unpack('<b', image.read(int(address), 1))[0]
+        return image.read(int(address), 1)[0]
 
     def write_code_bytes(address, values):
         image.write(int(address), [int(values[i + 1]) for i in range(len(values))])
@@ -123,10 +123,17 @@ def runtime(image, extreme, miss=None):
     g.py_miss = miss   # what scanForAOB returns on a miss: nil here, 0 as the framework documents
     lua.execute('''
         ERROR, WARNING, INFO, DEBUG = 1, 2, 3, 4
-        log = function(level, message) py_log(level, message) end
+        log = function(level, message) py_log(level, '[rebalancer]: ' .. message) end
         core = {
           readBytes = py_read_bytes, readInteger = py_read_int, readSmallInteger = py_read_short,
           readByte = py_read_byte, writeCodeBytes = py_write_code_bytes,
+          writeCodeByte = function(address, value) py_write_code_bytes(address, { value & 0xFF }) end,
+          writeCodeSmallInteger = function(address, value)
+            py_write_code_bytes(address, { value & 0xFF, (value >> 8) & 0xFF })
+          end,
+          writeCodeInteger = function(address, value)
+            py_write_code_bytes(address, { value & 0xFF, (value >> 8) & 0xFF, (value >> 16) & 0xFF, (value >> 24) & 0xFF })
+          end,
           scanForAOB = function(signature, low, high)
             local found = py_scan(signature, low, high)
             if found == nil then return py_miss end
@@ -167,7 +174,7 @@ class ValueSites:
 
     def address(self, site, value):
         """Where the test itself finds the value (independent of the module's resolver)."""
-        spec = self.sites._sites[site]
+        spec = self.sites.sites[site]
         found = self.image.scan(spec.signature, 0x401000, 0x59E000)
         return found + spec['values'][value]['value'], spec['values'][value]['width']
 
@@ -201,7 +208,7 @@ class ValueSites:
             with self.subTest(site=site, value=value):
                 self.setUp()
                 before, address, width = self.value_at(site, value)
-                self.assertEqual(before, self.sites.defaults(site, value))
+                self.assertEqual(before, self.sites.sites[site]['values'][value]['default'])
                 self.apply(config)
                 self.assertEqual(self.errors(), [])
                 after, _, _ = self.value_at(site, value)
@@ -272,7 +279,7 @@ class ValueSites:
         self.assert_refused({'building_placement': {'enemy_unit_radius': {'storage': 15}}}, 'holds 9')
 
     def test_ambiguous_signature(self):
-        spec = self.sites._sites['aggressive_melee_building_range']
+        spec = self.sites.sites['aggressive_melee_building_range']
         found = self.image.scan(spec.signature, 0x401000, 0x59E000)
         length = len(spec.signature.split())
         copy = self.image.read(found, length)
@@ -300,7 +307,7 @@ class ValueSites:
         self.assertEqual(self.image.scans, [])
 
     def corrupt_call(self, site):
-        spec = self.sites._sites[site]
+        spec = self.sites.sites[site]
         found = self.image.scan(spec.signature, 0x401000, 0x59E000)
         call = found + spec.calls.at
         rel = struct.unpack('<i', self.image.read(call + 1, 4))[0]
