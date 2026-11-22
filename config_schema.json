@@ -728,7 +728,7 @@
         },
         "enemy_unit_radius": {
           "type": "object",
-          "description": "How close (in tiles, as a circle) enemy units may stand before a building can no longer be placed. The other placement distances keep the game's values.",
+          "description": "How close (in tiles, as a circle) enemy units may stand before a building can no longer be placed. 0 turns the check off. The other placement distances keep the game's values.",
           "additionalProperties": false,
           "properties": {
             "storage": {
@@ -741,7 +741,7 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 127,
-              "description": "Siege tents: catapult, trebuchet, siege tower, battering ram and portable shield. Checked in every mode except the map editor and Siege That. Vanilla is 3"
+              "description": "Siege tents: catapult, trebuchet, siege tower, battering ram, portable shield and fire ballista. Checked in every mode except the map editor and Siege That. Vanilla is 3"
             },
             "ai_walls": {
               "type": "integer",
@@ -780,7 +780,7 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 127,
-          "description": "How far (in tiles) melee units in aggressive stance look for an enemy building to attack. Vanilla is 15"
+          "description": "How far (in tiles) melee units in aggressive stance look for an enemy building to attack. The game searches the ground around each group, so large values make that search slower. Vanilla is 15"
         }
       }
     },
