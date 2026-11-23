@@ -1,7 +1,5 @@
 local namespace = {}
 
-local IMAGE_BASE = 0x400000
-
 local read = { [1] = core.readByte, [2] = core.readSmallInteger, [4] = core.readInteger }
 local write = { [1] = core.writeCodeByte, [2] = core.writeCodeSmallInteger, [4] = core.writeCodeInteger }
 
@@ -83,64 +81,23 @@ local FUNCTIONS = {
   building_search = "83 EC 14 8B 44 24 18 69 C0 90 04 00 00 53 55 0F BF A8",
 }
 
-local code_section = nil
 local resolved = {}
 local functions = {}
 
-local function find_code_section()
-  local unexpected = "the game executable is not loaded the way this check expects (headers at 0x400000)"
-  if core.readSmallInteger(IMAGE_BASE) ~= 0x5A4D then
-    return { problem = unexpected }
-  end
-  local e_lfanew = core.readInteger(IMAGE_BASE + 0x3C)
-  if e_lfanew < 0x40 or e_lfanew > 0x800 or core.readInteger(IMAGE_BASE + e_lfanew) ~= 0x4550 then
-    return { problem = unexpected }
-  end
-  local file_header = IMAGE_BASE + e_lfanew + 4
-  local optional_header = file_header + 0x14
-  local relocations_stripped = (core.readSmallInteger(file_header + 0x12) & 1) ~= 0
-  if core.readSmallInteger(optional_header) ~= 0x10B or core.readInteger(optional_header + 0x1C) ~= IMAGE_BASE
-      or not relocations_stripped then
-    return { problem = unexpected }
-  end
-  local base_of_code = IMAGE_BASE + core.readInteger(optional_header + 0x14)
-  local size_of_code = core.readInteger(optional_header + 0x04)
-  local size_of_image = core.readInteger(optional_header + 0x38)
-  if base_of_code < IMAGE_BASE or size_of_code <= 0 or size_of_image <= 0
-      or base_of_code + size_of_code > IMAGE_BASE + size_of_image then
-    return { problem = "the game executable's code section is not where its headers say" }
-  end
-  return { first = base_of_code, stop = base_of_code + size_of_code }
-end
-
-local function get_code_section()
-  if code_section == nil then
-    code_section = find_code_section()
-  end
-  return code_section.first, code_section.stop, code_section.problem
-end
-
--- The scanner checks `to` only between memory regions, so a match past it counts as none.
-local function scan_once(signature, from, to)
-  local address = core.scanForAOB(signature, from, to)
-  if not address or address < from or address >= to then
+-- `from`, `to`: search only this window. The scanner checks `to` only between memory regions, so a
+-- match past it counts as none.
+local function scan(signature, from, to)
+  local ok, address = pcall(core.AOBScan, signature, from, to)
+  if not ok or not address or (from ~= nil and (address < from or address >= to)) then
     return nil, "signature not found (the game code there differs: another module changed it, "
       .. "or this game version is not supported)"
-  end
-  local other = core.scanForAOB(signature, address + 1, to)
-  if other and other > address and other < to then
-    return nil, string.format("signature found more than once (0x%X and 0x%X)", address, other)
   end
   return address
 end
 
 local function resolve_function(name)
   if functions[name] == nil then
-    local from, to, problem = get_code_section()
-    local address
-    if problem == nil then
-      address, problem = scan_once(FUNCTIONS[name], from, to)
-    end
+    local address, problem = scan(FUNCTIONS[name])
     functions[name] = { address = address, problem = problem }
   end
   return functions[name].address, functions[name].problem
@@ -182,8 +139,8 @@ local function resolve(name)
     return resolved[name].address, resolved[name].problem
   end
   local site = SITES[name]
-  local from, to, problem = get_code_section()
-  if problem == nil and site.inside ~= nil then
+  local from, to, problem
+  if site.inside ~= nil then
     local base, base_problem = resolve(site.inside.site)
     if base == nil then
       problem = site.inside.site .. ": " .. base_problem
@@ -193,7 +150,7 @@ local function resolve(name)
   end
   local address
   if problem == nil then
-    address, problem = scan_once(site.signature, from, to)
+    address, problem = scan(site.signature, from, to)
   end
   if address ~= nil then
     problem = check_site(site, address)
