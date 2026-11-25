@@ -32,18 +32,18 @@ local SITES = {
   unit_health_base = { "C4 09 00 00 C4 09 00 00 10 27 00 00 C4 09 00 00 10 27 00 00 88 13 00 00 10 27 00" },
   unit_arrow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 98 3A 00 00 98 3A" },
   unit_xbow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 B8 0B 00 00" },
-  unit_stone_dmg_base = { "88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00" },
+  unit_stone_dmg_base = { "00 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00", offset = 3 },
   unit_speed_base = { "01 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00" },
 
-  tunneller_building_melee_addr = { "F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8" },
-  archer_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98" },  -- +6 +9
+  tunneller_building_melee_addr = { "B9 06 00 00 00 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 54 },
+  archer_building_melee_addr = { "8B CF 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 22 },  -- +6 +9
   crossbow_building_melee_addr = { "33 FF 8D 44 00 02 8B D0 8B 44 24 10" },
   spearman_building_melee_addr = { "F7 D9 1B C9 83 E1 FB 83 C1 08 0F BF 90" },  -- +6 +9
   maceman_building_melee_addr = { "F7 D9 1B C9 83 E1 E1 83 C1 23 0F BF 98" },  -- +6 +9
   pikeman_building_melee_addr = { "F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", after = "tunneller_building_melee_addr", skip = 10 },  -- +6 +9
   swordsman_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98" },  -- +6 +9
   knight_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98", after = "swordsman_building_melee_addr", skip = 10 },  -- +6 +9
-  lord_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8" },
+  lord_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8 ? ? ? ? 57" },
   arabbow_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", after = "archer_building_melee_addr", skip = 10 },  -- +6 +9
   slave_building_melee_addr = { "0F BF 90 ? ? ? ? 8B 80 ? ? ? ? 6A 08" },  -- +14
   slinger_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", after = "arabbow_building_melee_addr", skip = 10 },  -- +6 +9
@@ -60,9 +60,9 @@ local SITES = {
   unit_melee_dmg_base = { "02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 14 00 00 00", offset = -0x260 },
 
   -- building related addresses
-  building_cost_base = { "06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00" },
-  building_health_base = { "64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00" },
-  building_population_base = { "08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" },
+  building_cost_base = { "06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03" },
+  building_health_base = { "64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 2C" },
+  building_population_base = { "0B 00 00 00 00 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", offset = 12 },
 
   -- siege related addresses
   cat_collateral_addr = { "8B 1C 95 ? ? ? ? 8B CB BF 0A 00 00 00 81 E1 01 00 10 40 8B EF", offset = 10 },
@@ -88,7 +88,7 @@ local SITES = {
 
   baker_func = { "53 C6 86 ? ? ? ? FE 6A 08 66 C7 86 ? ? ? ? 05 00" },  -- skirmish bonus is push ebx instead of push val
   wheatfarmer_func = { "53 66 89 BE ? ? ? ? 6A 02" },  -- skirmish bonus is push ebx instead of push val
-  brewer_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00" },  -- both produce amount and skirmish bonus is push ebp instead of push val
+  brewer_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8 ? ? ? ? 83 C4 0C 66 89 86 ? ? ? ? 57 B9 ? ? ? ? 66 89 AE ? ? ? ? E8 ? ? ? ? A1 ? ? ? ? 69 C0 90 04 00 00 5F" },  -- both produce amount and skirmish bonus is push ebp instead of push val
 
   fletcher_func = { "55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 06 00 E8" },
   poleturner_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00", after = "brewer_func", skip = 16 },  -- exact same AOB as brewer func
@@ -131,7 +131,7 @@ local SITES = {
   tax_addr = { "8B 44 24 08 83 C0 FF 0F AF 44 24 0C 99 2B C2 D1 F8" },
   bribe_addr = { "B8 05 00 00 00 2B 44 24 08 0F AF 44 24 0C 99" },
   neutral_level_addr_1 = { "83 F8 03 7D 12" },
-  neutral_level_addr_2 = { "03 00 00 00 C7 86" },
+  neutral_level_addr_2 = { "03 00 00 00 C7 86 E4" },
   neutral_level_addr_3 = { "83 F8 03 7E 16 8B 54 24 0C 52 50 8B 44 24 0C 50" },
   neutral_level_addr_4 = { "83 F8 03 7D 16 8B 54 24 0C 52 50" },
   keep_menu_addr = { "83 F8 03 7D 07 83 7C 24 10 00 7E 2B 85 C0 75 0A B8 AF 00 00 00 E9 86 00 00 00 83 F8 01 75 07 B8 7D 00 00 00 EB 7A 83 F8 02 75 07 B8 4B 00 00 00" },
@@ -168,7 +168,7 @@ local SITES = {
 
   scan_range_addr_archer = { "66 81 B8 ? ? ? ? 90 01 7F" },
   scan_range_addr_arabbow_1 = { "85 FF BD 90 01 00 00 7E 28 8B C3" },
-  scan_range_addr_arabbow_2 = { "66 00 BD 90 01 00 00 66 39 AE ? ? ? ?" },
+  scan_range_addr_arabbow_2 = { "66 00 BD 90 01 00 00 66 39 AE ? ? ? ? 7C 27" },
   scan_range_addr_horse_archer = { "69 D2 90 04 00 00 66 81 BA ? ? ? ? B0 01" },
   scan_range_addr_xbow = { "0F B7 88 ? ? ? ? 66 81 F9 90 01", after = "scan_range_addr_archer", skip = 500 },
   scan_range_addr_xbow_2 = { "66 C7 86 ? ? ? ? 0A 00 66 81 BE ? ? ? ? 90 01" },
@@ -179,12 +179,12 @@ local SITES = {
   scan_range_addr_fbal_1 = { "66 C7 86 ? ? ? ? 03 00 66 81 BE ? ? ? ? A8 02" },
   scan_range_addr_fbal_2 = { "0F AF FA 03 DF 81 FB 64 0B" },
   scan_range_addr_mango = { "0F 85 E0 00 00 00 66 81 BE ? ? ? ? A8 02" },
-  scan_range_addr_towerbal_1 = { "C3 66 81 BE ? ? ? ? A8 02" },
+  scan_range_addr_towerbal_1 = { "C3 5F 5E 5D C7 81 ? ? ? ? D8 FF FF FF 5B 83 C4 10 C3 66 81 BE ? ? ? ? A8 02", offset = 18 },
   scan_range_addr_towerbal_2 = { "C3 66 81 BE ? ? ? ? A8 02", after = "scan_range_addr_towerbal_1", skip = 250 },
 
   -- rally running addresses
   arabbow_rally_running_addr = { "66 89 AE ? ? ? ? 66 8B 8E ? ? ? ?" },
-  slinger_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ?" },
+  slinger_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? A1 ? ? ? ? 03 C3 99 B9 28 00 00 00 F7 F9 66 C7 86 ? ? ? ? 04 00 85 D2 75 74 66 81 BE ? ? ? ? B0" },
   assassin_rally_running_addr = { "66 89 86 ? ? ? ? 89 86 ? ? ? ? C7 86 ? ? ? ? 10 00 00 00 66 8B 96 ? ? ? ?" },
   firethrower_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8", after = "assassin_rally_running_addr" },
 
@@ -1549,6 +1549,9 @@ local function edit_taxation(taxation)
 
 end
 
+-- Siege ranges in tiles once a ranges block is applied, for getSiegeRanges.
+local applied_siege_ranges
+
 local function edit_ranges(ranges)
   local archer_range = ranges["archer_range"]
   local xbow_range = ranges["xbow_range"]
@@ -1710,6 +1713,7 @@ local function edit_ranges(ranges)
 
   core.writeCodeSmallInteger(at.scan_range_addr_towerbal_1 + 8, towerbal_range*8)
   core.writeCodeSmallInteger(at.scan_range_addr_towerbal_2 + 8, towerbal_range*8)
+  applied_siege_ranges = { catapult = catapult_range, trebuchet = treb_range, fire_ballista = fbal_range }
 end
 
 local function edit_projectiles(projectiles)
@@ -1838,4 +1842,10 @@ end
 namespace.disable = function(self, config)
 end
 
-return namespace
+-- The siege ranges this module applied, or nil when the game's own ranges apply.
+namespace.getSiegeRanges = function(self)
+  local r = applied_siege_ranges
+  return r and { catapult = r.catapult, trebuchet = r.trebuchet, fire_ballista = r.fire_ballista }
+end
+
+return namespace, { public = { "getSiegeRanges" } }
