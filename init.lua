@@ -9,9 +9,7 @@ local resource_names = constants.resource_names
 local namespace = {}
 
 -- Game code and data the settings change. { aob, offset = n }: the first match plus n.
--- `after`, `skip`: the first match from that site's address plus skip, searched past the AOB cache:
--- its first match can be a site this module already patched, and a failed cache check clears the
--- whole cache. `from`: that site plus offset.
+-- `after`, `skip`: the first match from that site's address plus skip. `from`: that site plus offset.
 local SITES = {
   pop_gathering_addr = { "8B 0C 85 ? ? ? ? EB 2D 8B 4E F0" },
   scenario_pgr_base = { "EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00" },
@@ -94,7 +92,7 @@ local SITES = {
 
   fletcher_func = { "55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 06 00 E8" },
   poleturner_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00", after = "brewer_func", skip = 16 },  -- exact same AOB as brewer func
-  blacksmith_func = { "55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 07 00 E8" },  -- blacksmith has another call to calculategoodsproduced but its a mystery
+  blacksmith_func = { "55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 07 00 E8" },
   tanner_func = { "53 53 50 66 89 AE ? ? ? ? E8 53 6C FD FF 66 89 86" },
   armourer_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", after = "poleturner_func", skip = 16 },
 
@@ -200,31 +198,65 @@ local SITES = {
   iron_subtract_addr = { "FF 6A ? 8D 80 ? ? ? ? 6A ? 51 E8" },
 }
 
--- Site addresses, each found once when a setting first needs it, and the code this module inserts.
--- A site that is not found is false.
-local at = setmetatable({}, { __index = function(found, name)
+-- Site addresses and the code this module inserts. Sites are found at load, before any module
+-- writes, so a repeated or overlapping AOB gives the intended match. False: the site is not usable,
+-- for the reason in `unusable`.
+local at, unusable = {}, {}
+
+local function find(name)
+  if at[name] ~= nil then
+    return at[name]
+  end
   local site = SITES[name]
   local address
   if site.from ~= nil then
-    address = found[site.from] and found[site.from] + (site.offset or 0)
-  elseif site.after == nil then
-    local ok, result = pcall(core.AOBScan, site[1])
+    local base = find(site.from)
+    address = base and base + (site.offset or 0)
+  elseif site.after == nil or find(site.after) then
+    local start = site.after and at[site.after] + (site.skip or 0)
+    local ok, result = pcall(core.AOBScan, site[1], start)
     address = ok and result and result + (site.offset or 0)
-  elseif found[site.after] then
-    local result = core.scanForAOB(site[1], found[site.after] + (site.skip or 0))
-    address = result and result ~= 0 and result + (site.offset or 0)
   end
+  at[name] = address or false
   if not address then
-    log(WARNING, string.format("%s not found, the settings that change it are not applied", name))
+    unusable[name] = "not found"
   end
-  found[name] = address or false
-  return found[name]
-end })
+  return at[name]
+end
 
--- Finds the named sites; false if one is missing.
+for name in pairs(SITES) do
+  find(name)
+end
+
+-- Drops the sites whose bytes another module changed after load. Runs once, before this module's
+-- first write.
+local checked = false
+local function check_sites()
+  if checked then
+    return
+  end
+  checked = true
+  for name, site in pairs(SITES) do
+    local start = at[name] and site.from == nil and at[name] - (site.offset or 0)
+    if start and core.scanForAOB(site[1], start) ~= start then
+      at[name], unusable[name] = false, "changed by another module"
+    end
+  end
+  for name, site in pairs(SITES) do
+    if site.from ~= nil and at[name] and not at[site.from] then
+      at[name], unusable[name] = false, unusable[site.from]
+    end
+  end
+end
+
+-- True if all named sites are usable; logs each unusable site once.
 local function need(...)
   for _, name in ipairs({ ... }) do
     if not at[name] then
+      if unusable[name] then
+        log(WARNING, string.format("%s %s, the settings that change it are not applied", name, unusable[name]))
+        unusable[name] = nil
+      end
       return false
     end
   end
@@ -344,6 +376,7 @@ local function enable_spearmen_conditional_run()
 end
 
 local function enable_rebalance_features()
+  check_sites()
   if not need("crossbow_building_melee_addr", "baker_func", "wheatfarmer_func", "brewer_func", "fletcher_func",
       "poleturner_func", "blacksmith_func", "tanner_func", "armourer_func", "tax_addr", "bribe_addr",
       "ballista_damage_addr", "mangonel_damage_addr", "non_rax_unit_display_cost_func_addr",
@@ -1439,6 +1472,18 @@ local function edit_taxation(taxation)
   local pop_table = taxation["popularity"]
   local adv_multipliers = taxation["advantage_multiplier"]
   local neutral_level = 3
+  if adv_multipliers ~= nil and need("multipliers_addr_base") then
+    local human_big_ai_medium = adv_multipliers["human_big_ai_medium"]
+    local ai_big = adv_multipliers["ai_big"]
+    if human_big_ai_medium ~= nil then
+      core.writeCodeInteger(at.multipliers_addr_base + 46, human_big_ai_medium)
+    end
+    if ai_big ~= nil then
+      core.writeCodeInteger(at.multipliers_addr_base + 2, ai_big)
+    end
+  end
+
+  -- the gold and popularity tables both depend on the neutral level
   if not need("neutral_level_addr_1", "neutral_level_addr_2", "neutral_level_addr_3", "neutral_level_addr_4") then
     return
   end
@@ -1500,17 +1545,6 @@ local function edit_taxation(taxation)
     }, at.actual_effect_addr + 2))
     -- 128 bytes are free in function
 
-  end
-
-  if adv_multipliers ~= nil and need("multipliers_addr_base") then
-    local human_big_ai_medium = adv_multipliers["human_big_ai_medium"]
-    local ai_big = adv_multipliers["ai_big"]
-    if human_big_ai_medium ~= nil then
-      core.writeCodeInteger(at.multipliers_addr_base + 46, human_big_ai_medium)
-    end 
-    if ai_big ~= nil then
-      core.writeCodeInteger(at.multipliers_addr_base + 2, ai_big)
-    end
   end
 
 end
@@ -1722,6 +1756,7 @@ local function apply_rebalance_function(function_name, config_section)
 end
 
 namespace.apply_rebalance = function(config)
+  check_sites()
   apply_rebalance_function(edit_buildings, config["buildings"])
   apply_rebalance_function(edit_siege, config["siege"])  -- siege changes need to come before units, due to projectile damages on units
   apply_rebalance_function(edit_castle, config["castle"])  -- castle changes need to come before units, due to fire damages on units
