@@ -479,7 +479,7 @@ local function enable_rebalance_features()
   core.writeCodeBytes(at.crossbow_building_melee_addr-12, core.compile({
     0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+towers_or_gates_base]
     0x3C, 0x01,                                        -- cmp al,01
-    0x75, 0x04,                                        -- jne 0055CE06
+    0x75, 0x04,                                        -- jne +4
     0x31, 0xC0,                                        -- xor eax,eax
     0x2C, 0x02,                                        -- sub al,02
     0x04, 0x04,                                        -- add al,04
@@ -578,10 +578,10 @@ local function enable_rebalance_features()
   -- enable custom taxation multipliers
   tax_table_addr = core.allocate(12*2)
   local custom_tax_instructions = {
-    0x8A, 0x44, 0x24, 0x0C,                          -- mov eax [esp+0C]
+    0x8A, 0x44, 0x24, 0x0C,                          -- mov al,[esp+0C]
     0x66, 0x8B, 0x04, 0x45, core.itob(tax_table_addr),  -- mov ax,[eax*2+tax_table_addr]
     0x0F, 0xAF, 0x44, 0x24, 0x10,                    -- imul eax,[esp+10]
-    0xC3                                             -- return
+    0xC3                                             -- ret
   }
 
   local divby10_code = {
@@ -629,23 +629,23 @@ local function enable_rebalance_features()
   -- enable per-unit damage definition for ballistas, catapults and trebuchets
   core.writeCodeBytes(at.ballista_damage_addr-14,
     core.compile({
-      0x75, 0x13,                                                     -- jne 005322D2
+      0x75, 0x13,                                                     -- jne +0x13 (cmp bx,02)
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(ballista_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
-      0xEB, 0x76,                                                     -- jmp 00532348
+      0x8B, 0x0C, 0x8D, core.itob(ballista_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+ballista_damage_table_addr]; nop
+      0xEB, 0x76,                                                     -- jmp +0x76
       0x66, 0x83, 0xFB, 0x02,                                         -- cmp bx,02
-      0x75, 0x13,                                                     -- jne 005322EB
+      0x75, 0x13,                                                     -- jne +0x13 (cmp bx,03)
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(catapult_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
-      0xEB, 0x17,                                                     -- jmp 00532302
+      0x8B, 0x0C, 0x8D, core.itob(catapult_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+catapult_damage_table_addr]; nop
+      0xEB, 0x17,                                                     -- jmp +0x17
       0x66, 0x83, 0xFB, 0x03,                                         -- cmp bx,03
-      0x75, 0x75,                                                     -- jne 00532366
+      0x75, 0x75,                                                     -- jne +0x75
       0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
       0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(trebuchet_damage_table_addr), 0x90, -- mov ecx,[ecx*4+053FF2C0]  -- clear the nops later.
-      0xEB, 0x7C,                                                     -- jmp 00532380
+      0x8B, 0x0C, 0x8D, core.itob(trebuchet_damage_table_addr), 0x90, -- mov ecx,[ecx*4+trebuchet_damage_table_addr]; nop
+      0xEB, 0x7C,                                                     -- jmp +0x7C
     }, at.ballista_damage_addr-14)
   )
 
@@ -654,12 +654,12 @@ local function enable_rebalance_features()
   -- enable per-unit damage definition for mangonels
   core.writeCodeBytes(at.mangonel_damage_addr,
     core.compile({
-      0x49, -- sub ecx
-      0x8B, 0x0C, 0x8D, core.itob(mangonel_damage_table_addr), 0x90, -- mov ecx, [ecx*4+ballista_damage_table_addr]  -- clear the nops later.
+      0x49, -- dec ecx
+      0x8B, 0x0C, 0x8D, core.itob(mangonel_damage_table_addr), 0x90, -- mov ecx,[ecx*4+mangonel_damage_table_addr]; nop
       0xE9, core.itob(339)  -- jmp 339 bytes forward
     }, at.mangonel_damage_addr)
   )
-  for i=14,153,5 do core.writeCodeBytes(at.mangonel_damage_addr+i, {0xBB, 0,0,0,0}) end -- fill 140 bytes with trash
+  for i=14,153,5 do core.writeCodeBytes(at.mangonel_damage_addr+i, {0xBB, 0,0,0,0}) end -- the skipped 140 bytes become mov ebx,0
 
   -- enable unit display costs&actual costs to be read from same place
   core.writeCodeBytes(at.non_rax_unit_display_cost_func_addr+14,{
@@ -711,9 +711,9 @@ local function enable_rebalance_features()
   ))
 
   core.writeCodeBytes(at.fire_damage_code_addr, core.compile({
-    0x8B, 0x04, 0xBD, core.itob(fire_damage_table_addr),  -- mov ax,[edi*4+fire_damage_table_addr]
+    0x8B, 0x04, 0xBD, core.itob(fire_damage_table_addr),  -- mov eax,[edi*4+fire_damage_table_addr]
     0xBD, 0x01, 0x00, 0x00, 0x00,                         -- mov ebp,00000001
-    0xEB, 0x25                                            -- jmp +24
+    0xEB, 0x25                                            -- jmp +0x25
   }, at.fire_damage_code_addr)
   )
   return true
@@ -1532,13 +1532,13 @@ local function edit_taxation(taxation)
     local pop_table_addr = at.keep_menu_addr + 31
     core.writeCodeBytes(at.keep_menu_addr, core.compile({  -- keep menu
       0x83, 0xF8, neutral_level,
-      0x7D, 0x09,                          -- jnl 0043B0AB
-      0x83, 0x7C, 0x24, 0x10, 0x00,        -- cmp dword ptr [esp+10],00 { 0 }
-      0x7F, 0x02,                          -- jle 0043B0AB
-      0xB0, neutral_level,                 -- mov al,03 { 3 }
-      0xC1, 0xE0, 0x02,                    -- shl eax,02 { 2 }
-      0x8B, 0x80, core.itob(pop_table_addr),  -- mov eax,[eax+0043B0BC]
-      0xE9, 0x84, 0x00, 0x00, 0x00,        -- jmp 0043B13D
+      0x7D, 0x09,                          -- jnl +9
+      0x83, 0x7C, 0x24, 0x10, 0x00,        -- cmp dword ptr [esp+10],00
+      0x7F, 0x02,                          -- jg +2
+      0xB0, neutral_level,                 -- mov al,neutral_level
+      0xC1, 0xE0, 0x02,                    -- shl eax,02
+      0x8B, 0x80, core.itob(pop_table_addr),  -- mov eax,[eax+pop_table_addr]
+      0xE9, 0x84, 0x00, 0x00, 0x00,        -- jmp +0x84
       0x90,                                -- nop
       0x90,                                -- nop
       0x90                                 -- nop
@@ -1553,12 +1553,12 @@ local function edit_taxation(taxation)
       0x7D, 0x0E,
       0x83, 0x7C, 0x24, 0x18, 0x00,
       0x7F, 0x07,
-      0xB8, neutral_level, 0x00, 0x00, 0x00,  -- mov eax,00000003
-      0xEB, 0x06,                             -- jmp 0043EBDB
+      0xB8, neutral_level, 0x00, 0x00, 0x00,  -- mov eax,neutral_level
+      0xEB, 0x06,                             -- jmp +6
       0x8B, 0x80, core.itob(at.tax_popularity_offset),     -- mov eax,[eax+tax_popularity_offset]
       0xC1, 0xE0, 0x02,                       -- shl eax,02
-      0x8B, 0xB0, core.itob(pop_table_addr),     -- mov esi,[eax+0043B0BC]
-      0xEB, 0x76                              -- jmp 0043EC5C
+      0x8B, 0xB0, core.itob(pop_table_addr),     -- mov esi,[eax+pop_table_addr]
+      0xEB, 0x76                              -- jmp +0x76
     }, at.pop_report_addr + 6))
     -- 118 bytes are free in function
 

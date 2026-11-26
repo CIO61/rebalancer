@@ -177,13 +177,13 @@ local function apply(setting, writes, check)
     end
     local address, problem = resolve(entry.site)
     if address == nil then
-      log(ERROR, string.format("%s not applied: %s: %s", setting, entry.site, problem))
+      log(WARNING, string.format("%s not applied: %s: %s", setting, entry.site, problem))
       return false
     end
     local at = address + value.value
     local current = read[value.width](at)
     if current ~= value.default and current ~= wanted then
-      log(ERROR, string.format("%s not applied: %s holds %d instead of the game's %d "
+      log(WARNING, string.format("%s not applied: %s holds %d instead of the game's %d "
         .. "(changed by another module?)", setting, entry.site, current, value.default))
       return false
     end
