@@ -196,9 +196,9 @@ local SITES = {
 
   -- rally running addresses
   arabbow_rally_running_addr = { "66 89 AE ? ? ? ? 66 8B 8E ? ? ? ?" },
-  slinger_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? A1 ? ? ? ? 03 C3 99 B9 28 00 00 00 F7 F9 66 C7 86 ? ? ? ? 04 00 85 D2 75 74 66 81 BE ? ? ? ? B0" },
+  slinger_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? ? ? ? ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? A1 ? ? ? ? 03 C3 99 B9 28 00 00 00 F7 F9 66 C7 86 ? ? ? ? 04 00 85 D2 75 74 66 81 BE ? ? ? ? B0" },
   assassin_rally_running_addr = { "66 89 86 ? ? ? ? 89 86 ? ? ? ? C7 86 ? ? ? ? 10 00 00 00 66 8B 96 ? ? ? ?" },
-  firethrower_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8", from = "range_split_addr12", offset = -0x6FA },
+  firethrower_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? ? ? ? ? ? ? ? E8", from = "range_split_addr12", offset = -0x6FA },
 
   -- half siege ammo addresses
   siege_initial_ammo_addr = { "74 0E 66 C7 86 76 09 00 00 14 00", offset = 9 },
@@ -465,7 +465,7 @@ local function enable_rebalance_features()
 
    -- enable fully changing melee damage of xbows to buildings
   core.writeCodeBytes(at.crossbow_building_melee_addr-12, core.compile({
-    0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+005B9980]
+    0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+towers_or_gates_base]
     0x3C, 0x01,                                        -- cmp al,01
     0x75, 0x04,                                        -- jne 0055CE06
     0x31, 0xC0,                                        -- xor eax,eax
@@ -495,9 +495,9 @@ local function enable_rebalance_features()
   local custom_fletcher_code = {
     0x50,                                       -- push eax
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+0145D374]
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
     0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
     0x83, 0xF8, 0x11,                           -- cmp eax, 11
     0x58,                                       -- pop eax
     0x75, 0x06,                                 -- jne 6bytes
@@ -516,9 +516,9 @@ local function enable_rebalance_features()
     0x50,                                       -- push eax
     0x8B, 0xC7,                                 -- mov eax, edi
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+0145D374]
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
     0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
     0x83, 0xF8, 0x13,                           -- cmp eax, 13
     0x58,                                       -- pop eax
     0x75, 0x06,                                 -- jne 6bytes
@@ -536,9 +536,9 @@ local function enable_rebalance_features()
   local custom_blacksmith_code = {
     0x50,                                       -- push eax
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+0145D374]
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
     0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
     0x83, 0xF8, 0x11,                           -- cmp eax, 15
     0x58,                                       -- pop eax
     0x75, 0x06,                                 -- jne 6bytes
@@ -1450,7 +1450,7 @@ local function edit_fear_factor(fear_factor)
     local custom_combat_instructions = {
       0x8A, 0x88, core.itob(damage_table_addr+5),
       0x0F, 0xAF, 0x4C, 0x24, 0x04,             -- imul ecx,[esp+04]
-      core.jmpTo(at.combat_bonus_memory_addr+11)   -- jmp 0053162B
+      core.jmpTo(at.combat_bonus_memory_addr+11)   -- jmp combat_bonus_memory_addr+0B
     }
 
     core.writeCode(damage_table_addr, combat_bonus, true)
@@ -1544,7 +1544,7 @@ local function edit_taxation(taxation)
       0x7F, 0x07,
       0xB8, neutral_level, 0x00, 0x00, 0x00,  -- mov eax,00000003
       0xEB, 0x06,                             -- jmp 0043EBDB
-      0x8B, 0x80, core.itob(at.tax_popularity_offset),     -- mov eax,[eax+011F0BC0]
+      0x8B, 0x80, core.itob(at.tax_popularity_offset),     -- mov eax,[eax+tax_popularity_offset]
       0xC1, 0xE0, 0x02,                       -- shl eax,02
       0x8B, 0xB0, core.itob(pop_table_addr),     -- mov esi,[eax+0043B0BC]
       0xEB, 0x76                              -- jmp 0043EC5C
