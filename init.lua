@@ -7,8 +7,8 @@ local military_ground_unit_names = constants.military_ground_unit_names
 local resource_names = constants.resource_names
 local namespace = {}
 
--- Game code and data the settings change. { aob, offset = n }: the first match plus n.
--- `after`, `skip`: the first match from that site's address plus skip. `from`: that site plus offset.
+-- Game code and data the settings change. { aob, offset = n }: the only match in Crusader 1.41 and
+-- Extreme 1.41.1-E, plus n. `from`: that site plus offset; an aob given with it must match there.
 -- `read = d`: the site is the dword at that address plus d.
 local SITES = {
   -- data the game code addresses; the unit tables are indexed from unit id 1
@@ -52,17 +52,17 @@ local SITES = {
   crossbow_building_melee_addr = { "39 04 95 ? ? ? ? 0F 94 C0 33 FF 8D 44 00 02 8B D0 8B 44 24 10", offset = 10 },
   spearman_building_melee_addr = { "F7 D9 1B C9 83 E1 FB 83 C1 08 0F BF 90" },  -- +6 +9
   maceman_building_melee_addr = { "F7 D9 1B C9 83 E1 E1 83 C1 23 0F BF 98" },  -- +6 +9
-  pikeman_building_melee_addr = { "F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", after = "tunneller_building_melee_addr", skip = 10 },  -- +6 +9
+  pikeman_building_melee_addr = { "8B F3 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 51 },  -- +6 +9
   swordsman_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98" .. string.rep(" ?", 199) .. " 3B FD 74 6C 8B B8 ? ? ? ? 69 C9 BC 77 01 00" },  -- +6 +9
   knight_building_melee_addr = { "8D 8C CA D9 01 00 00 89 88 ? ? ? ? 39 A8" .. string.rep(" ?", 214) .. " F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98", offset = 229 },  -- +6 +9
   lord_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8 ? ? ? ? 57" },
-  arabbow_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", after = "archer_building_melee_addr", skip = 10 },  -- +6 +9
+  arabbow_building_melee_addr = { "8B CD 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 22 },  -- +6 +9
   slave_building_melee_addr = { "0F BF 90 ? ? ? ? 8B 80 ? ? ? ? 6A 08" },  -- +14
-  slinger_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", after = "arabbow_building_melee_addr", skip = 10 },  -- +6 +9
-  assassin_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", after = "lord_building_melee_addr", skip = 10 },  -- +6 +9
-  firethrower_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", after = "slinger_building_melee_addr", skip = 10 },  -- +6 +9
-  horsearcher_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", after = "firethrower_building_melee_addr", skip = 10 },  -- +6 +9
-  arabsword_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", after = "assassin_building_melee_addr", skip = 10 },  -- +6 +9
+  slinger_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", from = "slave_building_melee_addr", offset = 0x1164 },  -- +6 +9
+  assassin_building_melee_addr = { "5B C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", offset = 24 },  -- +6 +9
+  firethrower_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", from = "range_split_addr12", offset = -0x2D9 },  -- +6 +9
+  horsearcher_building_melee_addr = { "8B F5 EB 39 0F BF 34 55 ? ? ? ? 3B F5 7F 0D 5F 5E 66 89 A8 ? ? ? ? 5D 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 51 },  -- +6 +9
+  arabsword_building_melee_addr = { "59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", offset = 24 },  -- +6 +9
   monk_building_melee_addr = { "F7 D9 1B C9 83 E1 EF 83 C1 14 0F BF A8 ? ? ? ? 6A 01" },  -- +6 +9
   ram_damage_addr = { "55 6A 32 52 8B 90 ? ? ? ? 51 52" },  -- +3
 
@@ -103,10 +103,10 @@ local SITES = {
   brewer_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8 ? ? ? ? 83 C4 0C 66 89 86 ? ? ? ? 57 B9 ? ? ? ? 66 89 AE ? ? ? ? E8 ? ? ? ? A1 ? ? ? ? 69 C0 90 04 00 00 5F" },  -- both produce amount and skirmish bonus is push ebp instead of push val
 
   fletcher_func = { "55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 06 00 E8" },
-  poleturner_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00", after = "brewer_func", skip = 16 },  -- exact same AOB as brewer func
+  poleturner_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8 ? ? ? ? 66 89 86" },
   blacksmith_func = { "55 55 66 89 9E ? ? ? ? 50 66 C7 86 ? ? ? ? 07 00 E8" },
   tanner_func = { "53 53 50 66 89 AE ? ? ? ? E8 53 6C FD FF 66 89 86" },
-  armourer_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", after = "poleturner_func", skip = 16 },
+  armourer_func = { "55 C6 86 ? ? ? ? FE 55 66 C7 86 ? ? ? ? 07 00 57 66 89 9E ? ? ? ? E8", from = "leather_per_cow_address", offset = -0xD76 },
 
   -- religion related addresses
   religion_addr_1 = { "83 F8 18 7F 04 33 C9 EB 2C 83 F8 31 7F 07 B9 32 00 00 00 EB 20 83 F8 4A 7F 07 B9 64 00 00 00 EB 14 33 C9 83 F8 5E 0F 9F C1 83 E9 01 83 E1 CE 81 C1 C8 00 00 00 83 BE" },
@@ -165,40 +165,40 @@ local SITES = {
   proj_velocity_table_addr = { "7D 00 00 00 0A 00 00 00 1E 00 00 00 0F 00 00 00 64 00 00 00 64 00 00 00" },
   proj_archtype_table_addr = { "00 00 00 00 02 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00" },
 
-  range_split_addr1 = { "8B 04 85 ? ? ? ? 0F AF C0 66 83 BC 37" },  -- (0x54B621)  -- patch size should be 7
-  range_split_addr2 = { "BD 64 0B 00 00 E9 A2 00 00 00" },  -- (0x43595D)  -- patch size should be 5
-  range_split_addr3 = { "BE 64 0B 00 00 E9 A5 00 00 00" },  -- (0x436339)  -- patch size should be 5
-  range_split_addr4 = { "BE 64 0B 00 00 0F 87 52 01 00 00" },  -- (0x435E2C)  -- patch size should be 5
-  range_split_addr5 = { "B8 64 0B 00 00 EB 25 B8" },  -- (0x4369B2)  -- patch size should be 5
-  range_split_addr6 = { "BA 64 0B 00 00 EB 25 BA" },  -- (0x436AB9)  -- patch size should be 5
-  range_split_addr7 = { "BD 39 1C 00 00 EB 7D BD" },  -- (0x435985)  -- patch size should be 5
-  range_split_addr8 = { "BE 39 1C 00 00 E9 7D 00 00 00 BE" },  -- (0x436361)  -- patch size should be 5
-  range_split_addr9 = { "B8 39 1C 00 00 EB 09 B8" },  -- (0x4369CE)  -- patch size should be 5
-  range_split_addr10 = { "BA 39 1C 00 00 EB 09 BA" },  -- (0x436AD5)  -- patch size should be 5
-  range_split_addr11 = { "83 E9 03 F7 D9 1B C9" },  -- (0x53D642)1 -- patch size should be 13
-  range_split_addr12 = { "03 D1 83 FA 79 7E" },  -- (0x57770C)2 -- patch size should be 5
+  range_split_addr1 = { "8B 04 85 ? ? ? ? 0F AF C0 66 83 BC 37" },  -- patch size should be 7
+  range_split_addr2 = { "BD 64 0B 00 00 E9 A2 00 00 00" },  -- patch size should be 5
+  range_split_addr3 = { "BE 64 0B 00 00 E9 A5 00 00 00" },  -- patch size should be 5
+  range_split_addr4 = { "BE 64 0B 00 00 0F 87 52 01 00 00" },  -- patch size should be 5
+  range_split_addr5 = { "B8 64 0B 00 00 EB 25 B8" },  -- patch size should be 5
+  range_split_addr6 = { "BA 64 0B 00 00 EB 25 BA" },  -- patch size should be 5
+  range_split_addr7 = { "BD 39 1C 00 00 EB 7D BD" },  -- patch size should be 5
+  range_split_addr8 = { "BE 39 1C 00 00 E9 7D 00 00 00 BE" },  -- patch size should be 5
+  range_split_addr9 = { "B8 39 1C 00 00 EB 09 B8" },  -- patch size should be 5
+  range_split_addr10 = { "BA 39 1C 00 00 EB 09 BA" },  -- patch size should be 5
+  range_split_addr11 = { "83 E9 03 F7 D9 1B C9" },  -- patch size should be 13
+  range_split_addr12 = { "03 D1 83 FA 79 7E" },  -- patch size should be 5
 
   scan_range_addr_archer = { "66 81 B8 ? ? ? ? 90 01 7F" },
   scan_range_addr_arabbow_1 = { "85 FF BD 90 01 00 00 7E 28 8B C3" },
   scan_range_addr_arabbow_2 = { "66 00 BD 90 01 00 00 66 39 AE ? ? ? ? 7C 27" },
   scan_range_addr_horse_archer = { "69 D2 90 04 00 00 66 81 BA ? ? ? ? B0 01" },
-  scan_range_addr_xbow = { "0F B7 88 ? ? ? ? 66 81 F9 90 01", after = "scan_range_addr_archer", skip = 500 },
+  scan_range_addr_xbow = { "8B C5 69 C0 90 04 00 00 0F B7 88 ? ? ? ? 66 81 F9 90 01", offset = 8 },
   scan_range_addr_xbow_2 = { "66 C7 86 ? ? ? ? 0A 00 66 81 BE ? ? ? ? 90 01" },
-  scan_range_addr_slinger_1 = { "0F B7 88 ? ? ? ? 66 81 F9 90 01", after = "scan_range_addr_xbow", skip = 500 },
+  scan_range_addr_slinger_1 = { "0F B7 88 ? ? ? ? 66 81 F9 90 01", from = "slave_building_melee_addr", offset = 0xC53 },
   scan_range_addr_slinger_2 = { "03 F9 81 FF E4 01 00 00 7E 17 C7 86 ? ? ? ? D8 FF FF FF" },
   scan_range_addr_slinger_3 = { "89 8E ? ? ? ? 66 C7 86 ? ? ? ? 66 00 BD 90 01 00 00" },
-  scan_range_addr_firethrower_1 = { "0F B7 88 ? ? ? ? 66 81 F9 90 01", after = "scan_range_addr_slinger_1", skip = 500 },
+  scan_range_addr_firethrower_1 = { "0F B7 88 ? ? ? ? 66 81 F9 90 01", from = "range_split_addr12", offset = -0x79A },
   scan_range_addr_fbal_1 = { "66 C7 86 ? ? ? ? 03 00 66 81 BE ? ? ? ? A8 02" },
   scan_range_addr_fbal_2 = { "0F AF FA 03 DF 81 FB 64 0B" },
   scan_range_addr_mango = { "0F 85 E0 00 00 00 66 81 BE ? ? ? ? A8 02" },
   scan_range_addr_towerbal_1 = { "C3 5F 5E 5D C7 81 ? ? ? ? D8 FF FF FF 5B 83 C4 10 C3 66 81 BE ? ? ? ? A8 02", offset = 18 },
-  scan_range_addr_towerbal_2 = { "C3 66 81 BE ? ? ? ? A8 02", after = "scan_range_addr_towerbal_1", skip = 250 },
+  scan_range_addr_towerbal_2 = { "69 C9 90 04 00 00 5F 5E 5D C7 81 ? ? ? ? D8 FF FF FF 5B 83 C4 10 C3 66 81 BE ? ? ? ? A8 02", offset = 23 },
 
   -- rally running addresses
   arabbow_rally_running_addr = { "66 89 AE ? ? ? ? 66 8B 8E ? ? ? ?" },
   slinger_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? A1 ? ? ? ? 03 C3 99 B9 28 00 00 00 F7 F9 66 C7 86 ? ? ? ? 04 00 85 D2 75 74 66 81 BE ? ? ? ? B0" },
   assassin_rally_running_addr = { "66 89 86 ? ? ? ? 89 86 ? ? ? ? C7 86 ? ? ? ? 10 00 00 00 66 8B 96 ? ? ? ?" },
-  firethrower_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8", after = "assassin_rally_running_addr" },
+  firethrower_rally_running_addr = { "66 89 86 ? ? ? ? 66 8B 96 ? ? ? ? 53 B9 ? ? ? ? 66 89 96 ? ? ? ? E8", from = "range_split_addr12", offset = -0x6FA },
 
   -- half siege ammo addresses
   siege_initial_ammo_addr = { "74 0E 66 C7 86 76 09 00 00 14 00", offset = 9 },
@@ -218,9 +218,14 @@ local SITES = {
 }
 
 -- Site addresses and the code this module inserts. Sites are found at load, before any module
--- writes, so a repeated or overlapping AOB gives the intended match. False: the site is not usable,
--- for the reason in `unusable`.
+-- writes. False: the site is not usable, for the reason in `unusable`.
 local at, unusable, matched = {}, {}, {}
+
+-- True if aob matches at address.
+local function matches(aob, address)
+  local _, size = aob:gsub("%S+", "")
+  return core.scanForAOB(aob, address, address + size) == address
+end
 
 local function find(name)
   if at[name] ~= nil then
@@ -231,11 +236,16 @@ local function find(name)
   if site.from ~= nil then
     local base = find(site.from)
     address = base and base + (site.offset or 0)
-  elseif site.after == nil or find(site.after) then
-    local start = site.after and at[site.after] + (site.skip or 0)
-    local ok, result = pcall(core.AOBScan, site[1], start)
-    matched[name] = ok and result
-    address = ok and result and result + (site.offset or 0)
+    if address and site[1] then
+      address = matches(site[1], address) and address
+      matched[name] = address
+    end
+  else
+    local ok, result = pcall(core.AOBScan, site[1])
+    if ok and result and result ~= 0 then
+      matched[name] = result
+      address = result + (site.offset or 0)
+    end
   end
   if address and site.read then
     address = core.readInteger(address) + site.read
@@ -261,12 +271,12 @@ local function check_sites()
   checked = true
   for name, site in pairs(SITES) do
     local start = at[name] and matched[name]
-    if start and core.scanForAOB(site[1], start) ~= start then
+    if start and not matches(site[1], start) then
       at[name], unusable[name] = false, "changed by another module"
     end
   end
   for name, site in pairs(SITES) do
-    if site.from ~= nil and at[name] and not at[site.from] then
+    if site.from ~= nil and site[1] == nil and at[name] and not at[site.from] then
       at[name], unusable[name] = false, unusable[site.from]
     end
   end
@@ -454,7 +464,7 @@ local function enable_rebalance_features()
   end
 
    -- enable fully changing melee damage of xbows to buildings
-  core.writeCodeBytes(at.crossbow_building_melee_addr-12, core.compile({ 
+  core.writeCodeBytes(at.crossbow_building_melee_addr-12, core.compile({
     0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+005B9980]
     0x3C, 0x01,                                        -- cmp al,01
     0x75, 0x04,                                        -- jne 0055CE06
@@ -743,10 +753,10 @@ local function edit_siege(siege)
   if siege["siegeProjectileOneShotThreshold"] ~= nil and need("oneshot_threshold_addr") then core.writeCodeInteger(at.oneshot_threshold_addr+2, siege["siegeProjectileOneShotThreshold"]) end
   if siege["enable_half_siege_ammo"] ~= nil and siege["enable_half_siege_ammo"] == true
       and need("siege_initial_ammo_addr", "reload_amount_addr", "multi_reload_func_addr") then
-    core.writeCodeSmallInteger(at.siege_initial_ammo_addr, 10) -- "Catapult/Trebuchet initial stone.",     
-    core.writeCodeByte(at.reload_amount_addr+7, 10) -- "Catapult stone reload amount.",             
-    core.writeCodeByte(at.multi_reload_func_addr+8, 10) -- "Default max. ammunition amount.",             
-    core.writeCodeByte(at.multi_reload_func_addr+20, 0) -- "Rounding extra stone cost.",       
+    core.writeCodeSmallInteger(at.siege_initial_ammo_addr, 10) -- "Catapult/Trebuchet initial stone.",
+    core.writeCodeByte(at.reload_amount_addr+7, 10) -- "Catapult stone reload amount.",
+    core.writeCodeByte(at.multi_reload_func_addr+8, 10) -- "Default max. ammunition amount.",
+    core.writeCodeByte(at.multi_reload_func_addr+20, 0) -- "Rounding extra stone cost.",
     core.writeCodeBytes(at.multi_reload_func_addr+32, {0x90, 0x90})  -- "Shift left to divide instruction.",  nop-out
     core.writeCodeBytes(at.multi_reload_func_addr+121, {0x89, 0xC6, 0x90})
   end
@@ -1657,8 +1667,8 @@ local function edit_ranges(ranges)
   core.writeCodeInteger(at.range_split_addr2 + 31, catapult_range*catapult_range)  -- also linked to cow throwing range
   core.writeCodeInteger(at.range_split_addr4 + 189, catapult_range*catapult_range)
   core.writeCodeInteger(at.range_split_addr3 + 31, catapult_range*catapult_range)  -- also linked to cow throwing range
-  core.writeCodeInteger(at.range_split_addr5 - 650, catapult_range*catapult_range)  -- maybe find a new base address?
-  core.writeCodeInteger(at.range_split_addr5 - 264, catapult_range*catapult_range)  -- maybe find a new base address?
+  core.writeCodeInteger(at.range_split_addr5 - 650, catapult_range*catapult_range)
+  core.writeCodeInteger(at.range_split_addr5 - 264, catapult_range*catapult_range)
   core.writeCodeInteger(at.range_split_addr5 + 22, catapult_range*catapult_range)
   core.writeCodeInteger(at.range_split_addr6 + 22, catapult_range*catapult_range)
 
@@ -1667,16 +1677,16 @@ local function edit_ranges(ranges)
   core.writeCodeInteger(at.range_split_addr2 + 48, mangonel_range*mangonel_range)
   core.writeCodeInteger(at.range_split_addr4 + 209, mangonel_range*mangonel_range)
   core.writeCodeInteger(at.range_split_addr3 + 51, mangonel_range*mangonel_range)
-  core.writeCodeInteger(at.range_split_addr5 - 636, mangonel_range*mangonel_range)  -- maybe find a new base address?
-  core.writeCodeInteger(at.range_split_addr5 - 250, mangonel_range*mangonel_range)  -- maybe find a new base address?
+  core.writeCodeInteger(at.range_split_addr5 - 636, mangonel_range*mangonel_range)
+  core.writeCodeInteger(at.range_split_addr5 - 250, mangonel_range*mangonel_range)
   core.writeCodeInteger(at.range_split_addr9 + 8, mangonel_range*mangonel_range)
   core.writeCodeInteger(at.range_split_addr10 + 8, mangonel_range*mangonel_range)
 
   -- trebuchet
   core.writeCodeInteger(at.base_ranges_table_addr + 8, treb_range)
   core.writeCodeInteger(at.range_split_addr4 + 199, treb_range*treb_range)
-  core.writeCodeInteger(at.range_split_addr5 - 643, treb_range*treb_range)  -- maybe find a new base address?
-  core.writeCodeInteger(at.range_split_addr5 - 257, treb_range*treb_range)  -- maybe find a new base address?
+  core.writeCodeInteger(at.range_split_addr5 - 643, treb_range*treb_range)
+  core.writeCodeInteger(at.range_split_addr5 - 257, treb_range*treb_range)
 
   -- towerbal
   core.writeCodeInteger(at.base_ranges_table_addr + 76, towerbal_range)
@@ -1796,7 +1806,7 @@ namespace.apply_rebalance = function(config)
       0x83, 0xB8, core.itob(at.building_array_base + 0x138), 0x01,
       0x0F, 0x9E, 0xC1,
       0x90
-    }, at.iron_wait_addr)) 
+    }, at.iron_wait_addr))
     core.writeCodeByte(at.iron_subtract_addr, -2)
   end
 

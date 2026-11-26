@@ -88,7 +88,7 @@ local functions = {}
 -- match past it counts as none.
 local function scan(signature, from, to)
   local ok, address = pcall(core.AOBScan, signature, from, to)
-  if not ok or not address or (from ~= nil and (address < from or address >= to)) then
+  if not ok or not address or address == 0 or (from ~= nil and (address < from or address >= to)) then
     return nil, "signature not found (the game code there differs: another module changed it, "
       .. "or this game version is not supported)"
   end
