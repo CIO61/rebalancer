@@ -68,7 +68,7 @@ return {
         jmp lbl_4
             lbl_3:
         pop eax
-        mov eax, [eax*4+0x5B6358]
+        mov eax, [eax*4+base_ranges]
         jmp lbl_5
             lbl_4:
         add esp, 0x04
@@ -131,7 +131,7 @@ return {
     ]],
     range_split_asm4 = [[
         push eax
-        movzx eax,word [ebp+0x145D0CA]
+        movzx eax,word [ebp+unit_type]
         cmp eax,0x16
         jne xbow
         mov esi, archer_range*archer_range

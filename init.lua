@@ -1,5 +1,4 @@
 local constants = require("constants")
-local addresses = require("addresses")
 local templates = require("templates")
 
 local building_names = constants.building_names
@@ -10,7 +9,20 @@ local namespace = {}
 
 -- Game code and data the settings change. { aob, offset = n }: the first match plus n.
 -- `after`, `skip`: the first match from that site's address plus skip. `from`: that site plus offset.
+-- `read = d`: the site is the dword at that address plus d.
 local SITES = {
+  -- data the game code addresses; the unit tables are indexed from unit id 1
+  unit_array_base = { "69 C9 90 04 00 00 6A 00 6A 00 81 C1 ? ? ? ? 68 90 04 00 00 51", offset = 12, read = 0 },
+  building_array_base = { "69 C9 2C 03 00 00 6A 00 6A 00 81 C1 ? ? ? ? 68 2C 03 00 00 51", offset = 12, read = 0 },
+  unit_melee_toggles_base = { "66 8B 14 85 ? ? ? ? 66 89 51 FE", offset = 4, read = 4 },
+  unit_jester_unfriendly_base = { "83 3C 8D ? ? ? ? 00 75 75 3B 5C 24 1C", offset = 3, read = 4 },
+  unit_blessable_base = { "83 3C 95 ? ? ? ? 00 75 57 8B 87 44 01 00 00", offset = 3, read = 4 },
+  unit_allowed_on_walls_base = { "8B 14 95 ? ? ? ? 33 DB 81 FD 8F 01 00 00", offset = 3, read = 4 },
+  unit_melee_immunity_base = { "8A 04 BD ? ? ? ? 88 86 40 09 00 00", offset = 3, read = 4 },
+  towers_or_gates_base = { from = "crossbow_building_melee_addr", offset = -7, read = 0 },
+  unit_gold_jumplist_addr = { from = "non_rax_unit_display_cost_func_addr", offset = 10, read = 0 },
+  tax_popularity_offset = { from = "pop_report_addr", offset = 28, read = 0 },
+
   pop_gathering_addr = { "8B 0C 85 ? ? ? ? EB 2D 8B 4E F0" },
   scenario_pgr_base = { "EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00" },
   scenario_pgr_crowded_base = { from = "scenario_pgr_base" },  -- the same AOB as scenario_pgr_base
@@ -37,12 +49,12 @@ local SITES = {
 
   tunneller_building_melee_addr = { "B9 06 00 00 00 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 54 },
   archer_building_melee_addr = { "8B CF 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 22 },  -- +6 +9
-  crossbow_building_melee_addr = { "33 FF 8D 44 00 02 8B D0 8B 44 24 10" },
+  crossbow_building_melee_addr = { "39 04 95 ? ? ? ? 0F 94 C0 33 FF 8D 44 00 02 8B D0 8B 44 24 10", offset = 10 },
   spearman_building_melee_addr = { "F7 D9 1B C9 83 E1 FB 83 C1 08 0F BF 90" },  -- +6 +9
   maceman_building_melee_addr = { "F7 D9 1B C9 83 E1 E1 83 C1 23 0F BF 98" },  -- +6 +9
   pikeman_building_melee_addr = { "F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", after = "tunneller_building_melee_addr", skip = 10 },  -- +6 +9
-  swordsman_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98" },  -- +6 +9
-  knight_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98", after = "swordsman_building_melee_addr", skip = 10 },  -- +6 +9
+  swordsman_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98" .. string.rep(" ?", 199) .. " 3B FD 74 6C 8B B8 ? ? ? ? 69 C9 BC 77 01 00" },  -- +6 +9
+  knight_building_melee_addr = { "8D 8C CA D9 01 00 00 89 88 ? ? ? ? 39 A8" .. string.rep(" ?", 214) .. " F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF 98", offset = 229 },  -- +6 +9
   lord_building_melee_addr = { "F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8 ? ? ? ? 57" },
   arabbow_building_melee_addr = { "F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", after = "archer_building_melee_addr", skip = 10 },  -- +6 +9
   slave_building_melee_addr = { "0F BF 90 ? ? ? ? 8B 80 ? ? ? ? 6A 08" },  -- +14
@@ -57,7 +69,7 @@ local SITES = {
   unit_power_levels_addr = { "05 00 00 00 0A 00 00 00 04 00 00 00 0A 00 00 00 0A 00 00 00" },
   eu_unit_gold_cost_base = { "0C 00 00 00 14 00 00 00 08 00 00 00 14 00 00 00" },
   ar_unit_gold_cost_base = { "4B 00 00 00 05 00 00 00 0C 00 00 00 3C 00 00 00" },
-  unit_melee_dmg_base = { "02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 02 00 00 00 14 00 00 00", offset = -0x260 },
+  unit_melee_dmg_base = { "8D 04 80 C1 E0 04 03 C2 66 83 F9 37 8B 04 85", offset = 15, read = 0x144 },  -- read as [(attacker * 80 + defender) * 4 + table], ids from 1
 
   -- building related addresses
   building_cost_base = { "06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03" },
@@ -135,7 +147,7 @@ local SITES = {
   neutral_level_addr_3 = { "83 F8 03 7E 16 8B 54 24 0C 52 50 8B 44 24 0C 50" },
   neutral_level_addr_4 = { "83 F8 03 7D 16 8B 54 24 0C 52 50" },
   keep_menu_addr = { "83 F8 03 7D 07 83 7C 24 10 00 7E 2B 85 C0 75 0A B8 AF 00 00 00 E9 86 00 00 00 83 F8 01 75 07 B8 7D 00 00 00 EB 7A 83 F8 02 75 07 B8 4B 00 00 00" },
-  pop_report_addr = { "83 B8 ? ? ? ? 03 7D 11 83 7C 24 18 00 7F 0A BE 19 00 00 00 E9" },
+  pop_report_addr = { "83 B8 ? ? ? ? 03 7D 11 83 7C 24 18 00 7F 0A BE 19 00 00 00 E9 ? ? ? ? 8B 80 ? ? ? ? 85 C0" },
   actual_effect_addr = { "83 F8 03 7D 0E 85 ED 7F 0A B8 19 00 00 00 E9 86 00 00" },
   multipliers_addr_base = { "69 C0 FA 00 00 00 8B C8 B8 1F 85 EB 51 F7 E9 C1 FA 05 8B C2 C1 E8 1F" },
 
@@ -196,12 +208,19 @@ local SITES = {
   -- double iron pickup addresses
   iron_wait_addr = { "33 C9 39 88 ? ? ? ? 0F 94 C1 8D 4C 09 03" },
   iron_subtract_addr = { "FF 6A ? 8D 80 ? ? ? ? 6A ? 51 E8" },
+
+  -- extreme-only settings
+  height_advantage_addr = { "66 83 FB 14 75 0B 8B C1", offset = 4 },
+  enemy_check_addr = { "83 BC 30 50 0A 00 00 00 8D 3C 30 74 6A 8B 87 50 0A 00 00", offset = 13 },
+  minimap_unit_size_addr = { "7D 76 8B 5D 24 8B 55 E0 2B D8 83 EB 01 D1 EB 8D 34 02 83 C3 01", offset = 20 },
+  flagon_cap_addr = { "5B C3 66 3D 90 01 0F 8D", offset = 4 },
+  spearmen_run_addr = { "7E 3C 66 C7 86 ? ? ? ? FF FF 89 BE ? ? ? ? EB 32 66 39 BE ? ? ? ? 75 1C 66 39 BE ? ? ? ?" .. string.rep(" ?", 21) .. " 89 86 ? ? ? ? 66 89 BE ? ? ? ?" },  -- jle, and the run state at +56
 }
 
 -- Site addresses and the code this module inserts. Sites are found at load, before any module
 -- writes, so a repeated or overlapping AOB gives the intended match. False: the site is not usable,
 -- for the reason in `unusable`.
-local at, unusable = {}, {}
+local at, unusable, matched = {}, {}, {}
 
 local function find(name)
   if at[name] ~= nil then
@@ -215,7 +234,11 @@ local function find(name)
   elseif site.after == nil or find(site.after) then
     local start = site.after and at[site.after] + (site.skip or 0)
     local ok, result = pcall(core.AOBScan, site[1], start)
+    matched[name] = ok and result
     address = ok and result and result + (site.offset or 0)
+  end
+  if address and site.read then
+    address = core.readInteger(address) + site.read
   end
   at[name] = address or false
   if not address then
@@ -237,7 +260,7 @@ local function check_sites()
   end
   checked = true
   for name, site in pairs(SITES) do
-    local start = at[name] and site.from == nil and at[name] - (site.offset or 0)
+    local start = at[name] and matched[name]
     if start and core.scanForAOB(site[1], start) ~= start then
       at[name], unusable[name] = false, "changed by another module"
     end
@@ -262,17 +285,6 @@ local function need(...)
   end
   return true
 end
-
-local unit_array_base_addr = addresses.unit_array_base_addr
-local building_array_base_addr = addresses.building_array_base_addr
-local unit_melee_toggles_base = addresses.unit_melee_toggles_base
-local unit_jester_unfriendly_base = addresses.unit_jester_unfriendly_base
-local unit_blessable_base = addresses.unit_blessable_base
-local unit_allowed_on_walls_base = addresses.unit_allowed_on_walls_base
-local unit_melee_immunity_base = addresses.unit_melee_immunity_base
-local towers_or_gates_base = addresses.towers_or_gates_base
-local unit_gold_jumplist_addr = addresses.unit_gold_jumplist_addr
-local tax_popularity_offset = addresses.tax_popularity_offset
 
 -- local scaling_code = templates.continuous_scaling_code
 local scaling_code = templates.discrete_scaling_code
@@ -338,41 +350,36 @@ local function extreme_only_feature_check(warning_message)
 end
 
 local function reduce_height_advantage()
-  core.writeCodeSmallInteger(0x400000 + 0x132408, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
+  if need("height_advantage_addr") then
+    core.writeCodeSmallInteger(at.height_advantage_addr, 37008) -- Highground damage reduction for all units to 50%. {0x90, 0x90}
+  end
 end
 
 local function increase_enemy_check_frequency()
-  core.writeCodeInteger(0x400000 + 0x17A08A, 20) -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
-  core.writeCodeByte(0x400000 + 0x17A089, 0xB8)  -- Custom unit to closest enemy distance update rate cap, code adjustment 1
-  core.writeCodeByte(0x400000 + 0x17A08E, 0x90)  -- Custom unit to closest enemy distance update rate cap, code adjustment 2
+  if need("enemy_check_addr") then
+    -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
+    core.writeCode(at.enemy_check_addr, {0xB8, core.itob(20), 0x90})
+  end
 end
 
 local function increase_minimap_unit_size()
-  core.writeCodeByte(0x400000 + 0xB6FC0, 4) -- "Minimap unit size.", 
+  if need("minimap_unit_size_addr") then
+    core.writeCodeByte(at.minimap_unit_size_addr, 4) -- "Minimap unit size.",
+  end
 end
 
-
 local function enable_spearmen_conditional_run()
-  core.writeCodeBytes(0x400000 + 0x15E47B, {
-    0x7e, 0x36
-  })
-
-  core.writeCodeBytes(0x400000 + 0x15E4B3, {
-    0xE9, 0x74, 0xDE, 0x04, 0x00,
-    0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
-  })
-
-  core.writeCodeBytes(0x400000 + 0x1AC32C, {
-    0x66, 0x81, 0xBE, 0xE2, 0xD2, 0x45, 0x01, 0xF0, 0x00,
+  if not need("spearmen_run_addr", "unit_array_base") then
+    return
+  end
+  core.writeCodeBytes(at.spearmen_run_addr, {0x7E, 0x36})
+  core.insertCode(at.spearmen_run_addr + 56, 13, {
+    0x66, 0x81, 0xBE, core.itob(at.unit_array_base + 0x2A6), 0xF0, 0x00,  -- Spearman running trigger range around enemy units * 8.
     0x7F, 0x16,
-    0xC7, 0x86, 0x44, 0xD0, 0x45, 0x01, 0x81, 0x00, 0x00, 0x00,
-    0x66, 0x89, 0x86, 0xFA, 0xD2, 0x45, 0x01,
-    0xE9, 0x73, 0x21, 0xFB, 0xFF, 0x89, 0x86, 0x44, 0xD0, 0x45, 0x01,
-    0x66, 0x89, 0xBE, 0xFA, 0xD2, 0x45, 0x01,
-    0xE9, 0x61, 0x21, 0xFB, 0xFF
-  })
-
-  core.writeCodeSmallInteger(0x400000+ 0x1AC333, 240) -- Spearman running trigger range around enemy units * 8."
+    0xC7, 0x86, core.itob(at.unit_array_base + 0x8), 0x81, 0x00, 0x00, 0x00,
+    0x66, 0x89, 0x86, core.itob(at.unit_array_base + 0x2BE),
+    core.jmpTo(at.spearmen_run_addr + 69),
+  }, nil, "after")
 end
 
 local function enable_rebalance_features()
@@ -380,7 +387,8 @@ local function enable_rebalance_features()
   if not need("crossbow_building_melee_addr", "baker_func", "wheatfarmer_func", "brewer_func", "fletcher_func",
       "poleturner_func", "blacksmith_func", "tanner_func", "armourer_func", "tax_addr", "bribe_addr",
       "ballista_damage_addr", "mangonel_damage_addr", "non_rax_unit_display_cost_func_addr",
-      "non_rax_unit_cost_func_addr", "ar_unit_gold_cost_base", "fire_damage_code_addr") then
+      "non_rax_unit_cost_func_addr", "ar_unit_gold_cost_base", "fire_damage_code_addr", "towers_or_gates_base",
+      "unit_array_base", "building_array_base", "unit_gold_jumplist_addr") then
     return false
   end
   ballista_damage_table_addr = core.allocate(#unit_names*4)
@@ -447,7 +455,7 @@ local function enable_rebalance_features()
 
    -- enable fully changing melee damage of xbows to buildings
   core.writeCodeBytes(at.crossbow_building_melee_addr-12, core.compile({ 
-    0x8B, 0x04, 0x95, core.itob(towers_or_gates_base), -- mov eax,[edx*4+005B9980]
+    0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+005B9980]
     0x3C, 0x01,                                        -- cmp al,01
     0x75, 0x04,                                        -- jne 0055CE06
     0x31, 0xC0,                                        -- xor eax,eax
@@ -477,9 +485,9 @@ local function enable_rebalance_features()
   local custom_fletcher_code = {
     0x50,                                       -- push eax
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(unit_array_base_addr+0x338),   -- movsx eax,word ptr [eax+0145D374]
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+0145D374]
     0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(building_array_base_addr+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
     0x83, 0xF8, 0x11,                           -- cmp eax, 11
     0x58,                                       -- pop eax
     0x75, 0x06,                                 -- jne 6bytes
@@ -498,9 +506,9 @@ local function enable_rebalance_features()
     0x50,                                       -- push eax
     0x8B, 0xC7,                                 -- mov eax, edi
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(unit_array_base_addr+0x338),   -- movsx eax,word ptr [eax+0145D374]
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+0145D374]
     0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(building_array_base_addr+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
     0x83, 0xF8, 0x13,                           -- cmp eax, 13
     0x58,                                       -- pop eax
     0x75, 0x06,                                 -- jne 6bytes
@@ -518,9 +526,9 @@ local function enable_rebalance_features()
   local custom_blacksmith_code = {
     0x50,                                       -- push eax
     0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(unit_array_base_addr+0x338),   -- movsx eax,word ptr [eax+0145D374]
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+0145D374]
     0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(building_array_base_addr+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+00F98C42]
     0x83, 0xF8, 0x11,                           -- cmp eax, 15
     0x58,                                       -- pop eax
     0x75, 0x06,                                 -- jne 6bytes
@@ -644,12 +652,12 @@ local function enable_rebalance_features()
     0xEB, 0x03,
     0x90, 0x90, 0x90,
   })
-  core.writeCodeBytes(unit_gold_jumplist_addr, core.compile({
+  core.writeCodeBytes(at.unit_gold_jumplist_addr, core.compile({
       core.itob(at.non_rax_unit_display_cost_func_addr + 14),
       core.itob(at.non_rax_unit_display_cost_func_addr + 18),
       core.itob(at.non_rax_unit_display_cost_func_addr + 22),
       core.itob(at.non_rax_unit_display_cost_func_addr + 26),
-    },unit_gold_jumplist_addr)
+    },at.unit_gold_jumplist_addr)
   )
 
   core.writeCodeByte(at.non_rax_unit_cost_func_addr+6, 70)  -- compare unit id with arab bow
@@ -851,12 +859,12 @@ local function edit_units(units)
     if arrowDamage ~= nil and need("unit_arrow_dmg_base") then core.writeInteger(at.unit_arrow_dmg_base + unit_idx * 4, arrowDamage) end
     if xbowDamage ~= nil and need("unit_xbow_dmg_base") then core.writeInteger(at.unit_xbow_dmg_base + unit_idx * 4, xbowDamage) end
     if stoneDamage ~= nil and need("unit_stone_dmg_base") then core.writeInteger(at.unit_stone_dmg_base + unit_idx * 4, stoneDamage) end
-    if meleeEngage ~= nil then core.writeInteger(unit_melee_toggles_base + 4*unit_idx, meleeEngage and 1 or 0) end
-    if notBlessable ~= nil then core.writeInteger(unit_blessable_base + 4*unit_idx, notBlessable and 1 or 0) end
-    if allowedOnWalls ~= nil then core.writeInteger(unit_allowed_on_walls_base + 4*unit_idx, allowedOnWalls and 1 or 0) end
+    if meleeEngage ~= nil and need("unit_melee_toggles_base") then core.writeInteger(at.unit_melee_toggles_base + 4*unit_idx, meleeEngage and 1 or 0) end
+    if notBlessable ~= nil and need("unit_blessable_base") then core.writeInteger(at.unit_blessable_base + 4*unit_idx, notBlessable and 1 or 0) end
+    if allowedOnWalls ~= nil and need("unit_allowed_on_walls_base") then core.writeInteger(at.unit_allowed_on_walls_base + 4*unit_idx, allowedOnWalls and 1 or 0) end
     if fireDamage ~= nil then core.writeInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
-    if jesterUnfriendly ~= nil then core.writeInteger(unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0) end
-    if meleeImmunity ~= nil then core.writeInteger(unit_melee_immunity_base + 4*unit_idx, meleeImmunity and 1 or 0) end
+    if jesterUnfriendly ~= nil and need("unit_jester_unfriendly_base") then core.writeInteger(at.unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0) end
+    if meleeImmunity ~= nil and need("unit_melee_immunity_base") then core.writeInteger(at.unit_melee_immunity_base + 4*unit_idx, meleeImmunity and 1 or 0) end
     if ballistaBoltDamage ~= nil then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
     if mangonelDamage ~= nil then core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage) end
     if catapultRockDamage ~= nil then core.writeInteger(catapult_damage_table_addr + 4*unit_idx, catapultRockDamage) end
@@ -1305,8 +1313,8 @@ local function edit_beer(beer)
     core.insertCode(at.beer_addr_3, 62, assembled_code)
   end
   if beer_flagon_cap ~= nil then
-    if extreme_only_feature_check("Beer flagon cap editing is only available for SHC Extreme!") then
-      core.writeCodeSmallInteger(0x400000 + 0x1418A0, beer_flagon_cap)
+    if extreme_only_feature_check("Beer flagon cap editing is only available for SHC Extreme!") and need("flagon_cap_addr") then
+      core.writeCodeSmallInteger(at.flagon_cap_addr, beer_flagon_cap)
     end
   end
 end
@@ -1499,7 +1507,7 @@ local function edit_taxation(taxation)
   core.writeCodeByte(at.neutral_level_addr_2, neutral_level)
   core.writeCodeByte(at.neutral_level_addr_3 + 2, neutral_level)
   core.writeCodeByte(at.neutral_level_addr_4 + 2, neutral_level)
-  if pop_table ~= nil and need("keep_menu_addr", "pop_report_addr", "actual_effect_addr") then
+  if pop_table ~= nil and need("keep_menu_addr", "pop_report_addr", "tax_popularity_offset", "actual_effect_addr") then
     local pop_table_addr = at.keep_menu_addr + 31
     core.writeCodeBytes(at.keep_menu_addr, core.compile({  -- keep menu
       0x83, 0xF8, neutral_level,
@@ -1526,7 +1534,7 @@ local function edit_taxation(taxation)
       0x7F, 0x07,
       0xB8, neutral_level, 0x00, 0x00, 0x00,  -- mov eax,00000003
       0xEB, 0x06,                             -- jmp 0043EBDB
-      0x8B, 0x80, core.itob(tax_popularity_offset),     -- mov eax,[eax+011F0BC0]
+      0x8B, 0x80, core.itob(at.tax_popularity_offset),     -- mov eax,[eax+011F0BC0]
       0xC1, 0xE0, 0x02,                       -- shl eax,02
       0x8B, 0xB0, core.itob(pop_table_addr),     -- mov esi,[eax+0043B0BC]
       0xEB, 0x76                              -- jmp 0043EC5C
@@ -1565,7 +1573,7 @@ local function edit_ranges(ranges)
   local towerbal_range = ranges["towerbal_range"]
   local mangonel_range = ranges["mangonel_range"]
 
-  if not need("base_ranges_table_addr", "range_split_addr1", "range_split_addr2", "range_split_addr3",
+  if not need("unit_array_base", "base_ranges_table_addr", "range_split_addr1", "range_split_addr2", "range_split_addr3",
       "range_split_addr4", "range_split_addr5", "range_split_addr6", "range_split_addr7", "range_split_addr8",
       "range_split_addr9", "range_split_addr10", "range_split_addr11", "range_split_addr12",
       "scan_range_addr_archer", "scan_range_addr_arabbow_1", "scan_range_addr_arabbow_2",
@@ -1592,10 +1600,10 @@ local function edit_ranges(ranges)
   local mapping_1 ={archer_range=archer_range, xbow_range=xbow_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range, fbal_range=fbal_range}
   local mapping_2 ={treb_range=treb_range, towerbal_range=towerbal_range}
 
-  local code_1 = core.assemble(templates.range_split_asm1, {archer_range=archer_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range}, 0)
+  local code_1 = core.assemble(templates.range_split_asm1, {archer_range=archer_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range, base_ranges=at.base_ranges_table_addr - 4}, 0)
   local code_2 = core.assemble(templates.range_split_asm2, mapping_1, 0)
   local code_3 = core.assemble(templates.range_split_asm3, mapping_1, 0)
-  local code_4 = core.assemble(templates.range_split_asm4, {archer_range=archer_range, xbow_range=xbow_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range}, 0)
+  local code_4 = core.assemble(templates.range_split_asm4, {archer_range=archer_range, xbow_range=xbow_range, arabbow_range=arabbow_range, horse_archer_range=horse_archer_range, unit_type=at.unit_array_base + 0x8E}, 0)
   local code_5 = core.assemble(templates.range_split_asm5, mapping_1, 0)
   local code_6 = core.assemble(templates.range_split_asm6, mapping_1, 0)
   local code_7 = core.assemble(templates.range_split_asm7, mapping_2, 0)
@@ -1783,9 +1791,9 @@ namespace.apply_rebalance = function(config)
     log(ERROR, "population_gathering_rate is removed, use population section in the config instead.")
   end
 
-  if config["enable_iron_double_pickup"] and need("iron_wait_addr", "iron_subtract_addr") then
+  if config["enable_iron_double_pickup"] and need("iron_wait_addr", "iron_subtract_addr", "building_array_base") then
     core.writeCodeBytes(at.iron_wait_addr, core.compile({
-      0x83, 0xB8, core.itob(building_array_base_addr + 0x138), 0x01,
+      0x83, 0xB8, core.itob(at.building_array_base + 0x138), 0x01,
       0x0F, 0x9E, 0xC1,
       0x90
     }, at.iron_wait_addr)) 
