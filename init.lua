@@ -209,12 +209,14 @@ local SITES = {
   iron_wait_addr = { "33 C9 39 88 ? ? ? ? 0F 94 C1 8D 4C 09 03" },
   iron_subtract_addr = { "FF 6A ? 8D 80 ? ? ? ? 6A ? 51 E8" },
 
+  -- spearmen running; the pattern spans the code Running Units and UCP2-Legacy change
+  spearmen_run_addr = { "66 39 BE ? ? ? ? 74 21 89 86 ? ? ? ? 66 83 BE ? ? ? ? 46 7E 3C 66 C7 86 ? ? ? ? FF FF 89 BE ? ? ? ? EB 32 66 39 BE ? ? ? ? 75 1C 66 39 BE ? ? ? ? 74 13" .. string.rep(" ?", 19) .. " 89 86 ? ? ? ? 66 89 BE ? ? ? ?", offset = 23 },  -- jle, and the run state at +56
+
   -- extreme-only settings
   height_advantage_addr = { "66 83 FB 14 75 0B 8B C1", offset = 4 },
-  enemy_check_addr = { "83 BC 30 50 0A 00 00 00 8D 3C 30 74 6A 8B 87 50 0A 00 00", offset = 13 },
+  enemy_check_addr = { "83 BC 30 50 0A 00 00 00 8D 3C 30 74 6A 8B 87 50 0A 00 00" },
   minimap_unit_size_addr = { "7D 76 8B 5D 24 8B 55 E0 2B D8 83 EB 01 D1 EB 8D 34 02 83 C3 01", offset = 20 },
   flagon_cap_addr = { "5B C3 66 3D 90 01 0F 8D", offset = 4 },
-  spearmen_run_addr = { "7E 3C 66 C7 86 ? ? ? ? FF FF 89 BE ? ? ? ? EB 32 66 39 BE ? ? ? ? 75 1C 66 39 BE ? ? ? ?" .. string.rep(" ?", 21) .. " 89 86 ? ? ? ? 66 89 BE ? ? ? ?" },  -- jle, and the run state at +56
 }
 
 -- Site addresses and the code this module inserts. Sites are found at load, before any module
@@ -367,8 +369,12 @@ end
 
 local function increase_enemy_check_frequency()
   if need("enemy_check_addr") then
-    -- Custom unit to closest enemy distance update rate cap (Set in gameticks, picked at random from 0 to this number, applies to all units
-    core.writeCode(at.enemy_check_addr, {0xB8, core.itob(20), 0x90})
+    -- Every unit's closest-enemy update mask is 20 instead of its own. The game's mask load at +13 stays
+    -- unchanged for the modules that read the tick counter after it.
+    core.insertCode(at.enemy_check_addr, 11, {
+      core.jeTo(at.enemy_check_addr + 0x77),
+      0xB8, core.itob(20),  -- mov eax,20
+    }, at.enemy_check_addr + 19, "before")
   end
 end
 
@@ -378,8 +384,14 @@ local function increase_minimap_unit_size()
   end
 end
 
+-- Runs at afterInit, after every module's enable. When Running Units or UCP2-Legacy changed the
+-- spearmen running code, the setting is not applied.
 local function enable_spearmen_conditional_run()
   if not need("spearmen_run_addr", "unit_array_base") then
+    return
+  end
+  if not matches(SITES.spearmen_run_addr[1], matched.spearmen_run_addr) then
+    log(WARNING, "spearmen_run_addr changed by another module, enable_spearmen_conditional_run is not applied")
     return
   end
   core.writeCodeBytes(at.spearmen_run_addr, {0x7E, 0x36})
@@ -567,7 +579,7 @@ local function enable_rebalance_features()
   tax_table_addr = core.allocate(12*2)
   local custom_tax_instructions = {
     0x8A, 0x44, 0x24, 0x0C,                          -- mov eax [esp+0C]
-    0x66, 0x8B, 0x04, 0x45, core.itob(tax_table_addr),  -- mov ax,[eax*2+Stronghold_Crusader_Extreme.exe+45AD]
+    0x66, 0x8B, 0x04, 0x45, core.itob(tax_table_addr),  -- mov ax,[eax*2+tax_table_addr]
     0x0F, 0xAF, 0x44, 0x24, 0x10,                    -- imul eax,[esp+10]
     0xC3                                             -- return
   }
@@ -592,17 +604,16 @@ local function enable_rebalance_features()
   local divby10_addr = core.allocateCode(25)
   core.writeCodeBytes(divby10_addr, divby10_code)
   local tax_jumpout_instructions = {
-    0xE8, core.itob(custom_tax_addr - at.tax_addr-5),  -- call 40459B
-    0xE8, core.itob(divby10_addr - at.tax_addr-10),  -- call 4045F9
+    0xE8, core.itob(custom_tax_addr - at.tax_addr-5),  -- call custom_tax
+    0xE8, core.itob(divby10_addr - at.tax_addr-10),  -- call divby10
     0xEB, 0x02,  -- jump over 2 bytes
     0x90, 0x90,
     0xC1, 0xF8, 0x03,  -- sar eax,03
-    0x83, 0x3D, 0xF0, 0x4D, 0x35, 0x02, 0x00 -- cmp dword ptr [Stronghold_Crusader_Extreme.exe+1F54DF0],00
   }
 
   local bribe_jumpout_instructions = {
-    0xE8, core.itob(custom_tax_addr - at.bribe_addr-5),  -- call 40459B
-    0xE8, core.itob(divby10_addr - at.bribe_addr-10),  -- call 4045F9
+    0xE8, core.itob(custom_tax_addr - at.bribe_addr-5),  -- call custom_tax
+    0xE8, core.itob(divby10_addr - at.bribe_addr-10),  -- call divby10
     0x90,
     0xC1, 0xF8, 0x02  -- sar eax,02
   }
@@ -1819,9 +1830,7 @@ namespace.apply_rebalance = function(config)
   end
 
   if config["enable_spearmen_conditional_run"] then
-    if extreme_only_feature_check("enable_spearmen_conditional_run is only available for SHC Extreme!") then
-      enable_spearmen_conditional_run()
-    end
+    hooks.registerHookCallback("afterInit", enable_spearmen_conditional_run)
   end
 
   if config["reduce_height_advantage"] then

@@ -888,7 +888,7 @@
     },
     "enable_spearmen_conditional_run": {
       "type": "boolean",
-      "description": "[SHC Extreme Only Feature] When enabled, spearmen will start sprinting when there are enemy units nearby, even when not in aggressive stance.\nThis feature is incompatible with running units plugin!"
+      "description": "When enabled, spearmen will start sprinting when there are enemy units nearby, even when not in aggressive stance.\nNot applied when Running Units or UCP2-Legacy already make spearmen run."
     },
     "reduce_height_advantage": {
       "type": "boolean",
