@@ -36,6 +36,39 @@ local scaling_code = [[
     mov eax, ebx
 ]]
 return {
+    ram_damage_code = [[
+        push ebp
+        push eax
+        pushfd
+        ; ESI is the building instance ID and EBX is the tile's logic flags.
+        test esi, esi
+        jz unoccupied_tile
+        imul eax, esi, 0x32C
+        movzx eax, word [eax + building_kind_base]
+        cmp eax, 45
+        jb sturdy_building
+        cmp eax, 47
+        jbe fortification
+    sturdy_building:
+        cmp dword [eax*4 + towers_or_gates_base], 1
+        je fortification
+        jmp building
+    unoccupied_tile:
+        test ebx, 0x10000400
+        jnz building
+        test ebx, 0x100
+        jz building
+        mov eax, wall_damage
+        jmp selected
+    fortification:
+        mov eax, fortification_damage
+        jmp selected
+    building:
+        mov eax, building_damage
+    selected:
+        popfd
+        xchg eax, [esp]
+    ]],
     continuous_scaling_code = scaling_code .. [[
         pop ebx
     ]],

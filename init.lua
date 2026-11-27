@@ -49,7 +49,7 @@ local SITES = {
 
   tunneller_building_melee_addr = { "B9 06 00 00 00 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 54 },
   archer_building_melee_addr = { "8B CF 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 22 },  -- +6 +9
-  crossbow_building_melee_addr = { "39 04 95 ? ? ? ? 0F 94 C0 33 FF 8D 44 00 02 8B D0 8B 44 24 10", offset = 10 },
+  crossbow_building_melee_addr = { "39 04 95 ? ? ? ? 0F 94 C0 33 FF 8D 44 00 02 8B D0 8B 44 24 10", offset = 10, unique = true },
   spearman_building_melee_addr = { "F7 D9 1B C9 83 E1 FB 83 C1 08 0F BF 90" },  -- +6 +9
   maceman_building_melee_addr = { "F7 D9 1B C9 83 E1 E1 83 C1 23 0F BF 98" },  -- +6 +9
   pikeman_building_melee_addr = { "8B F3 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 51 },  -- +6 +9
@@ -64,7 +64,8 @@ local SITES = {
   horsearcher_building_melee_addr = { "8B F5 EB 39 0F BF 34 55 ? ? ? ? 3B F5 7F 0D 5F 5E 66 89 A8 ? ? ? ? 5D 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 51 },  -- +6 +9
   arabsword_building_melee_addr = { "59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", offset = 24 },  -- +6 +9
   monk_building_melee_addr = { "F7 D9 1B C9 83 E1 EF 83 C1 14 0F BF A8 ? ? ? ? 6A 01" },  -- +6 +9
-  ram_damage_addr = { "55 6A 32 52 8B 90 ? ? ? ? 51 52" },  -- +3
+  ram_damage_addr = { "55 6A 32 52 8B 90 ? ? ? ? 51 52 B9 ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? F7 C3 00 01 00 00", unique = true },
+  ram_target_kind_addr = { "0F B7 80 ? ? ? ? 66 3D 2D 00 74 0C 66 3D 2E 00 74 06 66 3D 2F 00", from = "ram_damage_addr", offset = -0x52 },
 
   unit_power_levels_addr = { "05 00 00 00 0A 00 00 00 04 00 00 00 0A 00 00 00 0A 00 00 00" },
   eu_unit_gold_cost_base = { "0C 00 00 00 14 00 00 00 08 00 00 00 14 00 00 00" },
@@ -234,7 +235,7 @@ local function find(name)
     return at[name]
   end
   local site = SITES[name]
-  local address
+  local address, problem
   if site.from ~= nil then
     local base = find(site.from)
     address = base and base + (site.offset or 0)
@@ -243,7 +244,14 @@ local function find(name)
       matched[name] = address
     end
   else
-    local ok, result = pcall(core.AOBScan, site[1])
+    local scan = core.AOBScan
+    if site.unique then scan = core.AOBScanUnique or core.scanForAOB end
+    local ok, result, reason = pcall(scan, site[1])
+    if ok and result and result ~= 0 and site.unique and not core.AOBScanUnique
+      and core.scanForAOB(site[1], result + 1) then
+      result, reason = nil, "found more than once"
+    end
+    problem = ok and reason or nil
     if ok and result and result ~= 0 then
       matched[name] = result
       address = result + (site.offset or 0)
@@ -254,7 +262,7 @@ local function find(name)
   end
   at[name] = address or false
   if not address then
-    unusable[name] = "not found"
+    unusable[name] = problem or "not found"
   end
   return at[name]
 end
@@ -322,7 +330,6 @@ unit_melee_damage_offset_map["European swordsman"] =   {site = "swordsman_buildi
 unit_melee_damage_offset_map["European knight"] =      {site = "knight_building_melee_addr",      building = 9,  fortification = 6,                wall = -55}
 unit_melee_damage_offset_map["Monk"] =                 {site = "monk_building_melee_addr",        building = 9,  fortification = 6,                wall = -52}
 unit_melee_damage_offset_map["Lord"] =                 {site = "lord_building_melee_addr",        building = 9,  fortification = 6,                wall = -66}
-unit_melee_damage_offset_map["Battering ram"] =        {site = "ram_damage_addr",                 building = 2,  fortification = "Not supported.", wall = "Not supported."}
 unit_melee_damage_offset_map["Arabian archer"] =       {site = "arabbow_building_melee_addr",     building = 9,  fortification = 6,                wall = -44}
 unit_melee_damage_offset_map["Arabian slave"] =        {site = "slave_building_melee_addr",       building = 14, fortification = "Not supported.", wall = "Not supported."}
 unit_melee_damage_offset_map["Arabian slinger"] =      {site = "slinger_building_melee_addr",     building = 9,  fortification = 6,                wall = -53}
@@ -840,6 +847,47 @@ local function edit_castle(castle)
   end
 end
 
+local function need_ram_damage_sites()
+  if need("ram_damage_addr", "ram_target_kind_addr", "towers_or_gates_base") then
+    return true
+  end
+  log(ERROR, "[Battering ram] Damage settings are not applied because a native binding is unavailable.")
+  return false
+end
+
+local function ram_damage_value(name, value, default)
+  if value == nil then return default end
+  local damage = math.tointeger(value)
+  if damage == nil or damage < 0 or damage > 32767 then
+    log(WARNING, string.format("[Battering ram] %s must be a whole number from 0 to 32767.", name))
+    return default
+  end
+  return damage
+end
+
+local function edit_ram_damage(building, wall, fortification)
+  if building == nil and wall == nil and fortification == nil then return end
+  if not need_ram_damage_sites() then return end
+
+  local site = at.ram_damage_addr
+  building = ram_damage_value("buildingDamage", building, core.readByte(site + 2))
+  wall = ram_damage_value("wallDamage", wall, building)
+  fortification = ram_damage_value("fortificationDamage", fortification, building)
+  if wall == building and fortification == building and building <= 127 then
+    core.writeCodeByte(site + 2, building)
+    return
+  end
+
+  local code = core.assemble(templates.ram_damage_code, {
+    building_kind_base = core.readInteger(at.ram_target_kind_addr + 3),
+    towers_or_gates_base = at.towers_or_gates_base,
+    building_damage = building,
+    wall_damage = wall,
+    fortification_damage = fortification,
+  })
+  core.insertCode(site, 10, {code, core.readBytes(site + 3, 7)})
+end
+
 local function edit_units(units)
   local function get_unit_melee_dmg_address(attacker, defender)
     local attacker_idx = table.find(unit_names, attacker) - 1
@@ -946,32 +994,36 @@ local function edit_units(units)
 
     end
 
-    local melee = unit_melee_damage_offset_map[unit]
-    if buildingDamage ~= nil and need(melee.site) then core.writeCodeByte(at[melee.site] + melee.building, buildingDamage) end
-
     if fortificationDamagePenalty ~= nil then
       log(ERROR, string.format("[%s] fortificationDamagePenalty is removed, update your config to use fortificationDamage instead.", unit))
     end
 
-    if fortificationDamage ~= nil then
-      if melee.fortification == "Not supported." then
-        log(WARNING, string.format("[%s] fortificationDamage is not supported.", unit))
-      elseif need(melee.site) then
-        address = at[melee.site] + melee.fortification
-        local fdp = core.readByte(at[melee.site] + melee.building) - fortificationDamage
-        if unit == "European crossbowman" then
-          core.writeCodeByte(address, fdp)  -- special case.
-        else
-          core.writeCodeByte(address, -fdp)
+    if unit == "Battering ram" then
+      edit_ram_damage(buildingDamage, wallDamage, fortificationDamage)
+    else
+      local melee = unit_melee_damage_offset_map[unit]
+      if buildingDamage ~= nil and need(melee.site) then core.writeCodeByte(at[melee.site] + melee.building, buildingDamage) end
+
+      if fortificationDamage ~= nil then
+        if melee.fortification == "Not supported." then
+          log(WARNING, string.format("[%s] fortificationDamage is not supported.", unit))
+        elseif need(melee.site) then
+          address = at[melee.site] + melee.fortification
+          local fdp = core.readByte(at[melee.site] + melee.building) - fortificationDamage
+          if unit == "European crossbowman" then
+            core.writeCodeByte(address, fdp)  -- special case.
+          else
+            core.writeCodeByte(address, -fdp)
+          end
         end
       end
-    end
 
-    if wallDamage ~= nil then
-      if melee.wall == "Not supported." then
-        log(WARNING, string.format("[%s] wallDamage is not supported.", unit))
-      elseif need(melee.site) then
-        core.writeCodeByte(at[melee.site] + melee.wall, wallDamage)
+      if wallDamage ~= nil then
+        if melee.wall == "Not supported." then
+          log(WARNING, string.format("[%s] wallDamage is not supported.", unit))
+        elseif need(melee.site) then
+          core.writeCodeByte(at[melee.site] + melee.wall, wallDamage)
+        end
       end
     end
 
@@ -1864,6 +1916,10 @@ namespace.enable = function(self, config)
   if enable_rebalance_features() then
     namespace.apply_rebalance(rebalance_cfg)
   else
+    local ram = rebalance_cfg.units and rebalance_cfg.units["Battering ram"]
+    if ram and (ram.buildingDamage ~= nil or ram.wallDamage ~= nil or ram.fortificationDamage ~= nil) then
+      need_ram_damage_sites()
+    end
     log(WARNING, "the balance file is not applied")
   end
 end
