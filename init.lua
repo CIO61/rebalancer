@@ -24,9 +24,9 @@ local SITES = {
   tax_popularity_offset = { from = "pop_report_addr", offset = 28, read = 0 },
 
   pop_gathering_addr = { "8B 0C 85 ? ? ? ? EB 2D 8B 4E F0" },
-  scenario_pgr_base = { "EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00" },
+  scenario_pgr_base = { "EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00", data = true },
   scenario_pgr_crowded_base = { from = "scenario_pgr_base" },  -- the same AOB as scenario_pgr_base
-  skirmish_pgr_base = { "F8 FF FF FF FA FF FF FF FB FF FF FF FC FF FF FF FD FF FF FF FD FF FF FF FE FF FF FF FE FF FF FF FF FF FF FF FF FF FF FF 0A 00 00 00 0C 00 00 00" },
+  skirmish_pgr_base = { "F8 FF FF FF FA FF FF FF FB FF FF FF FC FF FF FF FD FF FF FF FD FF FF FF FE FF FF FF FE FF FF FF FF FF FF FF FF FF FF FF 0A 00 00 00 0C 00 00 00", data = true },
   large_town_threshold_addr = { "83 BE ? ? ? ? 64 7E 09", offset = 6 },
   min_peasants_addr = { "83 FA 04 7E 3B", offset = 2 },
   pop_reset_population_limit_addr = { "83 F9 03 7F 1F", offset = 2 },
@@ -41,11 +41,11 @@ local SITES = {
   ballista_damage_addr = { "66 83 F9 37 75 07 B9 32 00 00 00 EB 70 66 83 F9" },  -- 125 bytes (+14)
   mangonel_damage_addr = { "66 83 F9 37 75 0A B9 32 00 00 00 E9 51 01 00 00" },  -- 154 bytes
 
-  unit_health_base = { "C4 09 00 00 C4 09 00 00 10 27 00 00 C4 09 00 00 10 27 00 00 88 13 00 00 10 27 00" },
-  unit_arrow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 98 3A 00 00 98 3A" },
-  unit_xbow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 B8 0B 00 00" },
-  unit_stone_dmg_base = { "00 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00", offset = 3 },
-  unit_speed_base = { "01 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00" },
+  unit_health_base = { "C4 09 00 00 C4 09 00 00 10 27 00 00 C4 09 00 00 10 27 00 00 88 13 00 00 10 27 00", data = true },
+  unit_arrow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 98 3A 00 00 98 3A", data = true },
+  unit_xbow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 B8 0B 00 00", data = true },
+  unit_stone_dmg_base = { "00 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00", offset = 3, data = true },
+  unit_speed_base = { "01 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00", data = true },
 
   tunneller_building_melee_addr = { "B9 06 00 00 00 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 54 },
   archer_building_melee_addr = { "8B CF 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 22 },  -- +6 +9
@@ -67,15 +67,15 @@ local SITES = {
   ram_damage_addr = { "55 6A 32 52 8B 90 ? ? ? ? 51 52 B9 ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? F7 C3 00 01 00 00", unique = true },
   ram_target_kind_addr = { "0F B7 80 ? ? ? ? 66 3D 2D 00 74 0C 66 3D 2E 00 74 06 66 3D 2F 00", from = "ram_damage_addr", offset = -0x52 },
 
-  unit_power_levels_addr = { "05 00 00 00 0A 00 00 00 04 00 00 00 0A 00 00 00 0A 00 00 00" },
-  eu_unit_gold_cost_base = { "0C 00 00 00 14 00 00 00 08 00 00 00 14 00 00 00" },
-  ar_unit_gold_cost_base = { "4B 00 00 00 05 00 00 00 0C 00 00 00 3C 00 00 00" },
+  unit_power_levels_addr = { "05 00 00 00 0A 00 00 00 04 00 00 00 0A 00 00 00 0A 00 00 00", data = true },
+  eu_unit_gold_cost_base = { "0C 00 00 00 14 00 00 00 08 00 00 00 14 00 00 00", data = true },
+  ar_unit_gold_cost_base = { "4B 00 00 00 05 00 00 00 0C 00 00 00 3C 00 00 00", data = true },
   unit_melee_dmg_base = { "8D 04 80 C1 E0 04 03 C2 66 83 F9 37 8B 04 85", offset = 15, read = 0x144 },  -- read as [(attacker * 80 + defender) * 4 + table], ids from 1
 
   -- building related addresses
-  building_cost_base = { "06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03" },
-  building_health_base = { "64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 2C" },
-  building_population_base = { "0B 00 00 00 00 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", offset = 12 },
+  building_cost_base = { "06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03", data = true },
+  building_health_base = { "64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 2C", data = true },
+  building_population_base = { "0B 00 00 00 00 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", offset = 12, data = true },
 
   -- siege related addresses
   cat_collateral_addr = { "8B 1C 95 ? ? ? ? 8B CB BF 0A 00 00 00 81 E1 01 00 10 40 8B EF", offset = 10 },
@@ -87,8 +87,8 @@ local SITES = {
   mango_primary_addr = { from = "siege_projectile_func_addr", offset = 36 },  -- integer
 
   -- resource related addresses
-  resource_buy_base = { "14 00 00 00 4B 00 00 00 46 00 00 00 00 00 00 00 E1 00 00 00 64 00 00 00 64 00 00 00 73 00 00 00 28 00 00 00 28 00 00 00 28 00 00 00 28 00 00 00" },
-  resource_sell_base = { "05 00 00 00 28 00 00 00 23 00 00 00 00 00 00 00 73 00 00 00 32 00 00 00 32 00 00 00 28 00 00 00 14 00 00 00 14 00 00 00 14 00 00 00 14 00 00 00" },
+  resource_buy_base = { "14 00 00 00 4B 00 00 00 46 00 00 00 00 00 00 00 E1 00 00 00 64 00 00 00 64 00 00 00 73 00 00 00 28 00 00 00 28 00 00 00 28 00 00 00 28 00 00 00", data = true },
+  resource_sell_base = { "05 00 00 00 28 00 00 00 23 00 00 00 00 00 00 00 73 00 00 00 32 00 00 00 32 00 00 00 28 00 00 00 14 00 00 00 14 00 00 00 14 00 00 00 14 00 00 00", data = true },
 
   woodcutter_func = { "6A 01 66 89 BE ? ? ? ? 6A 0C 89 96 ? ? ? ? 50" },
   quarry_grunt_func = { "6A 01 6A 08 55 C7 81 ? ? ? ? 00 00 00 00 E8" },
@@ -162,9 +162,9 @@ local SITES = {
   leather_per_cow_address = { "53 6A 03 6A 03 6A 05 52 50" },
 
   -- range related addresses
-  base_ranges_table_addr = { "36 00 00 00 4B 00 00 00 55 00 00 00 46 00 00 00 00 00 00 00 00 00 00 00 36" },
-  proj_velocity_table_addr = { "7D 00 00 00 0A 00 00 00 1E 00 00 00 0F 00 00 00 64 00 00 00 64 00 00 00" },
-  proj_archtype_table_addr = { "00 00 00 00 02 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00" },
+  base_ranges_table_addr = { "36 00 00 00 4B 00 00 00 55 00 00 00 46 00 00 00 00 00 00 00 00 00 00 00 36", data = true },
+  proj_velocity_table_addr = { "7D 00 00 00 0A 00 00 00 1E 00 00 00 0F 00 00 00 64 00 00 00 64 00 00 00", data = true },
+  proj_archtype_table_addr = { "00 00 00 00 02 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00", data = true },
 
   range_split_addr1 = { "8B 04 85 ? ? ? ? 0F AF C0 66 83 BC 37" },  -- patch size should be 7
   range_split_addr2 = { "BD 64 0B 00 00 E9 A2 00 00 00" },  -- patch size should be 5
@@ -226,6 +226,7 @@ local at, unusable, matched = {}, {}, {}
 
 -- True if aob matches at address.
 local function matches(aob, address)
+  if core.matchesAOB then return core.matchesAOB(aob, address) end
   local _, size = aob:gsub("%S+", "")
   return core.scanForAOB(aob, address, address + size) == address
 end
@@ -247,11 +248,10 @@ local function find(name)
       matched[name] = address
     end
   else
-    local scan = core.AOBScan
-    if site.unique then scan = core.AOBScanUnique or core.scanForAOB end
-    local ok, result, reason = pcall(scan, site[1])
+    local scan = not site.data and core.AOBScanUnique
+    local ok, result, reason = pcall(scan or (site.unique and core.scanForAOB or core.AOBScan), site[1])
     if ok and result and result ~= 0 and site.unique and not core.AOBScanUnique
-      and core.scanForAOB(site[1], result + 1) then
+      and (core.scanForAOB(site[1], result + 1) or 0) ~= 0 then
       result, reason = nil, "found more than once"
     end
     problem = ok and reason or nil
@@ -270,18 +270,9 @@ local function find(name)
   return at[name]
 end
 
-for name in pairs(SITES) do
-  find(name)
-end
-
--- Drops the sites whose bytes another module changed after load. Runs once, before this module's
--- first write.
-local checked = false
+-- Resolve once and check the bytes before the first patch, including addresses from the AOB cache.
 local function check_sites()
-  if checked then
-    return
-  end
-  checked = true
+  for name in pairs(SITES) do find(name) end
   for name, site in pairs(SITES) do
     local start = at[name] and matched[name]
     if start and not matches(site[1], start) then
@@ -303,7 +294,7 @@ local function need(first, ...)
     if not at[name] then
       local problem = unusable[name]
       if not grouped and problem and not reported[name] then
-        log(WARNING, string.format("%s %s, the settings that change it are not applied", name, problem))
+        log(ERROR, string.format("%s settings are off: %s", name, problem))
         reported[name] = true
       end
       return false, name .. ": " .. (problem or "not found")
@@ -318,12 +309,13 @@ local scaling_code = templates.discrete_scaling_code
 local archer_idx = table.find(unit_names, "European archer")
 local arabbow_idx = table.find(unit_names, "Arabian archer")
 
-local ballista_damage_table_addr = 0 -- defined when allocated.
-local mangonel_damage_table_addr = 0 -- defined when allocated.
-local catapult_damage_table_addr = 0 -- defined when allocated.
-local trebuchet_damage_table_addr = 0 -- defined when allocated.
-local tax_table_addr = 0 -- defined when allocated
-local fire_damage_table_addr = 0 -- defined when allocated
+local ballista_damage_table_addr = nil
+local mangonel_damage_table_addr = nil
+local catapult_damage_table_addr = nil
+local trebuchet_damage_table_addr = nil
+local tax_table_addr = nil
+local fire_damage_table_addr = nil
+local recruitment_costs_ready
 
 local unit_melee_damage_offset_map = {}
 unit_melee_damage_offset_map["Tunneler"] =             {site = "tunneller_building_melee_addr",   building = 9,  fortification = 6,                wall = -53}
@@ -404,7 +396,7 @@ local function enable_spearmen_conditional_run()
     return
   end
   if not matches(SITES.spearmen_run_addr[1], matched.spearmen_run_addr) then
-    log(WARNING, "spearmen_run_addr changed by another module, enable_spearmen_conditional_run is not applied")
+    log(ERROR, "Spearmen conditional running is off: changed by another module")
     return
   end
   core.writeCodeBytes(at.spearmen_run_addr, {0x7E, 0x36})
@@ -417,22 +409,29 @@ local function enable_spearmen_conditional_run()
   }, nil, "after")
 end
 
-local function enable_rebalance_features()
-  check_sites()
-  local ready, problem = need({ "baker_func", "wheatfarmer_func", "brewer_func", "fletcher_func",
-      "poleturner_func", "blacksmith_func", "tanner_func", "armourer_func", "tax_addr", "bribe_addr",
-      "ballista_damage_addr", "mangonel_damage_addr", "non_rax_unit_display_cost_func_addr",
-      "non_rax_unit_cost_func_addr", "ar_unit_gold_cost_base", "fire_damage_code_addr",
-      "unit_array_base", "building_array_base", "unit_gold_jumplist_addr" })
-  if not ready then
-    return false, problem
-  end
-  ballista_damage_table_addr = core.allocate(#unit_names*4)
-  mangonel_damage_table_addr = core.allocate(#unit_names*4)
-  catapult_damage_table_addr = core.allocate(#unit_names*4)
-  trebuchet_damage_table_addr = core.allocate(#unit_names*4)
-  fire_damage_table_addr = core.allocate(#unit_names*4)
+local siege_unit_damage = {
+  ["Lord"] = {50, 50},
+  ["Catapult"] = {2500, 5000},
+  ["Trebuchet"] = {4000, 5000},
+  ["Mangonel"] = {2000, 500},
+  ["Siege tower"] = {20000, 10000},
+  ["Battering ram"] = {20000, 10000},
+  ["Portable shield"] = {500, 1500},
+  ["Tower ballista"] = {2000, 1000},
+  ["Fire ballista"] = {2000, 1000},
+}
 
+local function init_siege_unit_damage(column, default)
+  local address = core.allocate(#unit_names * 4)
+  for index, name in ipairs(unit_names) do
+    local damage = siege_unit_damage[name]
+    core.writeInteger(address + 4 * (index - 1), damage and damage[column] or default)
+  end
+  return address
+end
+
+local function install_fire_damage()
+  fire_damage_table_addr = core.allocate((#unit_names + 1) * 4)
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
       core.writeInteger(fire_damage_table_addr + 4*index, 25)
@@ -445,40 +444,18 @@ local function enable_rebalance_features()
     end
   end
 
-  for index, name in ipairs(unit_names) do
-    if name == "Lord" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 50)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 50)
-    elseif name == "Catapult" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2500)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 5000)
-    elseif name == "Trebuchet" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 4000)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 5000)
-    elseif name == "Mangonel" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 500)
-    elseif name == "Siege tower" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 20000)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 10000)
-    elseif name == "Battering ram" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 20000)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 10000)
-    elseif name == "Portable shield" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 500)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1500)
-    elseif name == "Tower ballista" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1000)
-    elseif name == "Fire ballista" then
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 2000)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 1000)
-    else
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), 10000)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), 30000)
-    end
-  end
+  core.writeCodeBytes(at.fire_damage_code_addr, core.compile({
+    0x8B, 0x04, 0xBD, core.itob(fire_damage_table_addr),  -- mov eax,[edi*4+fire_damage_table_addr]
+    0xBD, 0x01, 0x00, 0x00, 0x00,                         -- mov ebp,00000001
+    0xEB, 0x25                                            -- jmp +0x25
+  }, at.fire_damage_code_addr)
+  )
+end
 
+local function install_siege_damage()
+  ballista_damage_table_addr = init_siege_unit_damage(1, 10000)
+  catapult_damage_table_addr = core.allocate(#unit_names * 4)
+  trebuchet_damage_table_addr = core.allocate(#unit_names * 4)
   for index, name in ipairs(unit_names) do
     if name == "Lord" then
       core.writeInteger(catapult_damage_table_addr + 4*(index-1), 50)
@@ -489,111 +466,97 @@ local function enable_rebalance_features()
     end
   end
 
-  -- Enable changing crossbow melee damage to buildings.
-  ready, problem = need({ "crossbow_building_melee_addr" })
-  if ready then
-    local site = at.crossbow_building_melee_addr - 12
-    core.writeCodeBytes(site, core.compile({
-      0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+towers_or_gates_base]
-      0x3C, 0x01,                                        -- cmp al,01
-      0x75, 0x04,                                        -- jne +4
-      0x31, 0xC0,                                        -- xor eax,eax
-      0x2C, 0x02,                                        -- sub al,02
-      0x04, 0x04,                                        -- add al,04
-      0x90                                               -- nop
-    }, site))
-  else
-    log(ERROR, "[European crossbowman] Melee damage settings are not applied: " .. problem)
-  end
+  -- enable per-unit damage definition for ballistas, catapults and trebuchets
+  core.writeCodeBytes(at.ballista_damage_addr-14,
+    core.compile({
+      0x75, 0x13,                                                     -- jne +0x13 (cmp bx,02)
+      0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
+      0x49,                                                           -- dec ecx
+      0x8B, 0x0C, 0x8D, core.itob(ballista_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+ballista_damage_table_addr]; nop
+      0xEB, 0x76,                                                     -- jmp +0x76
+      0x66, 0x83, 0xFB, 0x02,                                         -- cmp bx,02
+      0x75, 0x13,                                                     -- jne +0x13 (cmp bx,03)
+      0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
+      0x49,                                                           -- dec ecx
+      0x8B, 0x0C, 0x8D, core.itob(catapult_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+catapult_damage_table_addr]; nop
+      0xEB, 0x17,                                                     -- jmp +0x17
+      0x66, 0x83, 0xFB, 0x03,                                         -- cmp bx,03
+      0x75, 0x75,                                                     -- jne +0x75
+      0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
+      0x49,                                                           -- dec ecx
+      0x8B, 0x0C, 0x8D, core.itob(trebuchet_damage_table_addr), 0x90, -- mov ecx,[ecx*4+trebuchet_damage_table_addr]; nop
+      0xEB, 0x7C,                                                     -- jmp +0x7C
+    }, at.ballista_damage_addr-14)
+  )
 
-  -- enable skirmish bonus&delivery modification for bakers
-  core.writeCodeByte(at.baker_func, 0x90)
-  core.insertCode(at.baker_func, 8, {}, at.baker_func+6, "after")
-  core.writeCodeBytes(at.baker_func+6, {0x6A, 0x00})
+  for i=57,124 do core.writeCodeByte(at.ballista_damage_addr+i, 0x90) end -- nop out remaining bytes
+end
 
-  -- enable skirmish bonus&delivery modification for wheat farmers
-  core.writeCodeByte(at.wheatfarmer_func, 0x90)
-  core.insertCode(at.wheatfarmer_func, 8, {}, at.wheatfarmer_func+6, "after")
-  core.writeCodeBytes(at.wheatfarmer_func+6, {0x6A, 0x00})
+local function install_mangonel_damage()
+  mangonel_damage_table_addr = init_siege_unit_damage(2, 30000)
+  -- enable per-unit damage definition for mangonels
+  core.writeCodeBytes(at.mangonel_damage_addr,
+    core.compile({
+      0x49, -- dec ecx
+      0x8B, 0x0C, 0x8D, core.itob(mangonel_damage_table_addr), 0x90, -- mov ecx,[ecx*4+mangonel_damage_table_addr]; nop
+      0xE9, core.itob(339)  -- jmp 339 bytes forward
+    }, at.mangonel_damage_addr)
+  )
+  for i=14,153,5 do core.writeCodeBytes(at.mangonel_damage_addr+i, {0xBB, 0,0,0,0}) end -- the skipped 140 bytes become mov ebx,0
+end
 
-  -- enable skirmish bonus&delivery modification for brewers
-  core.writeCodeByte(at.brewer_func, 0x90)
-  core.writeCodeByte(at.brewer_func+8, 0x90)
-  core.insertCode(at.brewer_func, 9, {}, at.brewer_func+5, "after")
-  core.writeCodeBytes(at.brewer_func+5, {0x6A, 0x01, 0x6A, 0x01})
+local function install_recruitment_costs()
+  -- enable unit display costs&actual costs to be read from same place
+  core.writeCodeBytes(at.non_rax_unit_display_cost_func_addr+14,{
+    0xB3, 0x1E, -- mov bl, engineer_cost
+    0xEB, 0x0F,
+    0xB3, 0x04, -- mov bl, laddermen_cost
+    0xEB, 0x0B,
+    0xB3, 0x1E, -- mov bl, tunnellor_cost
+    0xEB, 0x07,
+    0xB3, 0x0A, -- mov bl, monk_cost
+    0xEB, 0x03,
+    0x90, 0x90, 0x90,
+  })
+  core.writeCodeBytes(at.unit_gold_jumplist_addr, core.compile({
+      core.itob(at.non_rax_unit_display_cost_func_addr + 14),
+      core.itob(at.non_rax_unit_display_cost_func_addr + 18),
+      core.itob(at.non_rax_unit_display_cost_func_addr + 22),
+      core.itob(at.non_rax_unit_display_cost_func_addr + 26),
+    },at.unit_gold_jumplist_addr)
+  )
 
-  -- enable skirmish bonus&delivery modification for bows/xbows
-  local custom_fletcher_code = {
-    0x50,                                       -- push eax
-    0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
-    0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
-    0x83, 0xF8, 0x11,                           -- cmp eax, 11
-    0x58,                                       -- pop eax
-    0x75, 0x06,                                 -- jne 6bytes
-    0x6A, 0x01,                                 -- push 01
-    0x6A, 0x01,                                 -- push 01
-    0xEB, 0x04,                                 -- jmp 4bytes
-    0x6A, 0x01,                                 -- push 01
-    0x6A, 0x01,                                 -- push 01
-  }
+  core.writeCodeByte(at.non_rax_unit_cost_func_addr+6, 70)  -- compare unit id with arab bow
 
-  core.writeCodeBytes(at.fletcher_func, {0x90, 0x90})
-  at.custom_fletcher_code_addr = core.insertCode(at.fletcher_func, 9, custom_fletcher_code, at.fletcher_func+9, "after")
+  core.writeCodeBytes(at.non_rax_unit_cost_func_addr+18, core.compile({
+      0x7C, 0x10,
+      0x50,
+      0x83, 0xE8, 0x46,
+      0xC1, 0xE0, 0x02,
+      0x8B, 0xA8, core.itob(at.ar_unit_gold_cost_base),
+      0x58,
+      0xEB, 0x5A,
+      0x83, 0xF8, 0x1E,
+      0x75, 0x07,
+      0xBD, 0x1E, 0x00, 0x00, 0x00,
+      0xEB, 0x4E,
+      0x83, 0xF8, 0x1D,
+      0x75, 0x07,
+      0xBD, 0x04, 0x00, 0x00, 0x00,
+      0xEB, 0x42,
+      0x83, 0xF8, 0x05,
+      0x75, 0x07,
+      0xBD, 0x1E, 0x00, 0x00, 0x00,
+      0xEB, 0x36,
+      0x83, 0xF8, 0x25,
+      0x75, 0x07,
+      0xBD, 0x0A, 0x00, 0x00, 0x00,
+      0xEB, 0x2A
+    }, at.non_rax_unit_cost_func_addr+18
+  ))
+end
 
-  -- enable skirmish bonus&delivery modification for spears/pikes
-  local custom_poleturner_code = {
-    0x50,                                       -- push eax
-    0x8B, 0xC7,                                 -- mov eax, edi
-    0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
-    0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
-    0x83, 0xF8, 0x13,                           -- cmp eax, 13
-    0x58,                                       -- pop eax
-    0x75, 0x06,                                 -- jne 6bytes
-    0x6A, 0x01,                                 -- push 01
-    0x6A, 0x01,                                 -- push 01
-    0xEB, 0x04,                                 -- jmp 4bytes
-    0x6A, 0x01,                                 -- push 01
-    0x6A, 0x01,                                 -- push 01
-  }
-  core.writeCodeByte(at.poleturner_func, 0x90)
-  core.writeCodeByte(at.poleturner_func+8, 0x90)
-  at.custom_poleturner_code_addr = core.insertCode(at.poleturner_func, 9, custom_poleturner_code, at.poleturner_func+9, "after")
-
-  -- enable skirmish bonus&delivery modification for maces/swords
-  local custom_blacksmith_code = {
-    0x50,                                       -- push eax
-    0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
-    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
-    0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
-    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
-    0x83, 0xF8, 0x11,                           -- cmp eax, 15
-    0x58,                                       -- pop eax
-    0x75, 0x06,                                 -- jne 6bytes
-    0x6A, 0x01,                                 -- push 01
-    0x6A, 0x01,                                 -- push 01
-    0xEB, 0x04,                                 -- jmp 4bytes
-    0x6A, 0x01,                                 -- push 01
-    0x6A, 0x01,                                 -- push 01
-  }
-
-  core.writeCodeBytes(at.blacksmith_func, {0x90, 0x90})
-  at.custom_blacksmith_code_addr = core.insertCode(at.blacksmith_func, 9, custom_blacksmith_code, at.blacksmith_func+9, "after")
-
-  -- enable skirmish bonus&delivery modification for tanners
-  core.writeCodeBytes(at.tanner_func, {0x90, 0x90, 0x90})
-  core.insertCode(at.tanner_func, 10, {}, at.tanner_func+5, "after")
-  core.writeCodeBytes(at.tanner_func+5, {0x6A, 0x01, 0x6A, 0x01, 0x50})
-
-  -- enable skirmish bonus&delivery modification for armourers
-  core.writeCodeByte(at.armourer_func, 0x90)
-  core.writeCodeByte(at.armourer_func+8, 0x90)
-  core.insertCode(at.armourer_func, 9, {}, at.armourer_func+5, "after")
-  core.writeCodeBytes(at.armourer_func+5, {0x6A, 0x01, 0x6A, 0x01})
-
+local function install_gold_tax()
   -- enable custom taxation multipliers
   tax_table_addr = core.allocate(12*2)
   local custom_tax_instructions = {
@@ -644,98 +607,156 @@ local function enable_rebalance_features()
   for idx, tax_val in ipairs(default_tax_table) do
     core.writeCodeSmallInteger(tax_table_addr+2*(idx-1), math.floor(tax_val*100))
   end
+end
 
-  -- enable per-unit damage definition for ballistas, catapults and trebuchets
-  core.writeCodeBytes(at.ballista_damage_addr-14,
-    core.compile({
-      0x75, 0x13,                                                     -- jne +0x13 (cmp bx,02)
-      0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
-      0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(ballista_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+ballista_damage_table_addr]; nop
-      0xEB, 0x76,                                                     -- jmp +0x76
-      0x66, 0x83, 0xFB, 0x02,                                         -- cmp bx,02
-      0x75, 0x13,                                                     -- jne +0x13 (cmp bx,03)
-      0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
-      0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(catapult_damage_table_addr), 0x90,  -- mov ecx,[ecx*4+catapult_damage_table_addr]; nop
-      0xEB, 0x17,                                                     -- jmp +0x17
-      0x66, 0x83, 0xFB, 0x03,                                         -- cmp bx,03
-      0x75, 0x75,                                                     -- jne +0x75
-      0x0F, 0xB7, 0x8C, 0x3E, core.itob(0x6A2),                       -- movzx ecx,word ptr [esi+edi+000006A2]
-      0x49,                                                           -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(trebuchet_damage_table_addr), 0x90, -- mov ecx,[ecx*4+trebuchet_damage_table_addr]; nop
-      0xEB, 0x7C,                                                     -- jmp +0x7C
-    }, at.ballista_damage_addr-14)
-  )
+local function install_crossbow_melee()
+  local site = at.crossbow_building_melee_addr - 12
+  core.writeCodeBytes(site, core.compile({
+    0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+towers_or_gates_base]
+    0x3C, 0x01,                                        -- cmp al,01
+    0x75, 0x04,                                        -- jne +4
+    0x31, 0xC0,                                        -- xor eax,eax
+    0x2C, 0x02,                                        -- sub al,02
+    0x04, 0x04,                                        -- add al,04
+    0x90                                               -- nop
+  }, site))
+end
 
-  for i=57,124 do core.writeCodeByte(at.ballista_damage_addr+i, 0x90) end -- nop out remaining bytes
+local function install_bread_production()
+  core.writeCodeByte(at.baker_func, 0x90)
+  core.insertCode(at.baker_func, 8, {}, at.baker_func+6, "after")
+  core.writeCodeBytes(at.baker_func+6, {0x6A, 0x00})
+end
 
-  -- enable per-unit damage definition for mangonels
-  core.writeCodeBytes(at.mangonel_damage_addr,
-    core.compile({
-      0x49, -- dec ecx
-      0x8B, 0x0C, 0x8D, core.itob(mangonel_damage_table_addr), 0x90, -- mov ecx,[ecx*4+mangonel_damage_table_addr]; nop
-      0xE9, core.itob(339)  -- jmp 339 bytes forward
-    }, at.mangonel_damage_addr)
-  )
-  for i=14,153,5 do core.writeCodeBytes(at.mangonel_damage_addr+i, {0xBB, 0,0,0,0}) end -- the skipped 140 bytes become mov ebx,0
+local function install_wheat_production()
+  core.writeCodeByte(at.wheatfarmer_func, 0x90)
+  core.insertCode(at.wheatfarmer_func, 8, {}, at.wheatfarmer_func+6, "after")
+  core.writeCodeBytes(at.wheatfarmer_func+6, {0x6A, 0x00})
+end
 
-  -- enable unit display costs&actual costs to be read from same place
-  core.writeCodeBytes(at.non_rax_unit_display_cost_func_addr+14,{
-    0xB3, 0x1E, -- mov bl, engineer_cost
-    0xEB, 0x0F,
-    0xB3, 0x04, -- mov bl, laddermen_cost
-    0xEB, 0x0B,
-    0xB3, 0x1E, -- mov bl, tunnellor_cost
-    0xEB, 0x07,
-    0xB3, 0x0A, -- mov bl, monk_cost
-    0xEB, 0x03,
-    0x90, 0x90, 0x90,
-  })
-  core.writeCodeBytes(at.unit_gold_jumplist_addr, core.compile({
-      core.itob(at.non_rax_unit_display_cost_func_addr + 14),
-      core.itob(at.non_rax_unit_display_cost_func_addr + 18),
-      core.itob(at.non_rax_unit_display_cost_func_addr + 22),
-      core.itob(at.non_rax_unit_display_cost_func_addr + 26),
-    },at.unit_gold_jumplist_addr)
-  )
+local function install_beer_production()
+  core.writeCodeByte(at.brewer_func, 0x90)
+  core.writeCodeByte(at.brewer_func+8, 0x90)
+  core.insertCode(at.brewer_func, 9, {}, at.brewer_func+5, "after")
+  core.writeCodeBytes(at.brewer_func+5, {0x6A, 0x01, 0x6A, 0x01})
+end
 
-  core.writeCodeByte(at.non_rax_unit_cost_func_addr+6, 70)  -- compare unit id with arab bow
+local function install_bows_production()
+  local custom_fletcher_code = {
+    0x50,                                       -- push eax
+    0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
+    0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
+    0x83, 0xF8, 0x11,                           -- cmp eax, 11
+    0x58,                                       -- pop eax
+    0x75, 0x06,                                 -- jne 6bytes
+    0x6A, 0x01,                                 -- push 01
+    0x6A, 0x01,                                 -- push 01
+    0xEB, 0x04,                                 -- jmp 4bytes
+    0x6A, 0x01,                                 -- push 01
+    0x6A, 0x01,                                 -- push 01
+  }
 
-  core.writeCodeBytes(at.non_rax_unit_cost_func_addr+18, core.compile({
-      0x7C, 0x10,
-      0x50,
-      0x83, 0xE8, 0x46,
-      0xC1, 0xE0, 0x02,
-      0x8B, 0xA8, core.itob(at.ar_unit_gold_cost_base),
-      0x58,
-      0xEB, 0x5A,
-      0x83, 0xF8, 0x1E,
-      0x75, 0x07,
-      0xBD, 0x1E, 0x00, 0x00, 0x00,
-      0xEB, 0x4E,
-      0x83, 0xF8, 0x1D,
-      0x75, 0x07,
-      0xBD, 0x04, 0x00, 0x00, 0x00,
-      0xEB, 0x42,
-      0x83, 0xF8, 0x05,
-      0x75, 0x07,
-      0xBD, 0x1E, 0x00, 0x00, 0x00,
-      0xEB, 0x36,
-      0x83, 0xF8, 0x25,
-      0x75, 0x07,
-      0xBD, 0x0A, 0x00, 0x00, 0x00,
-      0xEB, 0x2A
-    }, at.non_rax_unit_cost_func_addr+18
-  ))
+  core.writeCodeBytes(at.fletcher_func, {0x90, 0x90})
+  at.custom_fletcher_code_addr = core.insertCode(at.fletcher_func, 9, custom_fletcher_code, at.fletcher_func+9, "after")
+end
 
-  core.writeCodeBytes(at.fire_damage_code_addr, core.compile({
-    0x8B, 0x04, 0xBD, core.itob(fire_damage_table_addr),  -- mov eax,[edi*4+fire_damage_table_addr]
-    0xBD, 0x01, 0x00, 0x00, 0x00,                         -- mov ebp,00000001
-    0xEB, 0x25                                            -- jmp +0x25
-  }, at.fire_damage_code_addr)
-  )
+local function install_spears_production()
+  local custom_poleturner_code = {
+    0x50,                                       -- push eax
+    0x8B, 0xC7,                                 -- mov eax, edi
+    0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
+    0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
+    0x83, 0xF8, 0x13,                           -- cmp eax, 13
+    0x58,                                       -- pop eax
+    0x75, 0x06,                                 -- jne 6bytes
+    0x6A, 0x01,                                 -- push 01
+    0x6A, 0x01,                                 -- push 01
+    0xEB, 0x04,                                 -- jmp 4bytes
+    0x6A, 0x01,                                 -- push 01
+    0x6A, 0x01,                                 -- push 01
+  }
+  core.writeCodeByte(at.poleturner_func, 0x90)
+  core.writeCodeByte(at.poleturner_func+8, 0x90)
+  at.custom_poleturner_code_addr = core.insertCode(at.poleturner_func, 9, custom_poleturner_code, at.poleturner_func+9, "after")
+end
+
+local function install_maces_production()
+  local custom_blacksmith_code = {
+    0x50,                                       -- push eax
+    0x69, 0xC0, 0x90, 0x04, 0x00, 0x00,         -- imul eax,eax,00000490
+    0x0F, 0xBF, 0x80, core.itob(at.unit_array_base+0x338),   -- movsx eax,word ptr [eax+unit_array_base+338]
+    0x69, 0xC0, 0x2C, 0x03, 0x00, 0x00,         -- imul eax,eax,0000032C
+    0x0F, 0xBF, 0x80, core.itob(at.building_array_base+0x28E),   -- movsx eax,word ptr [eax+building_array_base+28E]
+    0x83, 0xF8, 0x11,                           -- cmp eax, 15
+    0x58,                                       -- pop eax
+    0x75, 0x06,                                 -- jne 6bytes
+    0x6A, 0x01,                                 -- push 01
+    0x6A, 0x01,                                 -- push 01
+    0xEB, 0x04,                                 -- jmp 4bytes
+    0x6A, 0x01,                                 -- push 01
+    0x6A, 0x01,                                 -- push 01
+  }
+
+  core.writeCodeBytes(at.blacksmith_func, {0x90, 0x90})
+  at.custom_blacksmith_code_addr = core.insertCode(at.blacksmith_func, 9, custom_blacksmith_code, at.blacksmith_func+9, "after")
+end
+
+local function install_leather_production()
+  core.writeCodeBytes(at.tanner_func, {0x90, 0x90, 0x90})
+  core.insertCode(at.tanner_func, 10, {}, at.tanner_func+5, "after")
+  core.writeCodeBytes(at.tanner_func+5, {0x6A, 0x01, 0x6A, 0x01, 0x50})
+end
+
+local function install_armor_production()
+  core.writeCodeByte(at.armourer_func, 0x90)
+  core.writeCodeByte(at.armourer_func+8, 0x90)
+  core.insertCode(at.armourer_func, 9, {}, at.armourer_func+5, "after")
+  core.writeCodeBytes(at.armourer_func+5, {0x6A, 0x01, 0x6A, 0x01})
+end
+
+local function group_ready(name, ...)
+  local ready, problem = need({...})
+  if not ready then log(ERROR, name .. " is off: " .. problem) end
+  return ready
+end
+
+local function install_group(name, install, ...)
+  if not group_ready(name, ...) then return false end
+  install()
   return true
+end
+
+local function install_production(name, install, site, ...)
+  if not install_group(name, install, site, ...) then
+    at[site] = false
+    reported[site] = true
+  end
+end
+
+local prepared = false
+local function enable_rebalance_features()
+  if prepared then return end
+  check_sites()
+  prepared = true
+  install_group("Fire damage", install_fire_damage, "fire_damage_code_addr")
+  install_group("Ballista, catapult and trebuchet damage to units", install_siege_damage, "ballista_damage_addr")
+  install_group("Mangonel damage to units", install_mangonel_damage, "mangonel_damage_addr")
+  install_group("Crossbow melee damage to buildings", install_crossbow_melee, "crossbow_building_melee_addr")
+  install_production("Bread production", install_bread_production, "baker_func")
+  install_production("Wheat production", install_wheat_production, "wheatfarmer_func")
+  install_production("Beer production", install_beer_production, "brewer_func")
+  install_production("Bow and crossbow production", install_bows_production, "fletcher_func", "unit_array_base", "building_array_base")
+  install_production("Spear and pike production", install_spears_production, "poleturner_func", "unit_array_base", "building_array_base")
+  install_production("Mace and sword production", install_maces_production, "blacksmith_func", "unit_array_base", "building_array_base")
+  install_production("Leather production", install_leather_production, "tanner_func")
+  install_production("Armor production", install_armor_production, "armourer_func")
+  install_group("Gold taxation", install_gold_tax, "tax_addr", "bribe_addr")
+  recruitment_costs_ready = install_group("Recruitment gold costs", install_recruitment_costs,
+    "non_rax_unit_display_cost_func_addr", "non_rax_unit_cost_func_addr", "ar_unit_gold_cost_base", "unit_gold_jumplist_addr")
 end
 
 local function edit_buildings(buildings)
@@ -802,14 +823,13 @@ local function edit_siege(siege)
     or name == "Tower ballista"
     or name == "Fire ballista" then  -- defaults are set once
     else
-      core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage)
-      core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage)
+      if ballista_damage_table_addr then core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage) end
+      if mangonel_damage_table_addr then core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage) end
     end
   end
 
   for index, name in ipairs(unit_names) do
-    if name == "Lord" then  -- defaults are set once
-    else
+    if catapult_damage_table_addr and name ~= "Lord" then
       core.writeInteger(catapult_damage_table_addr + 4*(index-1), default_catapult_damage)
       core.writeInteger(trebuchet_damage_table_addr + 4*(index-1), default_trebuchet_damage)
     end
@@ -847,7 +867,7 @@ local function edit_castle(castle)
     core.writeCodeByte(at.dog_threshold_addr, dog_trigger_threshold)
   end
 
-  if fire_damage ~= nil then
+  if fire_damage ~= nil and fire_damage_table_addr then
     for index, name in ipairs(unit_names) do
       if name == "Lord"
       or name == "Fireman"
@@ -950,13 +970,13 @@ local function edit_units(units)
     if meleeEngage ~= nil and need("unit_melee_toggles_base") then core.writeInteger(at.unit_melee_toggles_base + 4*unit_idx, meleeEngage and 1 or 0) end
     if notBlessable ~= nil and need("unit_blessable_base") then core.writeInteger(at.unit_blessable_base + 4*unit_idx, notBlessable and 1 or 0) end
     if allowedOnWalls ~= nil and need("unit_allowed_on_walls_base") then core.writeInteger(at.unit_allowed_on_walls_base + 4*unit_idx, allowedOnWalls and 1 or 0) end
-    if fireDamage ~= nil then core.writeInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
+    if fireDamage ~= nil and fire_damage_table_addr then core.writeInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
     if jesterUnfriendly ~= nil and need("unit_jester_unfriendly_base") then core.writeInteger(at.unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0) end
     if meleeImmunity ~= nil and need("unit_melee_immunity_base") then core.writeInteger(at.unit_melee_immunity_base + 4*unit_idx, meleeImmunity and 1 or 0) end
-    if ballistaBoltDamage ~= nil then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
-    if mangonelDamage ~= nil then core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage) end
-    if catapultRockDamage ~= nil then core.writeInteger(catapult_damage_table_addr + 4*unit_idx, catapultRockDamage) end
-    if trebuchetRockDamage ~= nil then core.writeInteger(trebuchet_damage_table_addr + 4*unit_idx, trebuchetRockDamage) end
+    if ballistaBoltDamage ~= nil and ballista_damage_table_addr then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
+    if mangonelDamage ~= nil and mangonel_damage_table_addr then core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage) end
+    if catapultRockDamage ~= nil and catapult_damage_table_addr then core.writeInteger(catapult_damage_table_addr + 4*unit_idx, catapultRockDamage) end
+    if trebuchetRockDamage ~= nil and trebuchet_damage_table_addr then core.writeInteger(trebuchet_damage_table_addr + 4*unit_idx, trebuchetRockDamage) end
     if speedLevel ~= nil and need("unit_speed_base") then core.writeInteger(at.unit_speed_base + unit_idx*4, speedLevel) end
 
     if baseMeleeDamage ~= nil and need("unit_melee_dmg_base") then
@@ -989,13 +1009,13 @@ local function edit_units(units)
         address = at.eu_unit_gold_cost_base + 4 * eu_unit_idx
         core.writeInteger(address, goldCost)
       end
-      if is_arab_unit then
+      if is_arab_unit and recruitment_costs_ready then
         local ar_unit_idx = unit_idx_p1 - arabbow_idx
         address = at.ar_unit_gold_cost_base + 4*ar_unit_idx
         core.writeInteger(address, goldCost)
       end  -- arab unit display cost
 
-      if is_other_trainable_unit then
+      if is_other_trainable_unit and recruitment_costs_ready then
         if unit_idx_p1 == 30 then -- engineer cost
           core.writeCodeByte(at.non_rax_unit_display_cost_func_addr + 15, goldCost)
           core.writeCodeInteger(at.non_rax_unit_cost_func_addr+42, goldCost)
@@ -1587,7 +1607,7 @@ local function edit_taxation(taxation)
   if not need("neutral_level_addr_1", "neutral_level_addr_2", "neutral_level_addr_3", "neutral_level_addr_4") then
     return
   end
-  if tax_table ~= nil then
+  if tax_table ~= nil and tax_table_addr then
     for idx, tax_val in ipairs(tax_table) do
       core.writeCodeSmallInteger(tax_table_addr+2*(idx-1), math.floor(tax_val*100))
       if math.floor(tax_val*100) == 0 then
@@ -1666,7 +1686,7 @@ local function edit_ranges(ranges)
   local towerbal_range = ranges["towerbal_range"]
   local mangonel_range = ranges["mangonel_range"]
 
-  if not need("unit_array_base", "base_ranges_table_addr", "range_split_addr1", "range_split_addr2", "range_split_addr3",
+  if not group_ready("Unit ranges", "unit_array_base", "base_ranges_table_addr", "range_split_addr1", "range_split_addr2", "range_split_addr3",
       "range_split_addr4", "range_split_addr5", "range_split_addr6", "range_split_addr7", "range_split_addr8",
       "range_split_addr9", "range_split_addr10", "range_split_addr11", "range_split_addr12",
       "scan_range_addr_archer", "scan_range_addr_arabbow_1", "scan_range_addr_arabbow_2",
@@ -1862,7 +1882,8 @@ local function apply_rebalance_function(function_name, config_section)
 end
 
 namespace.apply_rebalance = function(config)
-  check_sites()
+  if next(config) == nil then return end
+  enable_rebalance_features()
   apply_rebalance_function(edit_buildings, config["buildings"])
   apply_rebalance_function(edit_siege, config["siege"])  -- siege changes need to come before units, due to projectile damages on units
   apply_rebalance_function(edit_castle, config["castle"])  -- castle changes need to come before units, due to fire damages on units
@@ -1927,17 +1948,29 @@ namespace.apply_rebalance = function(config)
 end
 
 namespace.enable = function(self, config)
-  local file = io.open(config["balance_config_file_selector"], "rb")
----@diagnostic disable-next-line: need-check-nil
-  local spec = file:read("*all")
----@diagnostic disable-next-line: undefined-global
-  local rebalance_cfg = yaml.parse(spec)
-  local ready, problem = enable_rebalance_features()
-  if ready then
-    namespace.apply_rebalance(rebalance_cfg)
-  else
-    log(ERROR, "The balance file is not applied: " .. problem)
+  local path = config and config["balance_config_file_selector"]
+  if path == nil or path == "" then return end
+  if type(path) ~= "string" then
+    log(ERROR, "Balance configuration file must be a path.")
+    return
   end
+  local file, reason = io.open(path, "rb")
+  if not file then
+    log(ERROR, "Balance configuration file could not be opened: " .. tostring(reason))
+    return
+  end
+  local spec, read_problem = file:read("*all")
+  file:close()
+  if not spec then
+    log(ERROR, "Balance configuration file could not be read: " .. tostring(read_problem))
+    return
+  end
+  local ok, balance = pcall(yaml.parse, spec)
+  if not ok or type(balance) ~= "table" then
+    log(ERROR, "Balance configuration file must contain a balance table.")
+    return
+  end
+  namespace.apply_rebalance(balance)
 end
 
 namespace.disable = function(self, config)
