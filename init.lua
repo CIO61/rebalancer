@@ -1574,6 +1574,72 @@ local function edit_fear_factor(fear_factor)
   end
 end
 
+local function tax_values(name, values, gold)
+  if values == nil then return end
+  if type(values) ~= "table" then
+    log(ERROR, name .. " must be an array.")
+    return
+  end
+  local checked, count, zeroes = {}, 0, 0
+  for index, value in pairs(values) do
+    if type(value) ~= "number" and not (gold and type(value) == "string") then
+      log(ERROR, name .. " entries must be " .. (gold and "numbers or numeric strings." or "numbers."))
+      return
+    end
+    local number = tonumber(value)
+    if gold and number and number >= 0 and number <= 655.35 then
+      local cents = math.floor(number * 100 + 0.5)
+      number = math.abs(number * 100 - cents) < 0.000001 and cents or nil
+    elseif gold then
+      number = nil
+    else
+      number = math.tointeger(number)
+      if number and (number < -0x80000000 or number > 0x7FFFFFFF) then number = nil end
+    end
+    if math.type(index) ~= "integer" or index < 1 or index > 12 or not number then
+      log(WARNING, name .. " has an invalid entry. Using the game default.")
+      return
+    end
+    checked[index] = number
+    count = count + 1
+    if number == 0 then zeroes = zeroes + 1 end
+  end
+  if count ~= 12 or (gold and zeroes ~= 1) then
+    log(WARNING, name .. (gold and " requires 12 rates with one zero." or " requires 12 entries.")
+      .. " Using the game default.")
+    return
+  end
+  return checked
+end
+
+local function validate_taxation(taxation)
+  local multipliers = taxation.advantage_multiplier
+  local checked = {}
+  if type(multipliers) == "table" then
+    for _, key in ipairs({"human_big_ai_medium", "ai_big"}) do
+      local value = multipliers[key]
+      if value ~= nil then
+        local name = "taxation.advantage_multiplier." .. key
+        local integer = math.tointeger(value)
+        if type(value) ~= "number" then
+          log(ERROR, name .. " must be a number. Using the game default.")
+        elseif not integer or integer < 0 or integer > 0x7FFFFFFF then
+          log(WARNING, name .. " must be a nonnegative 32-bit integer. Using the game default.")
+        else
+          checked[key] = integer
+        end
+      end
+    end
+  elseif multipliers ~= nil then
+    log(ERROR, "taxation.advantage_multiplier must be a table.")
+  end
+  return {
+    gold = tax_values("taxation.gold", taxation.gold, true),
+    popularity = tax_values("taxation.popularity", taxation.popularity, false),
+    advantage_multiplier = next(checked) and checked or nil,
+  }
+end
+
 local function edit_taxation(taxation)
   local tax_table = taxation["gold"]
   local pop_table = taxation["popularity"]
@@ -1592,17 +1658,22 @@ local function edit_taxation(taxation)
 
   if tax_table == nil and pop_table == nil then return end
   -- the gold and popularity tables both depend on the neutral level
-  if not need("neutral_level_addr_1", "neutral_level_addr_2", "neutral_level_addr_3", "neutral_level_addr_4") then
+  if not group_ready("Tax neutral level", "neutral_level_addr_1", "neutral_level_addr_2",
+      "neutral_level_addr_3", "neutral_level_addr_4") then
     return
   end
+  if pop_table ~= nil and not group_ready("Tax popularity", "keep_menu_addr", "pop_report_addr",
+      "tax_popularity_offset", "actual_effect_addr") then
+    pop_table = nil
+  end
   if tax_table ~= nil and not install_group("Gold taxation", install_gold_tax, "tax_addr", "bribe_addr") then
-    if pop_table == nil then return end
     tax_table = nil
   end
+  if tax_table == nil and pop_table == nil then return end
   if tax_table ~= nil then
     for idx, tax_val in ipairs(tax_table) do
-      core.writeCodeSmallInteger(tax_table_addr+2*(idx-1), math.floor(tax_val*100))
-      if math.floor(tax_val*100) == 0 then
+      core.writeCodeSmallInteger(tax_table_addr+2*(idx-1), tax_val)
+      if tax_val == 0 then
         neutral_level = idx-1
       end
     end
@@ -1611,7 +1682,7 @@ local function edit_taxation(taxation)
   core.writeCodeByte(at.neutral_level_addr_2, neutral_level)
   core.writeCodeByte(at.neutral_level_addr_3 + 2, neutral_level)
   core.writeCodeByte(at.neutral_level_addr_4 + 2, neutral_level)
-  if pop_table ~= nil and need("keep_menu_addr", "pop_report_addr", "tax_popularity_offset", "actual_effect_addr") then
+  if pop_table ~= nil then
     local pop_table_addr = at.keep_menu_addr + 31
     core.writeCodeBytes(at.keep_menu_addr, core.compile({  -- keep menu
       0x83, 0xF8, neutral_level,
@@ -1919,6 +1990,8 @@ namespace.apply_rebalance = function(config)
           end
         end
         valid[name] = entries
+      elseif name == "taxation" then
+        valid[name] = validate_taxation(value)
       else
         valid[name] = value
       end
