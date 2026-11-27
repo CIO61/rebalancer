@@ -84,16 +84,9 @@ local FUNCTIONS = {
 local resolved = {}
 local functions = {}
 
--- `from`, `to`: search only this window. The scanner checks `to` only between memory regions, so a
--- match past it counts as none.
 local function scan(signature, from, to)
-  local ok, address, reason
-  if core.AOBScanUnique then
-    ok, address, reason = pcall(core.AOBScanUnique, signature)
-  else
-    ok, address = pcall(core.AOBScan, signature, from, to)
-  end
-  if not ok or not address or address == 0 then return nil, reason or "signature not found" end
+  local address, reason = core.AOBScanUnique(signature)
+  if not address or address == 0 then return nil, reason or "signature not found" end
   if from ~= nil and (address < from or address >= to) then
     return nil, "signature outside the expected function"
   end

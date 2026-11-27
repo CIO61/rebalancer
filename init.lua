@@ -49,7 +49,7 @@ local SITES = {
 
   tunneller_building_melee_addr = { "B9 06 00 00 00 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 54 },
   archer_building_melee_addr = { "8B CF 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 22 },  -- +6 +9
-  crossbow_building_melee_addr = { "39 04 95 ? ? ? ? 0F 94 C0 33 FF 8D 44 00 02 8B D0 8B 44 24 10", offset = 10, unique = true },
+  crossbow_building_melee_addr = { "39 04 95 ? ? ? ? 0F 94 C0 33 FF 8D 44 00 02 8B D0 8B 44 24 10", offset = 10 },
   spearman_building_melee_addr = { "F7 D9 1B C9 83 E1 FB 83 C1 08 0F BF 90" },  -- +6 +9
   maceman_building_melee_addr = { "F7 D9 1B C9 83 E1 E1 83 C1 23 0F BF 98" },  -- +6 +9
   pikeman_building_melee_addr = { "8B F3 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 51 },  -- +6 +9
@@ -64,7 +64,7 @@ local SITES = {
   horsearcher_building_melee_addr = { "8B F5 EB 39 0F BF 34 55 ? ? ? ? 3B F5 7F 0D 5F 5E 66 89 A8 ? ? ? ? 5D 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 51 },  -- +6 +9
   arabsword_building_melee_addr = { "59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 C0 83 C1 46 0F BF A8", offset = 24 },  -- +6 +9
   monk_building_melee_addr = { "F7 D9 1B C9 83 E1 EF 83 C1 14 0F BF A8 ? ? ? ? 6A 01" },  -- +6 +9
-  ram_damage_addr = { "55 6A 32 52 8B 90 ? ? ? ? 51 52 B9 ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? F7 C3 00 01 00 00", unique = true },
+  ram_damage_addr = { "55 6A 32 52 8B 90 ? ? ? ? 51 52 B9 ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? F7 C3 00 01 00 00" },
   ram_target_kind_addr = { "0F B7 80 ? ? ? ? 66 3D 2D 00 74 0C 66 3D 2E 00 74 06 66 3D 2F 00", from = "ram_damage_addr", offset = -0x52 },
 
   unit_power_levels_addr = { "05 00 00 00 0A 00 00 00 04 00 00 00 0A 00 00 00 0A 00 00 00", data = true },
@@ -224,12 +224,7 @@ local SITES = {
 -- writes. False: the site is not usable, for the reason in `unusable`.
 local at, unusable, matched = {}, {}, {}
 
--- True if aob matches at address.
-local function matches(aob, address)
-  if core.matchesAOB then return core.matchesAOB(aob, address) end
-  local _, size = aob:gsub("%S+", "")
-  return core.scanForAOB(aob, address, address + size) == address
-end
+local matches = core.matchesAOB
 
 local function find(name)
   if at[name] ~= nil then
@@ -244,20 +239,22 @@ local function find(name)
       problem = site.from .. " " .. unusable[site.from]
     end
     if address and site[1] then
-      address = matches(site[1], address) and address
+      if not matches(site[1], address) then
+        address, problem = nil, "changed by another module"
+      end
       matched[name] = address
     end
   else
-    local scan = not site.data and core.AOBScanUnique
-    local ok, result, reason = pcall(scan or (site.unique and core.scanForAOB or core.AOBScan), site[1])
-    if ok and result and result ~= 0 and site.unique and not core.AOBScanUnique
-      and (core.scanForAOB(site[1], result + 1) or 0) ~= 0 then
-      result, reason = nil, "found more than once"
-    end
+    local scan = site.data and core.AOBScan or core.AOBScanUnique
+    local ok, result, reason = pcall(scan, site[1])
     problem = ok and reason or nil
     if ok and result and result ~= 0 then
       matched[name] = result
-      address = result + (site.offset or 0)
+      if matches(site[1], result) then
+        address = result + (site.offset or 0)
+      else
+        problem = "changed by another module"
+      end
     end
   end
   if address and site.read then
@@ -270,28 +267,12 @@ local function find(name)
   return at[name]
 end
 
--- Resolve once and check the bytes before the first patch, including addresses from the AOB cache.
-local function check_sites()
-  for name in pairs(SITES) do find(name) end
-  for name, site in pairs(SITES) do
-    local start = at[name] and matched[name]
-    if start and not matches(site[1], start) then
-      at[name], unusable[name] = false, "changed by another module"
-    end
-  end
-  for name, site in pairs(SITES) do
-    if site.from ~= nil and site[1] == nil and at[name] and not at[site.from] then
-      at[name], unusable[name] = false, site.from .. " " .. unusable[site.from]
-    end
-  end
-end
-
 -- A list leaves reporting to the caller; individual site names log once per site.
 local reported = {}
 local function need(first, ...)
   local grouped = type(first) == "table"
   for _, name in ipairs(grouped and first or { first, ... }) do
-    if not at[name] then
+    if not find(name) then
       local problem = unusable[name]
       if not grouped and problem and not reported[name] then
         log(ERROR, string.format("%s settings are off: %s", name, problem))
@@ -315,7 +296,6 @@ local catapult_damage_table_addr = nil
 local trebuchet_damage_table_addr = nil
 local tax_table_addr = nil
 local fire_damage_table_addr = nil
-local recruitment_costs_ready
 
 local unit_melee_damage_offset_map = {}
 unit_melee_damage_offset_map["Tunneler"] =             {site = "tunneller_building_melee_addr",   building = 9,  fortification = 6,                wall = -53}
@@ -724,40 +704,30 @@ local function group_ready(name, ...)
   return ready
 end
 
+local installed = {}
 local function install_group(name, install, ...)
-  if not group_ready(name, ...) then return false end
-  install()
-  return true
-end
-
-local function install_production(name, install, site, ...)
-  if not install_group(name, install, site, ...) then
-    at[site] = false
-    reported[site] = true
+  if installed[name] == nil then
+    if group_ready(name, ...) then
+      local ok, problem = pcall(install)
+      installed[name] = ok
+      if not ok then log(ERROR, name .. " is off: " .. tostring(problem)) end
+    else
+      installed[name] = false
+    end
   end
+  return installed[name]
 end
 
-local prepared = false
-local function enable_rebalance_features()
-  if prepared then return end
-  check_sites()
-  prepared = true
-  install_group("Fire damage", install_fire_damage, "fire_damage_code_addr")
-  install_group("Ballista, catapult and trebuchet damage to units", install_siege_damage, "ballista_damage_addr")
-  install_group("Mangonel damage to units", install_mangonel_damage, "mangonel_damage_addr")
-  install_group("Crossbow melee damage to buildings", install_crossbow_melee, "crossbow_building_melee_addr")
-  install_production("Bread production", install_bread_production, "baker_func")
-  install_production("Wheat production", install_wheat_production, "wheatfarmer_func")
-  install_production("Beer production", install_beer_production, "brewer_func")
-  install_production("Bow and crossbow production", install_bows_production, "fletcher_func", "unit_array_base", "building_array_base")
-  install_production("Spear and pike production", install_spears_production, "poleturner_func", "unit_array_base", "building_array_base")
-  install_production("Mace and sword production", install_maces_production, "blacksmith_func", "unit_array_base", "building_array_base")
-  install_production("Leather production", install_leather_production, "tanner_func")
-  install_production("Armor production", install_armor_production, "armourer_func")
-  install_group("Gold taxation", install_gold_tax, "tax_addr", "bribe_addr")
-  recruitment_costs_ready = install_group("Recruitment gold costs", install_recruitment_costs,
-    "non_rax_unit_display_cost_func_addr", "non_rax_unit_cost_func_addr", "ar_unit_gold_cost_base", "unit_gold_jumplist_addr")
-end
+local production_groups = {
+  baker_func = {"Bread production", install_bread_production, "baker_func"},
+  wheatfarmer_func = {"Wheat production", install_wheat_production, "wheatfarmer_func"},
+  brewer_func = {"Beer production", install_beer_production, "brewer_func"},
+  custom_fletcher_code_addr = {"Bow and crossbow production", install_bows_production, "fletcher_func", "unit_array_base", "building_array_base"},
+  custom_poleturner_code_addr = {"Spear and pike production", install_spears_production, "poleturner_func", "unit_array_base", "building_array_base"},
+  custom_blacksmith_code_addr = {"Mace and sword production", install_maces_production, "blacksmith_func", "unit_array_base", "building_array_base"},
+  tanner_func = {"Leather production", install_leather_production, "tanner_func"},
+  armourer_func = {"Armor production", install_armor_production, "armourer_func"},
+}
 
 local function edit_buildings(buildings)
   local address = 0
@@ -792,6 +762,11 @@ local function edit_siege(siege)
   local default_mangonel_damage = 30000
   local default_catapult_damage = 30000
   local default_trebuchet_damage = 30000
+  local siege_damage = (siege.defaultBallistaBoltUnitDamage ~= nil or siege.defaultCatapultRockUnitDamage ~= nil
+    or siege.defaultTrebuchetRockUnitDamage ~= nil)
+    and install_group("Ballista, catapult and trebuchet damage to units", install_siege_damage, "ballista_damage_addr")
+  local mangonel_damage = siege.defaultMangonelPebbleUnitDamage ~= nil
+    and install_group("Mangonel damage to units", install_mangonel_damage, "mangonel_damage_addr")
   if siege["catapultRockDamage"] ~= nil and need("cat_primary_addr") then core.writeCodeInteger(at.cat_primary_addr, siege["catapultRockDamage"]) end
   if siege["catapultRockCollateralDamage"] ~= nil and need("cat_collateral_addr") then core.writeCodeInteger(at.cat_collateral_addr, siege["catapultRockCollateralDamage"]) end
   if siege["trebuchetRockDamage"] ~= nil and need("treb_primary_addr") then core.writeCodeInteger(at.treb_primary_addr, siege["trebuchetRockDamage"]) end
@@ -823,13 +798,13 @@ local function edit_siege(siege)
     or name == "Tower ballista"
     or name == "Fire ballista" then  -- defaults are set once
     else
-      if ballista_damage_table_addr then core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage) end
-      if mangonel_damage_table_addr then core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage) end
+      if siege_damage then core.writeInteger(ballista_damage_table_addr + 4*(index-1), default_ballista_damage) end
+      if mangonel_damage then core.writeInteger(mangonel_damage_table_addr + 4*(index-1), default_mangonel_damage) end
     end
   end
 
   for index, name in ipairs(unit_names) do
-    if catapult_damage_table_addr and name ~= "Lord" then
+    if siege_damage and name ~= "Lord" then
       core.writeInteger(catapult_damage_table_addr + 4*(index-1), default_catapult_damage)
       core.writeInteger(trebuchet_damage_table_addr + 4*(index-1), default_trebuchet_damage)
     end
@@ -867,7 +842,7 @@ local function edit_castle(castle)
     core.writeCodeByte(at.dog_threshold_addr, dog_trigger_threshold)
   end
 
-  if fire_damage ~= nil and fire_damage_table_addr then
+  if fire_damage ~= nil and install_group("Fire damage", install_fire_damage, "fire_damage_code_addr") then
     for index, name in ipairs(unit_names) do
       if name == "Lord"
       or name == "Fireman"
@@ -970,13 +945,15 @@ local function edit_units(units)
     if meleeEngage ~= nil and need("unit_melee_toggles_base") then core.writeInteger(at.unit_melee_toggles_base + 4*unit_idx, meleeEngage and 1 or 0) end
     if notBlessable ~= nil and need("unit_blessable_base") then core.writeInteger(at.unit_blessable_base + 4*unit_idx, notBlessable and 1 or 0) end
     if allowedOnWalls ~= nil and need("unit_allowed_on_walls_base") then core.writeInteger(at.unit_allowed_on_walls_base + 4*unit_idx, allowedOnWalls and 1 or 0) end
-    if fireDamage ~= nil and fire_damage_table_addr then core.writeInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
+    if fireDamage ~= nil and install_group("Fire damage", install_fire_damage, "fire_damage_code_addr") then core.writeInteger(fire_damage_table_addr + 4*unit_idx_p1, fireDamage) end
     if jesterUnfriendly ~= nil and need("unit_jester_unfriendly_base") then core.writeInteger(at.unit_jester_unfriendly_base + 4*unit_idx, jesterUnfriendly and 1 or 0) end
     if meleeImmunity ~= nil and need("unit_melee_immunity_base") then core.writeInteger(at.unit_melee_immunity_base + 4*unit_idx, meleeImmunity and 1 or 0) end
-    if ballistaBoltDamage ~= nil and ballista_damage_table_addr then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
-    if mangonelDamage ~= nil and mangonel_damage_table_addr then core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage) end
-    if catapultRockDamage ~= nil and catapult_damage_table_addr then core.writeInteger(catapult_damage_table_addr + 4*unit_idx, catapultRockDamage) end
-    if trebuchetRockDamage ~= nil and trebuchet_damage_table_addr then core.writeInteger(trebuchet_damage_table_addr + 4*unit_idx, trebuchetRockDamage) end
+    local siege_damage = (ballistaBoltDamage ~= nil or catapultRockDamage ~= nil or trebuchetRockDamage ~= nil)
+      and install_group("Ballista, catapult and trebuchet damage to units", install_siege_damage, "ballista_damage_addr")
+    if ballistaBoltDamage ~= nil and siege_damage then core.writeInteger(ballista_damage_table_addr + 4*unit_idx, ballistaBoltDamage) end
+    if mangonelDamage ~= nil and install_group("Mangonel damage to units", install_mangonel_damage, "mangonel_damage_addr") then core.writeInteger(mangonel_damage_table_addr + 4*unit_idx, mangonelDamage) end
+    if catapultRockDamage ~= nil and siege_damage then core.writeInteger(catapult_damage_table_addr + 4*unit_idx, catapultRockDamage) end
+    if trebuchetRockDamage ~= nil and siege_damage then core.writeInteger(trebuchet_damage_table_addr + 4*unit_idx, trebuchetRockDamage) end
     if speedLevel ~= nil and need("unit_speed_base") then core.writeInteger(at.unit_speed_base + unit_idx*4, speedLevel) end
 
     if baseMeleeDamage ~= nil and need("unit_melee_dmg_base") then
@@ -1002,6 +979,9 @@ local function edit_units(units)
     if goldCost ~= nil then
       local is_arab_unit = unit_idx_p1 >= arabbow_idx and unit_idx_p1 <= table.find(unit_names, "Arabian firethrower")
       local is_other_trainable_unit = unit_idx_p1 == 5 or unit_idx_p1 == 29 or unit_idx_p1 == 30 or unit_idx_p1 == 37
+      local recruitment_costs_ready = (is_arab_unit or is_other_trainable_unit)
+        and install_group("Recruitment gold costs", install_recruitment_costs, "non_rax_unit_display_cost_func_addr",
+          "non_rax_unit_cost_func_addr", "ar_unit_gold_cost_base", "unit_gold_jumplist_addr")
       -- other trainable units are tunneller, laddermen, engineer or monk
       if unit_idx_p1 >= archer_idx and unit_idx_p1 <= table.find(unit_names, "European knight")
         and need("eu_unit_gold_cost_base") then
@@ -1039,7 +1019,9 @@ local function edit_units(units)
 
     if unit == "Battering ram" then
       edit_ram_damage(buildingDamage, wallDamage, fortificationDamage)
-    elseif unit ~= "European crossbowman" or at.crossbow_building_melee_addr then
+    elseif unit_melee_damage_offset_map[unit] and (buildingDamage ~= nil or wallDamage ~= nil or fortificationDamage ~= nil)
+      and (unit ~= "European crossbowman" or install_group("Crossbow melee damage to buildings",
+        install_crossbow_melee, "crossbow_building_melee_addr", "towers_or_gates_base")) then
       local melee = unit_melee_damage_offset_map[unit]
       if buildingDamage ~= nil and need(melee.site) then core.writeCodeByte(at[melee.site] + melee.building, buildingDamage) end
 
@@ -1088,7 +1070,12 @@ local function edit_resources(resources)
       core.writeInteger(address, sell)
     end
 
-    if baseDelivery ~= nil then
+    local group = production and production_groups[production.site]
+    if group and (baseDelivery ~= nil or skirmishBonus ~= nil) and not install_group(table.unpack(group)) then
+      baseDelivery, skirmishBonus = nil, nil
+    end
+
+    if baseDelivery ~= nil and production then
       if production.baseDelivery == "Not supported." then
         log(WARNING, string.format("%s  production cannot be modified.", res_name))
       elseif need(production.site) then
@@ -1096,7 +1083,7 @@ local function edit_resources(resources)
       end
     end
 
-    if skirmishBonus ~= nil then
+    if skirmishBonus ~= nil and production then
       local sb = skirmishBonus and 1 or 0
       if production.skirmishBonus == "Not supported." then
         log(WARNING, string.format("%s  production cannot be modified.", res_name))
@@ -1603,11 +1590,16 @@ local function edit_taxation(taxation)
     end
   end
 
+  if tax_table == nil and pop_table == nil then return end
   -- the gold and popularity tables both depend on the neutral level
   if not need("neutral_level_addr_1", "neutral_level_addr_2", "neutral_level_addr_3", "neutral_level_addr_4") then
     return
   end
-  if tax_table ~= nil and tax_table_addr then
+  if tax_table ~= nil and not install_group("Gold taxation", install_gold_tax, "tax_addr", "bribe_addr") then
+    if pop_table == nil then return end
+    tax_table = nil
+  end
+  if tax_table ~= nil then
     for idx, tax_val in ipairs(tax_table) do
       core.writeCodeSmallInteger(tax_table_addr+2*(idx-1), math.floor(tax_val*100))
       if math.floor(tax_val*100) == 0 then
@@ -1875,73 +1867,129 @@ local function edit_leather_per_cow(leather_per_cow)
   core.writeCodeByte(at.leather_per_cow_address+4, leather_per_cow)
 end
 
-local function apply_rebalance_function(function_name, config_section)
-  if config_section ~= nil then
-    function_name(config_section)
-  end
+local function apply_setting(name, apply, ...)
+  local ok, problem = pcall(apply, ...)
+  if not ok then log(ERROR, name .. " is off: " .. tostring(problem)) end
 end
 
+local sections = {
+  {"buildings", edit_buildings, building_names},
+  {"siege", edit_siege},
+  {"castle", edit_castle},
+  {"units", edit_units, unit_names},
+  {"resources", edit_resources, resource_names},
+  {"population", edit_population},
+  {"religion", edit_religion},
+  {"beer", edit_beer},
+  {"food", edit_food},
+  {"fear_factor", edit_fear_factor},
+  {"taxation", edit_taxation},
+  {"ranges", edit_ranges},
+  {"projectiles", edit_projectiles},
+  {"building_placement", require("value_sites").edit_building_placement},
+  {"stances", require("value_sites").edit_stances},
+}
+
+local switches = {
+  "enable_iron_double_pickup", "disable_rally_runners", "enable_spearmen_conditional_run",
+  "reduce_height_advantage", "increase_enemy_check_frequency", "increase_minimap_unit_size",
+}
+
 namespace.apply_rebalance = function(config)
-  if next(config) == nil then return end
-  enable_rebalance_features()
-  apply_rebalance_function(edit_buildings, config["buildings"])
-  apply_rebalance_function(edit_siege, config["siege"])  -- siege changes need to come before units, due to projectile damages on units
-  apply_rebalance_function(edit_castle, config["castle"])  -- castle changes need to come before units, due to fire damages on units
-  apply_rebalance_function(edit_units, config["units"])
-  apply_rebalance_function(edit_resources, config["resources"])
-  apply_rebalance_function(edit_population, config["population"])
-  apply_rebalance_function(edit_religion, config["religion"])
-  apply_rebalance_function(edit_beer, config["beer"])
-  apply_rebalance_function(edit_food, config["food"])
-  apply_rebalance_function(edit_fear_factor, config["fear_factor"])
-  apply_rebalance_function(edit_taxation, config["taxation"])
-  apply_rebalance_function(edit_ranges, config["ranges"])
-  apply_rebalance_function(edit_projectiles, config["projectiles"])
-  apply_rebalance_function(edit_leather_per_cow, config["leather_per_cow"])
-  local value_sites = require("value_sites")
-  apply_rebalance_function(value_sites.edit_building_placement, config["building_placement"])
-  apply_rebalance_function(value_sites.edit_stances, config["stances"])
+  if type(config) ~= "table" then
+    log(ERROR, "Balance settings must be a table.")
+    return
+  end
+  local valid = {}
+  for _, section in ipairs(sections) do
+    local name, _, names = table.unpack(section)
+    local value = config[name]
+    if value ~= nil then
+      if type(value) ~= "table" then
+        log(ERROR, name .. " must be a table.")
+      elseif names then
+        local entries = {}
+        for key, entry in pairs(value) do
+          if type(entry) ~= "table" then
+            log(ERROR, name .. "." .. tostring(key) .. " must be a table.")
+          elseif not table.find(names, key) then
+            log(WARNING, name .. "." .. tostring(key) .. " is unknown.")
+          else
+            entries[key] = entry
+          end
+        end
+        valid[name] = entries
+      else
+        valid[name] = value
+      end
+    end
+  end
+  for _, name in ipairs(switches) do
+    if config[name] ~= nil and type(config[name]) ~= "boolean" then
+      log(ERROR, name .. " must be a boolean. Using false.")
+    end
+  end
+  local leather = config.leather_per_cow
+  if leather ~= nil and type(leather) ~= "number" then
+    log(ERROR, "leather_per_cow must be a number. Using the game default.")
+    leather = nil
+  elseif leather ~= nil and (leather % 1 ~= 0 or leather < 0 or leather > 127) then
+    log(WARNING, "leather_per_cow must be a whole number from 0 to 127. Using the game default.")
+    leather = nil
+  end
+
+  for _, section in ipairs(sections) do
+    local name, apply = table.unpack(section)
+    if valid[name] and next(valid[name]) then apply_setting(name, apply, valid[name]) end
+  end
+  if leather ~= nil then apply_setting("Leather per cow", edit_leather_per_cow, leather) end
 
   if config["population_gathering_rate"] then
     log(ERROR, "population_gathering_rate is removed, use population section in the config instead.")
   end
 
-  if config["enable_iron_double_pickup"] and need("iron_wait_addr", "iron_subtract_addr", "building_array_base") then
-    core.writeCodeBytes(at.iron_wait_addr, core.compile({
-      0x83, 0xB8, core.itob(at.building_array_base + 0x138), 0x01,
-      0x0F, 0x9E, 0xC1,
-      0x90
-    }, at.iron_wait_addr))
-    core.writeCodeByte(at.iron_subtract_addr, -2)
+  if config["enable_iron_double_pickup"] == true and need("iron_wait_addr", "iron_subtract_addr", "building_array_base") then
+    apply_setting("Double iron pickup", function()
+      core.writeCodeBytes(at.iron_wait_addr, core.compile({
+        0x83, 0xB8, core.itob(at.building_array_base + 0x138), 0x01,
+        0x0F, 0x9E, 0xC1,
+        0x90
+      }, at.iron_wait_addr))
+      core.writeCodeByte(at.iron_subtract_addr, -2)
+    end)
   end
 
-  if config["disable_rally_runners"] and need("arabbow_rally_running_addr", "slinger_rally_running_addr",
+  if config["disable_rally_runners"] == true and need("arabbow_rally_running_addr", "slinger_rally_running_addr",
       "assassin_rally_running_addr", "firethrower_rally_running_addr") then
-    core.writeCodeBytes(at.arabbow_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
-    core.writeCodeBytes(at.slinger_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
-    core.writeCodeBytes(at.assassin_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
-    core.writeCodeBytes(at.firethrower_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+    apply_setting("Rally runners", function()
+      core.writeCodeBytes(at.arabbow_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+      core.writeCodeBytes(at.slinger_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+      core.writeCodeBytes(at.assassin_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+      core.writeCodeBytes(at.firethrower_rally_running_addr, {0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90})
+    end)
   end
 
-  if config["enable_spearmen_conditional_run"] then
-    hooks.registerHookCallback("afterInit", enable_spearmen_conditional_run)
+  if config["enable_spearmen_conditional_run"] == true then
+    hooks.registerHookCallback("afterInit", function()
+      apply_setting("Spearmen conditional running", enable_spearmen_conditional_run)
+    end)
   end
 
-  if config["reduce_height_advantage"] then
+  if config["reduce_height_advantage"] == true then
     if extreme_only_feature_check("reduce_height_advantage is only available for SHC Extreme!") then
-      reduce_height_advantage()
+      apply_setting("Height advantage", reduce_height_advantage)
     end
   end
 
-  if config["increase_enemy_check_frequency"] ~= nil then
+  if config["increase_enemy_check_frequency"] == true then
     if extreme_only_feature_check("increase_enemy_check_frequency is only available for SHC Extreme!") then
-      increase_enemy_check_frequency()
+      apply_setting("Enemy check frequency", increase_enemy_check_frequency)
     end
   end
 
-  if config["increase_minimap_unit_size"] ~= nil then
+  if config["increase_minimap_unit_size"] == true then
     if extreme_only_feature_check("increase_minimap_unit_size is only available for SHC Extreme!") then
-      increase_minimap_unit_size()
+      apply_setting("Minimap unit size", increase_minimap_unit_size)
     end
   end
 
