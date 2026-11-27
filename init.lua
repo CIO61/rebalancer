@@ -1578,6 +1578,7 @@ local function edit_taxation(taxation)
 
 end
 
+-- Ranges in tiles once a ranges block is applied, for getSiegeRanges and getBowRanges.
 local applied_siege_ranges
 local applied_bow_ranges
 
