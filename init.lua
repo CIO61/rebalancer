@@ -1578,8 +1578,8 @@ local function edit_taxation(taxation)
 
 end
 
--- Siege ranges in tiles once a ranges block is applied, for getSiegeRanges.
 local applied_siege_ranges
+local applied_bow_ranges
 
 local function edit_ranges(ranges)
   local archer_range = ranges["archer_range"]
@@ -1743,6 +1743,7 @@ local function edit_ranges(ranges)
   core.writeCodeSmallInteger(at.scan_range_addr_towerbal_1 + 8, towerbal_range*8)
   core.writeCodeSmallInteger(at.scan_range_addr_towerbal_2 + 8, towerbal_range*8)
   applied_siege_ranges = { catapult = catapult_range, trebuchet = treb_range, fire_ballista = fbal_range }
+  applied_bow_ranges = { [22] = archer_range, [70] = arabbow_range, [74] = horse_archer_range }
 end
 
 local function edit_projectiles(projectiles)
@@ -1875,4 +1876,10 @@ namespace.getSiegeRanges = function(self)
   return r and { catapult = r.catapult, trebuchet = r.trebuchet, fire_ballista = r.fire_ballista }
 end
 
-return namespace, { public = { "getSiegeRanges" } }
+-- Bow ranges in tiles by native unit kind, or nil when the game's own ranges apply.
+namespace.getBowRanges = function(self)
+  local r = applied_bow_ranges
+  return r and { [22] = r[22], [70] = r[70], [74] = r[74] }
+end
+
+return namespace, { public = { "getSiegeRanges", "getBowRanges" } }
