@@ -239,6 +239,9 @@ local function find(name)
   if site.from ~= nil then
     local base = find(site.from)
     address = base and base + (site.offset or 0)
+    if not base then
+      problem = site.from .. " " .. unusable[site.from]
+    end
     if address and site[1] then
       address = matches(site[1], address) and address
       matched[name] = address
@@ -287,20 +290,23 @@ local function check_sites()
   end
   for name, site in pairs(SITES) do
     if site.from ~= nil and site[1] == nil and at[name] and not at[site.from] then
-      at[name], unusable[name] = false, unusable[site.from]
+      at[name], unusable[name] = false, site.from .. " " .. unusable[site.from]
     end
   end
 end
 
--- True if all named sites are usable; logs each unusable site once.
-local function need(...)
-  for _, name in ipairs({ ... }) do
+-- A list leaves reporting to the caller; individual site names log once per site.
+local reported = {}
+local function need(first, ...)
+  local grouped = type(first) == "table"
+  for _, name in ipairs(grouped and first or { first, ... }) do
     if not at[name] then
-      if unusable[name] then
-        log(WARNING, string.format("%s %s, the settings that change it are not applied", name, unusable[name]))
-        unusable[name] = nil
+      local problem = unusable[name]
+      if not grouped and problem and not reported[name] then
+        log(WARNING, string.format("%s %s, the settings that change it are not applied", name, problem))
+        reported[name] = true
       end
-      return false
+      return false, name .. ": " .. (problem or "not found")
     end
   end
   return true
@@ -413,12 +419,13 @@ end
 
 local function enable_rebalance_features()
   check_sites()
-  if not need("crossbow_building_melee_addr", "baker_func", "wheatfarmer_func", "brewer_func", "fletcher_func",
+  local ready, problem = need({ "baker_func", "wheatfarmer_func", "brewer_func", "fletcher_func",
       "poleturner_func", "blacksmith_func", "tanner_func", "armourer_func", "tax_addr", "bribe_addr",
       "ballista_damage_addr", "mangonel_damage_addr", "non_rax_unit_display_cost_func_addr",
-      "non_rax_unit_cost_func_addr", "ar_unit_gold_cost_base", "fire_damage_code_addr", "towers_or_gates_base",
-      "unit_array_base", "building_array_base", "unit_gold_jumplist_addr") then
-    return false
+      "non_rax_unit_cost_func_addr", "ar_unit_gold_cost_base", "fire_damage_code_addr",
+      "unit_array_base", "building_array_base", "unit_gold_jumplist_addr" })
+  if not ready then
+    return false, problem
   end
   ballista_damage_table_addr = core.allocate(#unit_names*4)
   mangonel_damage_table_addr = core.allocate(#unit_names*4)
@@ -482,17 +489,22 @@ local function enable_rebalance_features()
     end
   end
 
-   -- enable fully changing melee damage of xbows to buildings
-  core.writeCodeBytes(at.crossbow_building_melee_addr-12, core.compile({
-    0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+towers_or_gates_base]
-    0x3C, 0x01,                                        -- cmp al,01
-    0x75, 0x04,                                        -- jne +4
-    0x31, 0xC0,                                        -- xor eax,eax
-    0x2C, 0x02,                                        -- sub al,02
-    0x04, 0x04,                                        -- add al,04
-    0x90                                               -- nop 
-  }, at.crossbow_building_melee_addr-12)
-  )
+  -- Enable changing crossbow melee damage to buildings.
+  ready, problem = need({ "crossbow_building_melee_addr" })
+  if ready then
+    local site = at.crossbow_building_melee_addr - 12
+    core.writeCodeBytes(site, core.compile({
+      0x8B, 0x04, 0x95, core.itob(at.towers_or_gates_base), -- mov eax,[edx*4+towers_or_gates_base]
+      0x3C, 0x01,                                        -- cmp al,01
+      0x75, 0x04,                                        -- jne +4
+      0x31, 0xC0,                                        -- xor eax,eax
+      0x2C, 0x02,                                        -- sub al,02
+      0x04, 0x04,                                        -- add al,04
+      0x90                                               -- nop
+    }, site))
+  else
+    log(ERROR, "[European crossbowman] Melee damage settings are not applied: " .. problem)
+  end
 
   -- enable skirmish bonus&delivery modification for bakers
   core.writeCodeByte(at.baker_func, 0x90)
@@ -847,14 +859,6 @@ local function edit_castle(castle)
   end
 end
 
-local function need_ram_damage_sites()
-  if need("ram_damage_addr", "ram_target_kind_addr", "towers_or_gates_base") then
-    return true
-  end
-  log(ERROR, "[Battering ram] Damage settings are not applied because a native binding is unavailable.")
-  return false
-end
-
 local function ram_damage_value(name, value, default)
   if value == nil then return default end
   local damage = math.tointeger(value)
@@ -867,7 +871,11 @@ end
 
 local function edit_ram_damage(building, wall, fortification)
   if building == nil and wall == nil and fortification == nil then return end
-  if not need_ram_damage_sites() then return end
+  local ready, problem = need({ "ram_damage_addr" })
+  if not ready then
+    log(ERROR, "[Battering ram] Damage settings are not applied: " .. problem)
+    return
+  end
 
   local site = at.ram_damage_addr
   building = ram_damage_value("buildingDamage", building, core.readByte(site + 2))
@@ -875,6 +883,12 @@ local function edit_ram_damage(building, wall, fortification)
   fortification = ram_damage_value("fortificationDamage", fortification, building)
   if wall == building and fortification == building and building <= 127 then
     core.writeCodeByte(site + 2, building)
+    return
+  end
+
+  ready, problem = need({ "ram_target_kind_addr", "towers_or_gates_base" })
+  if not ready then
+    log(ERROR, "[Battering ram] Damage settings are not applied: " .. problem)
     return
   end
 
@@ -1000,7 +1014,7 @@ local function edit_units(units)
 
     if unit == "Battering ram" then
       edit_ram_damage(buildingDamage, wallDamage, fortificationDamage)
-    else
+    elseif unit ~= "European crossbowman" or at.crossbow_building_melee_addr then
       local melee = unit_melee_damage_offset_map[unit]
       if buildingDamage ~= nil and need(melee.site) then core.writeCodeByte(at[melee.site] + melee.building, buildingDamage) end
 
@@ -1913,14 +1927,11 @@ namespace.enable = function(self, config)
   local spec = file:read("*all")
 ---@diagnostic disable-next-line: undefined-global
   local rebalance_cfg = yaml.parse(spec)
-  if enable_rebalance_features() then
+  local ready, problem = enable_rebalance_features()
+  if ready then
     namespace.apply_rebalance(rebalance_cfg)
   else
-    local ram = rebalance_cfg.units and rebalance_cfg.units["Battering ram"]
-    if ram and (ram.buildingDamage ~= nil or ram.wallDamage ~= nil or ram.fortificationDamage ~= nil) then
-      need_ram_damage_sites()
-    end
-    log(WARNING, "the balance file is not applied")
+    log(ERROR, "The balance file is not applied: " .. problem)
   end
 end
 
