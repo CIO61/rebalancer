@@ -861,7 +861,12 @@ end
 
 local function ram_damage_value(name, value, default)
   if value == nil then return default end
-  local damage = math.tointeger(value)
+  local number = tonumber(value)
+  if number == nil then
+    log(ERROR, string.format("[Battering ram] %s must be a number.", name))
+    return default
+  end
+  local damage = math.tointeger(number)
   if damage == nil or damage < 0 or damage > 32767 then
     log(WARNING, string.format("[Battering ram] %s must be a whole number from 0 to 32767.", name))
     return default
