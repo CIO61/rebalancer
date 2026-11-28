@@ -24,9 +24,9 @@ local SITES = {
   tax_popularity_offset = { from = "pop_report_addr", offset = 28, read = 0 },
 
   pop_gathering_addr = { "8B 0C 85 ? ? ? ? EB 2D 8B 4E F0" },
-  scenario_pgr_base = { "EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00", data = true },
+  scenario_pgr_base = { "EC FF FF FF F1 FF FF FF F4 FF FF FF F6 FF FF FF F7 FF FF FF F8 FF FF FF F9 FF FF FF FA FF FF FF FB FF FF FF FB FF FF FF 05 00 00 00 05 00 00 00" },
   scenario_pgr_crowded_base = { from = "scenario_pgr_base" },  -- the same AOB as scenario_pgr_base
-  skirmish_pgr_base = { "F8 FF FF FF FA FF FF FF FB FF FF FF FC FF FF FF FD FF FF FF FD FF FF FF FE FF FF FF FE FF FF FF FF FF FF FF FF FF FF FF 0A 00 00 00 0C 00 00 00", data = true },
+  skirmish_pgr_base = { "F8 FF FF FF FA FF FF FF FB FF FF FF FC FF FF FF FD FF FF FF FD FF FF FF FE FF FF FF FE FF FF FF FF FF FF FF FF FF FF FF 0A 00 00 00 0C 00 00 00" },
   large_town_threshold_addr = { "83 BE ? ? ? ? 64 7E 09", offset = 6 },
   min_peasants_addr = { "83 FA 04 7E 3B", offset = 2 },
   pop_reset_population_limit_addr = { "83 F9 03 7F 1F", offset = 2 },
@@ -41,11 +41,11 @@ local SITES = {
   ballista_damage_addr = { "66 83 F9 37 75 07 B9 32 00 00 00 EB 70 66 83 F9" },  -- 125 bytes (+14)
   mangonel_damage_addr = { "66 83 F9 37 75 0A B9 32 00 00 00 E9 51 01 00 00" },  -- 154 bytes
 
-  unit_health_base = { "C4 09 00 00 C4 09 00 00 10 27 00 00 C4 09 00 00 10 27 00 00 88 13 00 00 10 27 00", data = true },
-  unit_arrow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 98 3A 00 00 98 3A", data = true },
-  unit_xbow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 B8 0B 00 00", data = true },
-  unit_stone_dmg_base = { "00 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00", offset = 3, data = true },
-  unit_speed_base = { "01 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00", data = true },
+  unit_health_base = { "C4 09 00 00 C4 09 00 00 10 27 00 00 C4 09 00 00 10 27 00 00 88 13 00 00 10 27 00" },
+  unit_arrow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 98 3A 00 00 98 3A" },
+  unit_xbow_dmg_base = { "98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 98 3A 00 00 88 13 00 00 98 3A 00 00 B8 0B 00 00" },
+  unit_stone_dmg_base = { "00 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00 88 13 00 00", offset = 3 },
+  unit_speed_base = { "01 00 00 00 01 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 01 00 00 00" },
 
   tunneller_building_melee_addr = { "B9 06 00 00 00 EB 39 0F BF 34 55 ? ? ? ? 3B F3 7F 0D 5F 5E 5D 66 89 98 ? ? ? ? 5B 59 C3 8B CE 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 F0 83 C1 14 0F BF A8", offset = 54 },
   archer_building_melee_addr = { "8B CF 69 C9 2C 03 00 00 0F BF 89 ? ? ? ? 8B 0C 8D ? ? ? ? F7 D9 1B C9 83 E1 FD 83 C1 04 0F BF 98", offset = 22 },  -- +6 +9
@@ -67,15 +67,15 @@ local SITES = {
   ram_damage_addr = { "55 6A 32 52 8B 90 ? ? ? ? 51 52 B9 ? ? ? ? E8 ? ? ? ? 85 C0 0F 84 ? ? ? ? F7 C3 00 01 00 00" },
   ram_target_kind_addr = { "0F B7 80 ? ? ? ? 66 3D 2D 00 74 0C 66 3D 2E 00 74 06 66 3D 2F 00", from = "ram_damage_addr", offset = -0x52 },
 
-  unit_power_levels_addr = { "05 00 00 00 0A 00 00 00 04 00 00 00 0A 00 00 00 0A 00 00 00", data = true },
-  eu_unit_gold_cost_base = { "0C 00 00 00 14 00 00 00 08 00 00 00 14 00 00 00", data = true },
-  ar_unit_gold_cost_base = { "4B 00 00 00 05 00 00 00 0C 00 00 00 3C 00 00 00", data = true },
+  unit_power_levels_addr = { "05 00 00 00 0A 00 00 00 04 00 00 00 0A 00 00 00 0A 00 00 00" },
+  eu_unit_gold_cost_base = { "0C 00 00 00 14 00 00 00 08 00 00 00 14 00 00 00" },
+  ar_unit_gold_cost_base = { "4B 00 00 00 05 00 00 00 0C 00 00 00 3C 00 00 00" },
   unit_melee_dmg_base = { "8D 04 80 C1 E0 04 03 C2 66 83 F9 37 8B 04 85", offset = 15, read = 0x144 },  -- read as [(attacker * 80 + defender) * 4 + table], ids from 1
 
   -- building related addresses
-  building_cost_base = { "06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03", data = true },
-  building_health_base = { "64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 2C", data = true },
-  building_population_base = { "0B 00 00 00 00 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", offset = 12, data = true },
+  building_cost_base = { "06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03" },
+  building_health_base = { "64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 64 00 00 00 2C" },
+  building_population_base = { "0B 00 00 00 00 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", offset = 12 },
 
   -- siege related addresses
   cat_collateral_addr = { "8B 1C 95 ? ? ? ? 8B CB BF 0A 00 00 00 81 E1 01 00 10 40 8B EF", offset = 10 },
@@ -87,8 +87,8 @@ local SITES = {
   mango_primary_addr = { from = "siege_projectile_func_addr", offset = 36 },  -- integer
 
   -- resource related addresses
-  resource_buy_base = { "14 00 00 00 4B 00 00 00 46 00 00 00 00 00 00 00 E1 00 00 00 64 00 00 00 64 00 00 00 73 00 00 00 28 00 00 00 28 00 00 00 28 00 00 00 28 00 00 00", data = true },
-  resource_sell_base = { "05 00 00 00 28 00 00 00 23 00 00 00 00 00 00 00 73 00 00 00 32 00 00 00 32 00 00 00 28 00 00 00 14 00 00 00 14 00 00 00 14 00 00 00 14 00 00 00", data = true },
+  resource_buy_base = { "14 00 00 00 4B 00 00 00 46 00 00 00 00 00 00 00 E1 00 00 00 64 00 00 00 64 00 00 00 73 00 00 00 28 00 00 00 28 00 00 00 28 00 00 00 28 00 00 00" },
+  resource_sell_base = { "05 00 00 00 28 00 00 00 23 00 00 00 00 00 00 00 73 00 00 00 32 00 00 00 32 00 00 00 28 00 00 00 14 00 00 00 14 00 00 00 14 00 00 00 14 00 00 00" },
 
   woodcutter_func = { "6A 01 66 89 BE ? ? ? ? 6A 0C 89 96 ? ? ? ? 50" },
   quarry_grunt_func = { "6A 01 6A 08 55 C7 81 ? ? ? ? 00 00 00 00 E8" },
@@ -162,9 +162,9 @@ local SITES = {
   leather_per_cow_address = { "53 6A 03 6A 03 6A 05 52 50" },
 
   -- range related addresses
-  base_ranges_table_addr = { "36 00 00 00 4B 00 00 00 55 00 00 00 46 00 00 00 00 00 00 00 00 00 00 00 36", data = true },
-  proj_velocity_table_addr = { "7D 00 00 00 0A 00 00 00 1E 00 00 00 0F 00 00 00 64 00 00 00 64 00 00 00", data = true },
-  proj_archtype_table_addr = { "00 00 00 00 02 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00", data = true },
+  base_ranges_table_addr = { "36 00 00 00 4B 00 00 00 55 00 00 00 46 00 00 00 00 00 00 00 00 00 00 00 36" },
+  proj_velocity_table_addr = { "7D 00 00 00 0A 00 00 00 1E 00 00 00 0F 00 00 00 64 00 00 00 64 00 00 00" },
+  proj_archtype_table_addr = { "00 00 00 00 02 00 00 00 01 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00" },
 
   range_split_addr1 = { "8B 04 85 ? ? ? ? 0F AF C0 66 83 BC 37" },  -- patch size should be 7
   range_split_addr2 = { "BD 64 0B 00 00 E9 A2 00 00 00" },  -- patch size should be 5
@@ -245,10 +245,8 @@ local function find(name)
       matched[name] = address
     end
   else
-    local scan = site.data and core.AOBScan or core.AOBScanUnique
-    local ok, result, reason = pcall(scan, site[1])
-    problem = ok and reason or nil
-    if ok and result and result ~= 0 then
+    local ok, result = pcall(core.AOBScan, site[1])
+    if ok then
       matched[name] = result
       if matches(site[1], result) then
         address = result + (site.offset or 0)

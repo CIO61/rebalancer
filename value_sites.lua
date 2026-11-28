@@ -85,8 +85,8 @@ local resolved = {}
 local functions = {}
 
 local function scan(signature, from, to)
-  local address, reason = core.AOBScanUnique(signature)
-  if not address or address == 0 then return nil, reason or "signature not found" end
+  local ok, address = pcall(core.AOBScan, signature)
+  if not ok then return nil, "signature not found" end
   if from ~= nil and (address < from or address >= to) then
     return nil, "signature outside the expected function"
   end
