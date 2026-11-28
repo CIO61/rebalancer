@@ -3,3 +3,5 @@ balance_config_file_selector: Balance configuration file
 ui.rebalancer: Rebalancer
 tags.balance: Balance
 tags.tools: Tools
+balance_changes: Balance Changes
+cat_balance_files: Balance files and rules

@@ -3,3 +3,5 @@ balance_config_file_selector_descr: Выберите путь к файлу на
 ui.rebalancer: Rebalancer
 tags.balance: Баланс
 tags.tools: Инструменты
+balance_changes: Изменения баланса
+cat_balance_files: Файлы и правила баланса

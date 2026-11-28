@@ -3,3 +3,5 @@ balance_config_file_selector_descr: Sélectionnez le chemin du fichier de config
 ui.rebalancer: Rebalancer
 tags.balance: Équilibrage
 tags.tools: Outils
+balance_changes: Modifications de l'équilibrage
+cat_balance_files: Fichiers et règles d'équilibrage

@@ -3,3 +3,5 @@ balance_config_file_selector_descr: 选择平衡配置文件的路径。
 ui.rebalancer: Rebalancer
 tags.balance: 平衡
 tags.tools: 工具
+balance_changes: 平衡调整
+cat_balance_files: 平衡文件与规则

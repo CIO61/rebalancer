@@ -3,3 +3,5 @@ balance_config_file_selector_descr: Válaszd ki az egyensúlybeállítási fájl
 ui.rebalancer: Rebalancer
 tags.balance: Egyensúly
 tags.tools: Eszközök
+balance_changes: Egyensúlymódosítások
+cat_balance_files: Egyensúlyfájlok és szabályok
