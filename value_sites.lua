@@ -84,13 +84,11 @@ local FUNCTIONS = {
 local resolved = {}
 local functions = {}
 
--- `from`, `to`: search only this window. The scanner checks `to` only between memory regions, so a
--- match past it counts as none.
 local function scan(signature, from, to)
-  local ok, address = pcall(core.AOBScan, signature, from, to)
-  if not ok or not address or (from ~= nil and (address < from or address >= to)) then
-    return nil, "signature not found (the game code there differs: another module changed it, "
-      .. "or this game version is not supported)"
+  local ok, address = pcall(core.AOBScan, signature)
+  if not ok then return nil, "signature not found" end
+  if from ~= nil and (address < from or address >= to) then
+    return nil, "signature outside the expected function"
   end
   return address
 end
@@ -162,18 +160,24 @@ local function resolve(name)
   return address, problem
 end
 
--- Writes all `writes` ({ site, value, to, label, keep }) or, if one can't be verified, none.
--- `keep` marks a value that is only checked and stays the game's. `check`, if given, runs once all
--- values are valid and returns a reason to refuse, or nil.
+-- Validate the full group before writing. A dependent entry can reuse a value already in the plan.
 local function apply(setting, writes, check)
   local plan = {}
   for _, entry in ipairs(writes) do
     local value = SITES[entry.site].values[entry.value]
-    local wanted = math.tointeger(entry.to)
-    if wanted == nil or wanted < value.min or wanted > value.max then
-      log(ERROR, string.format("%s not applied: %s must be a whole number from %d to %d, not %s",
-        setting, entry.label, value.min, value.max, tostring(entry.to)))
-      return false
+    local wanted
+    if entry.from then
+      wanted = plan[entry.from].to
+    elseif type(entry.to) == "number" or type(entry.to) == "string" then
+      wanted = math.tointeger(entry.to)
+      if wanted == nil or wanted < value.min or wanted > value.max then
+        log(WARNING, string.format("%s: %s must be a whole number from %d to %d. Using the default.",
+          setting, entry.label, value.min, value.max))
+        wanted = value.default
+      end
+    else
+      log(ERROR, string.format("%s: %s must be a number.", setting, entry.label))
+      wanted = value.default
     end
     local address, problem = resolve(entry.site)
     if address == nil then
@@ -190,7 +194,7 @@ local function apply(setting, writes, check)
     plan[#plan + 1] = { at = at, value = value, to = wanted, current = current, label = entry.label,
       keep = entry.keep }
   end
-  local problem = check and check()
+  local problem = check and check(plan)
   if problem ~= nil then
     log(ERROR, string.format("%s not applied: %s", setting, problem))
     return false
@@ -284,10 +288,10 @@ function namespace.edit_stances(stances)
         label = "stances.aggressive_range", keep = aggressive == nil },
       { site = "stance_ranges", value = "defensive", to = new_defensive,
         label = "stances.defensive_range", keep = defensive == nil },
-      { site = "defensive_stance_check", value = "defensive", to = new_defensive,
+      { site = "defensive_stance_check", value = "defensive", from = 2,
         label = "stances.defensive_range (stance check)", keep = defensive == nil },
-    }, function()
-      if math.tointeger(new_aggressive) == math.tointeger(new_defensive) then
+    }, function(plan)
+      if plan[1].to == plan[2].to then
         return "aggressive_range and defensive_range must differ "
           .. "(the game tells the two stances apart by the defensive range)"
       end
